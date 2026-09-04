@@ -102,7 +102,7 @@ create table quiz_sessions (
   evento               text not null default 'diagnostico-tribunais-comercial',
   nome                 text not null,
   whatsapp             text not null,
-  whatsapp_normalizado text not null,                     -- só dígitos; 10-11 dígitos ganha prefixo 55; já com 55+12-13 dígitos mantém
+  whatsapp_normalizado text not null,                     -- só dígitos; entrada com 10-11 dígitos (sem DDI) ganha prefixo 55; entrada já com 12-13 dígitos (com DDI 55) mantém como está
   email                text not null,
   email_normalizado    text not null,                     -- lowercase, trim
   status               text not null default 'em_andamento'
@@ -169,7 +169,7 @@ Em qualquer reaproveitamento (casos 1 e 2), `session_token` da linha é atualiza
 ## Fluxo de dados
 
 1. **Início** — `POST /api/quiz/start` recebe `{ nome, whatsapp, email, session_token, evento }`.
-   - Validação: email em formato válido; whatsapp com 10-13 dígitos após normalizar; nome não vazio (trim).
+   - Validação: email em formato válido; whatsapp com 10-13 dígitos na entrada bruta (antes de normalizar — cobre com ou sem DDI); nome não vazio (trim).
    - Aplica a regra de dedupe acima, grava com `service_role`.
    - Devolve `{ session_token, retomando: boolean, respostas_salvas?, etapa_atual? }`.
    - O front guarda `{ nome, whatsapp, email, session_token }` em `localStorage`; se a página recarregar no meio do quiz, reenvia esses mesmos dados para `/start` de novo (idempotente, mesma linha é encontrada por email).
@@ -225,7 +225,7 @@ Escrita incremental a cada resposta não é um risco de volume: mesmo com muitos
 ## Testes
 
 - Lógica de cálculo de score/área/área prioritária: testes unitários puros (sem I/O), dado um array de respostas fixo.
-- Regra de dedupe por pessoa: testes de integração cobrindo os 6 cenários — match por email (sessão incompleta / sessão concluída) × match por whatsapp (sessão incompleta / sessão concluída) × nenhum match (session_token isolado sempre cria linha nova) × mesmo evento vs. evento diferente (não deve haver conflito entre eventos).
+- Regra de dedupe por pessoa: testes de integração cobrindo os 6 cenários — (1) match por email, sessão anterior incompleta → retoma progresso; (2) match por email, sessão anterior concluída → sobrescreve; (3) match por whatsapp, sessão anterior incompleta → retoma progresso e atualiza nome/email; (4) match por whatsapp, sessão anterior concluída → sobrescreve; (5) nenhum match (inclusive quando só o `session_token` bate) → cria linha nova; (6) mesmo email em `evento`s diferentes → duas linhas distintas, sem conflito.
 - Route Handlers: testes de integração cobrindo os casos de recusa (sessão incompleta em `/finish`, sessão já concluída em `/answer` e `/finish`, `session_token` inválido/inexistente, `/result` sem sessão concluída).
 - RLS: teste manual/script confirmando que a chave `anon` não consegue ler nem escrever na tabela.
 - Rate-limit: teste confirmando que a Nª requisição no mesmo IP é recusada dentro da janela configurada.
