@@ -38,6 +38,24 @@ describe('POST /api/quiz/start', () => {
     expect(res.status).toBe(422)
   })
 
+  it('devolve o corpo em snake_case (session_token / respostas_salvas)', async () => {
+    const handler = criarHandlerStart(criarFakeSessionRepo())
+    const res = await handler(fazerRequisicao({
+      nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+    }))
+    const json = await res.json()
+    expect(json.session_token).toBe('aaaaaaaa-1111-1111-1111-111111111111')
+    expect(json.respostas_salvas).toEqual([])
+  })
+
+  it('recusa session_token fora do formato uuid com 422', async () => {
+    const handler = criarHandlerStart(criarFakeSessionRepo())
+    const res = await handler(fazerRequisicao({
+      nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'nao-e-uuid',
+    }))
+    expect(res.status).toBe(422)
+  })
+
   it('recusa nome vazio com 422', async () => {
     const handler = criarHandlerStart(criarFakeSessionRepo())
     const res = await handler(fazerRequisicao({

@@ -4,6 +4,7 @@ import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { iniciarSessao } from '@/lib/server/quizService'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
+import { isUuid } from '@/lib/server/uuid'
 import { EVENTO } from '@/lib/questions'
 
 export const runtime = 'nodejs'
@@ -40,14 +41,25 @@ export function criarHandlerStart(repo: SessionRepo) {
     if (digitos < 10 || digitos > 13) {
       return NextResponse.json({ erro: 'whatsapp inválido' }, { status: 422 })
     }
-    if (typeof sessionToken !== 'string' || sessionToken.length < 10) {
+    if (typeof sessionToken !== 'string' || !isUuid(sessionToken)) {
       return NextResponse.json({ erro: 'session_token inválido' }, { status: 422 })
     }
 
-    const resultado = await iniciarSessao(repo, {
-      nome, whatsapp: whatsapp as string, email, sessionToken, evento: EVENTO,
-    })
-    return NextResponse.json(resultado, { status: 200 })
+    try {
+      const resultado = await iniciarSessao(repo, {
+        nome, whatsapp: whatsapp as string, email, sessionToken, evento: EVENTO,
+      })
+      // Fronteira JSON em snake_case (mesma convenção de /finish e /result);
+      // internamente o serviço continua em camelCase.
+      return NextResponse.json({
+        session_token: resultado.sessionToken,
+        retomando: resultado.retomando,
+        respostas_salvas: resultado.respostasSalvas,
+      }, { status: 200 })
+    } catch (e) {
+      console.error('[quiz/start] erro inesperado', e)
+      throw e
+    }
   }
 }
 
