@@ -4,6 +4,7 @@ import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { registrarResposta, SessaoInvalidaError, SessaoConcluidaError } from '@/lib/server/quizService'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
+import { isUuid } from '@/lib/server/uuid'
 
 export const runtime = 'nodejs'
 
@@ -28,12 +29,17 @@ export function criarHandlerAnswer(repo: SessionRepo) {
     if (typeof sessionToken !== 'string' || typeof num !== 'number' || typeof escolhida !== 'string') {
       return NextResponse.json({ erro: 'corpo inválido' }, { status: 422 })
     }
+    // session_token é uuid no banco: formato inválido é erro de entrada (422), não 500.
+    if (!isUuid(sessionToken)) {
+      return NextResponse.json({ erro: 'session_token inválido' }, { status: 422 })
+    }
 
     try {
       await registrarResposta(repo, sessionToken, { num, escolhida })
     } catch (e) {
       if (e instanceof SessaoInvalidaError) return NextResponse.json({ erro: 'sessão não encontrada' }, { status: 404 })
       if (e instanceof SessaoConcluidaError) return NextResponse.json({ erro: 'sessão já concluída' }, { status: 409 })
+      console.error('[quiz/answer] erro inesperado', e)
       throw e
     }
     return NextResponse.json({ ok: true }, { status: 200 })

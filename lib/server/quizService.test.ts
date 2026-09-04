@@ -56,11 +56,23 @@ describe('iniciarSessao', () => {
     expect(repo.linhas[0].completedAt).toBeNull()
   })
 
+  // Mesmo navegador, pessoa diferente: o cliente sempre gera um session_token novo
+  // no início manual (o token em cache só é reusado ao retomar a própria sessão),
+  // porque `session_token` é unique no banco. O que se verifica aqui é que nem o
+  // token nem o navegador fundem linhas — só email e whatsapp fundem.
   it('não funde por session_token isolado — cria linha nova mesmo com o mesmo navegador', async () => {
     const repo = criarFakeSessionRepo()
-    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-mesmo-navegador', evento: EVENTO })
-    await iniciarSessao(repo, { nome: 'Joao', whatsapp: '11900000000', email: 'joao@x.com', sessionToken: 'tok-mesmo-navegador', evento: EVENTO })
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-navegador-1', evento: EVENTO })
+    await iniciarSessao(repo, { nome: 'Joao', whatsapp: '11900000000', email: 'joao@x.com', sessionToken: 'tok-navegador-2', evento: EVENTO })
     expect(repo.linhas).toHaveLength(2)
+  })
+
+  it('recusa reaproveitar o session_token de outra linha ao criar (unique no banco)', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await expect(
+      iniciarSessao(repo, { nome: 'Joao', whatsapp: '11900000000', email: 'joao@x.com', sessionToken: 'tok-1', evento: EVENTO }),
+    ).rejects.toThrow(/session_token duplicado/)
   })
 
   it('mesmo email em eventos diferentes não conflita', async () => {

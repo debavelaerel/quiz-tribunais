@@ -76,10 +76,16 @@ export function criarSupabaseSessionRepo(client: SupabaseClient): SessionRepo {
       return data ? paraSessao(data as LinhaBanco) : null
     },
     async buscarPorWhatsapp(evento, whatsappNormalizado) {
+      // whatsapp_normalizado é só indexado, NÃO tem unique constraint (ver migration):
+      // duas linhas do mesmo evento podem legitimamente compartilhar o valor (ex.: uma
+      // linha casada por email teve o whatsapp sobrescrito). `.maybeSingle()` lançaria
+      // PGRST116 nesse caso — aqui pegamos a mais recente.
       const { data, error } = await client.from('quiz_sessions').select('*')
-        .eq('evento', evento).eq('whatsapp_normalizado', whatsappNormalizado).maybeSingle()
+        .eq('evento', evento).eq('whatsapp_normalizado', whatsappNormalizado)
+        .order('updated_at', { ascending: false }).limit(1)
       if (error) throw error
-      return data ? paraSessao(data as LinhaBanco) : null
+      const linha = data?.[0]
+      return linha ? paraSessao(linha as LinhaBanco) : null
     },
     async buscarPorToken(sessionToken) {
       const { data, error } = await client.from('quiz_sessions').select('*')

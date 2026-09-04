@@ -72,7 +72,14 @@ describe('POST /api/quiz/finish', () => {
   it('retorna 404 para session_token inexistente', async () => {
     const repo = criarFakeSessionRepo()
     const handler = criarHandlerFinish(repo)
-    const res = await handler(fazerRequisicao({ session_token: 'nao-existe' }))
+    const res = await handler(fazerRequisicao({ session_token: 'bbbbbbbb-2222-2222-2222-222222222222' }))
     expect(res.status).toBe(404)
+  })
+
+  it('retorna 422 para session_token fora do formato uuid (sem estourar 500 no banco)', async () => {
+    const repo = criarFakeSessionRepo()
+    const handler = criarHandlerFinish(repo)
+    const res = await handler(fazerRequisicao({ session_token: 'nao-e-uuid' }))
+    expect(res.status).toBe(422)
   })
 })

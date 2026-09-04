@@ -4,6 +4,7 @@ import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { concluirSessao, SessaoInvalidaError, SessaoConcluidaError, SessaoIncompletaError } from '@/lib/server/quizService'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
+import { isUuid } from '@/lib/server/uuid'
 
 export const runtime = 'nodejs'
 
@@ -28,6 +29,10 @@ export function criarHandlerFinish(repo: SessionRepo) {
     if (typeof sessionToken !== 'string') {
       return NextResponse.json({ erro: 'corpo inválido' }, { status: 422 })
     }
+    // session_token é uuid no banco: formato inválido é erro de entrada (422), não 500.
+    if (!isUuid(sessionToken)) {
+      return NextResponse.json({ erro: 'session_token inválido' }, { status: 422 })
+    }
 
     try {
       const sessao = await concluirSessao(repo, sessionToken)
@@ -42,6 +47,7 @@ export function criarHandlerFinish(repo: SessionRepo) {
       if (e instanceof SessaoInvalidaError) return NextResponse.json({ erro: 'sessão não encontrada' }, { status: 404 })
       if (e instanceof SessaoConcluidaError) return NextResponse.json({ erro: 'sessão já concluída' }, { status: 409 })
       if (e instanceof SessaoIncompletaError) return NextResponse.json({ erro: 'faltam respostas' }, { status: 422 })
+      console.error('[quiz/finish] erro inesperado', e)
       throw e
     }
   }

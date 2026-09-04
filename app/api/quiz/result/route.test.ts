@@ -16,7 +16,14 @@ describe('GET /api/quiz/result', () => {
   it('retorna 404 quando a sessão não existe', async () => {
     const repo = criarFakeSessionRepo()
     const handler = criarHandlerResult(repo)
-    const res = await handler(new Request(`http://localhost/api/quiz/result?session_token=nao-existe`))
+    const res = await handler(new Request('http://localhost/api/quiz/result?session_token=bbbbbbbb-2222-2222-2222-222222222222'))
+    expect(res.status).toBe(404)
+  })
+
+  it('retorna 404 para session_token fora do formato uuid (sem estourar 500 no banco)', async () => {
+    const repo = criarFakeSessionRepo()
+    const handler = criarHandlerResult(repo)
+    const res = await handler(new Request('http://localhost/api/quiz/result?session_token=nao-e-uuid'))
     expect(res.status).toBe(404)
   })
 

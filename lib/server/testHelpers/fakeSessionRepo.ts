@@ -18,6 +18,11 @@ export function criarFakeSessionRepo(): SessionRepo & { linhas: QuizSession[] } 
       return linhas.find((l) => l.sessionToken === sessionToken) ?? null
     },
     async criar(sessao) {
+      // Espelha `session_token uuid not null unique` da migration: sem isso, o fake
+      // aceitaria colisões que o Postgres recusaria em produção.
+      if (linhas.some((l) => l.sessionToken === sessao.sessionToken)) {
+        throw new Error(`session_token duplicado: ${sessao.sessionToken}`)
+      }
       const nova: QuizSession = { ...sessao, id: proximoId++ }
       linhas.push(nova)
       return nova

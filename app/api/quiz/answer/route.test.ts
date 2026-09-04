@@ -34,8 +34,15 @@ describe('POST /api/quiz/answer', () => {
   it('retorna 404 para session_token inexistente', async () => {
     const repo = criarFakeSessionRepo()
     const handler = criarHandlerAnswer(repo)
-    const res = await handler(fazerRequisicao({ session_token: 'nao-existe', num: 1, escolhida: 'B' }))
+    const res = await handler(fazerRequisicao({ session_token: 'bbbbbbbb-2222-2222-2222-222222222222', num: 1, escolhida: 'B' }))
     expect(res.status).toBe(404)
+  })
+
+  it('retorna 422 para session_token fora do formato uuid (sem estourar 500 no banco)', async () => {
+    const repo = criarFakeSessionRepo()
+    const handler = criarHandlerAnswer(repo)
+    const res = await handler(fazerRequisicao({ session_token: 'nao-e-uuid', num: 1, escolhida: 'B' }))
+    expect(res.status).toBe(422)
   })
 
   it('retorna 422 para corpo com tipos errados', async () => {
