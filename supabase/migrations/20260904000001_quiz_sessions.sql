@@ -26,12 +26,15 @@ create table quiz_sessions (
 create index idx_quiz_sessions_status_updated on quiz_sessions (status, updated_at);
 create index idx_quiz_sessions_evento_whatsapp on quiz_sessions (evento, whatsapp_normalizado);
 
+-- search_path fixado (vazio) para não depender do search_path de quem dispara o
+-- trigger — é o que o linter do Supabase cobra (function_search_path_mutable).
+-- Não há referência a tabela aqui; now() é builtin em pg_catalog, sempre visível.
 create function set_updated_at() returns trigger as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql set search_path = '';
 
 create trigger trg_quiz_sessions_updated_at
   before update on quiz_sessions
