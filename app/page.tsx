@@ -1,3 +1,5 @@
+import Quiz from '@/components/Quiz'
+
 export default function Page() {
-  return <main>Carregando…</main>
+  return <Quiz />
 }
