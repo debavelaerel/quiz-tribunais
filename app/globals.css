@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-navy: #203C7C;
+  --color-brand-lilac: #B7ADFD;
+  --font-brand: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font-brand);
+}
