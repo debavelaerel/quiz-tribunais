@@ -212,53 +212,154 @@ export default function Quiz() {
     setTela('resultado')
   }
 
+  const marca = (
+    // eslint-disable-next-line @next/next/no-img-element -- SVG estático, sem
+    // necessidade do pipeline de otimização de imagem do Next.
+    <img src="/brand/versao02-color0.svg" alt="VDE Tribunais" width={116} height={58} />
+  )
+
   if (restaurando) {
     return (
-      <div>
-        <p>Retomando seu diagnóstico…</p>
-      </div>
+      <main className="flex min-h-screen items-center justify-center px-6">
+        <p className="text-brand-ink/60">Retomando seu diagnóstico…</p>
+      </main>
     )
   }
 
   if (tela === 'capa') {
     return (
-      <div>
-        <h1>Descubra seu nível para carreiras de Tribunais</h1>
-        {erro && <p role="alert">{erro}</p>}
-        <input placeholder="Seu nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-        <input placeholder="(DDD) 00000-0000" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
-        <input placeholder="Seu melhor e-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <button onClick={iniciar} disabled={enviando}>Iniciar diagnóstico</button>
-      </div>
+      <main className="flex min-h-screen items-center justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          {marca}
+          <h1 className="mt-8 text-3xl font-semibold leading-tight text-brand-navy-ink">
+            Descubra seu nível para carreiras de Tribunais
+          </h1>
+          <p className="mt-3 text-brand-ink/70">
+            Responda a um diagnóstico rápido e veja onde focar seus estudos.
+          </p>
+
+          {erro && (
+            <p role="alert" className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {erro}
+            </p>
+          )}
+
+          <div className="mt-8 flex flex-col gap-3">
+            <input
+              placeholder="Seu nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="rounded-lg border border-brand-line bg-white px-4 py-3 text-brand-ink placeholder:text-brand-ink/40 focus:border-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-lilac/50"
+            />
+            <input
+              placeholder="(DDD) 00000-0000"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              className="rounded-lg border border-brand-line bg-white px-4 py-3 text-brand-ink placeholder:text-brand-ink/40 focus:border-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-lilac/50"
+            />
+            <input
+              placeholder="Seu melhor e-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded-lg border border-brand-line bg-white px-4 py-3 text-brand-ink placeholder:text-brand-ink/40 focus:border-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-lilac/50"
+            />
+          </div>
+
+          <button
+            onClick={iniciar}
+            disabled={enviando}
+            className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink disabled:opacity-50"
+          >
+            Iniciar diagnóstico
+          </button>
+        </div>
+      </main>
     )
   }
 
   if (tela === 'quiz') {
     const questao = QUESTIONS[atual]
+    const progresso = Math.round((atual / TOTAL) * 100)
     return (
-      <div>
-        <p>Questão {atual + 1} de {TOTAL}</p>
-        {erro && <p role="alert">{erro}</p>}
-        <p>{questao.statement}</p>
-        {questao.options.map((o) => (
-          <button key={o.letter} onClick={() => responder(o.letter)} disabled={enviando}>
-            {o.letter}) {o.text}
-          </button>
-        ))}
-      </div>
+      <main className="flex min-h-screen justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          <div className="flex items-center justify-between text-sm text-brand-ink/60">
+            <span>Questão {atual + 1} de {TOTAL}</span>
+            <span>{questao.area}</span>
+          </div>
+          <div className="mt-3 h-1.5 w-full rounded-full bg-brand-lilac/25">
+            <div
+              className="h-1.5 rounded-full bg-brand-navy transition-[width]"
+              style={{ width: `${progresso}%` }}
+            />
+          </div>
+
+          {erro && (
+            <p role="alert" className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {erro}
+            </p>
+          )}
+
+          <p className="mt-8 text-lg leading-relaxed text-brand-navy-ink">{questao.statement}</p>
+
+          <div className="mt-6 flex flex-col gap-2.5">
+            {questao.options.map((o) => (
+              <button
+                key={o.letter}
+                onClick={() => responder(o.letter)}
+                disabled={enviando}
+                className="flex gap-3 rounded-lg border border-brand-line bg-white px-4 py-3 text-left text-brand-ink transition-colors hover:border-brand-navy hover:bg-brand-navy/5 disabled:opacity-50"
+              >
+                <span className="font-medium text-brand-navy">{o.letter}</span>{' '}
+                <span>{o.text}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </main>
     )
   }
 
+  const areaPrioritaria = resultado?.area_prioritaria
+
   return (
-    <div>
-      <h2>Diagnóstico concluído</h2>
-      {resultado && (
-        <>
-          <p>{resultado.score_geral_pct}% de aproveitamento</p>
-          <p>{resultado.acertos} de {resultado.total} corretas</p>
-          <p>Área prioritária: {resultado.area_prioritaria}</p>
-        </>
-      )}
-    </div>
+    <main className="flex min-h-screen justify-center px-6 py-16">
+      <div className="w-full max-w-md">
+        <p className="text-sm text-brand-ink/60">Diagnóstico concluído</p>
+        {resultado && (
+          <>
+            <p className="mt-2 text-6xl font-semibold text-brand-navy-ink">{resultado.score_geral_pct}%</p>
+            <p className="mt-1 text-brand-ink/70">
+              {resultado.acertos} de {resultado.total} respostas corretas
+            </p>
+
+            <div className="mt-10 flex flex-col gap-4">
+              {Object.entries(resultado.areas).map(([area, dados]) => (
+                <div key={area}>
+                  <div className="flex items-baseline justify-between text-sm">
+                    <span className={area === areaPrioritaria ? 'font-medium text-brand-navy-ink' : 'text-brand-ink/80'}>
+                      {area}
+                    </span>
+                    <span className="text-brand-ink/60">{dados.pct}%</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 w-full rounded-full bg-brand-lilac/25">
+                    <div
+                      className={`h-1.5 rounded-full ${area === areaPrioritaria ? 'bg-brand-lilac' : 'bg-brand-navy'}`}
+                      style={{ width: `${dados.pct}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {areaPrioritaria && (
+              <p className="mt-8 rounded-lg bg-brand-lilac/15 px-4 py-3 text-sm text-brand-navy-ink">
+                Foco sugerido: <span className="font-medium">{areaPrioritaria}</span>
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    </main>
   )
 }

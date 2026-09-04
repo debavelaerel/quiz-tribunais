@@ -75,7 +75,7 @@ describe('Quiz', () => {
     fireEvent.click(screen.getByText('Iniciar diagnóstico'))
     await waitFor(() => expect(screen.getByText(/Questão 1/)).toBeInTheDocument())
 
-    fireEvent.click(screen.getByText(/^A\)/))
+    fireEvent.click(screen.getByRole('button', { name: /^A / }))
     await waitFor(() => expect(screen.getByText(/Questão 2/)).toBeInTheDocument())
 
     const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/answer'))
@@ -92,7 +92,7 @@ describe('Quiz', () => {
     await waitFor(() => expect(screen.getByText(/Questão 1/)).toBeInTheDocument())
 
     respostas.answer = () => new Response(JSON.stringify({ erro: 'x' }), { status: 422 })
-    fireEvent.click(screen.getByText(/^A\)/))
+    fireEvent.click(screen.getByRole('button', { name: /^A / }))
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByText(/Questão 1/)).toBeInTheDocument()
   })
@@ -103,7 +103,9 @@ describe('Quiz', () => {
 
     render(<Quiz />)
     await waitFor(() => expect(screen.getByText('Diagnóstico concluído')).toBeInTheDocument())
-    expect(screen.getByText(/100% de aproveitamento/)).toBeInTheDocument()
+    // '100%' aparece duas vezes: o placar geral e o único bloco de área do fixture.
+    expect(screen.getAllByText('100%').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText(/3 de 3 respostas corretas/)).toBeInTheDocument()
     expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/start'))).toBe(false)
   })
 
