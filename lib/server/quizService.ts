@@ -2,6 +2,7 @@ import type { SessionRepo } from './sessionRepo'
 import type { IniciarSessaoInput, IniciarSessaoResultado, QuizSession } from './types'
 import { normalizeEmail, normalizeWhatsapp } from '../normalize'
 import { montarRespostaResumo, calcularAreas, calcularResultado, respostasCobremTodasPerguntas, type RespostaEntrada } from '../scoring'
+import { calcularPerfil, type RespostasPerfil } from '../perfil'
 
 export class SessaoInvalidaError extends Error {}
 export class SessaoConcluidaError extends Error {}
@@ -40,6 +41,8 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
       acertos: null,
       total: null,
       areaPrioritaria: null,
+      perfil: {},
+      perfilCalculado: null,
       startedAt: new Date().toISOString(),
       completedAt: null,
     })
@@ -62,6 +65,8 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
     acertos: null,
     total: null,
     areaPrioritaria: null,
+    perfil: {},
+    perfilCalculado: null,
     startedAt: agora,
     updatedAt: agora,
     completedAt: null,
@@ -81,6 +86,17 @@ export async function registrarResposta(repo: SessionRepo, sessionToken: string,
   await repo.atualizar(sessao.id, { respostas, areas })
 }
 
+// Mescla (não substitui) respostas de perfilamento na sessão — cada tela do
+// funil manda só a chave que acabou de responder. Não são graduadas: ao
+// contrário de registrarResposta, não passam por lib/scoring.ts.
+export async function registrarPerfil(repo: SessionRepo, sessionToken: string, entrada: Partial<RespostasPerfil>): Promise<void> {
+  const sessao = await repo.buscarPorToken(sessionToken)
+  if (!sessao) throw new SessaoInvalidaError('sessão não encontrada')
+  if (sessao.status === 'concluido') throw new SessaoConcluidaError('sessão já concluída')
+
+  await repo.atualizar(sessao.id, { perfil: { ...sessao.perfil, ...entrada } })
+}
+
 export async function concluirSessao(repo: SessionRepo, sessionToken: string): Promise<QuizSession> {
   const sessao = await repo.buscarPorToken(sessionToken)
   if (!sessao) throw new SessaoInvalidaError('sessão não encontrada')
@@ -88,6 +104,7 @@ export async function concluirSessao(repo: SessionRepo, sessionToken: string): P
   if (!respostasCobremTodasPerguntas(sessao.respostas)) throw new SessaoIncompletaError('faltam respostas')
 
   const resultado = calcularResultado(sessao.respostas)
+  const perfilCalculado = calcularPerfil(sessao.perfil, resultado.acertos)
   return repo.atualizar(sessao.id, {
     status: 'concluido',
     areas: resultado.areas,
@@ -95,6 +112,7 @@ export async function concluirSessao(repo: SessionRepo, sessionToken: string): P
     acertos: resultado.acertos,
     total: resultado.total,
     areaPrioritaria: resultado.areaPrioritaria,
+    perfilCalculado,
     completedAt: new Date().toISOString(),
   })
 }

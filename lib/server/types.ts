@@ -1,4 +1,5 @@
 import type { RespostaResumo, AreaResumo } from '../scoring'
+import type { RespostasPerfil, PerfilCalculado } from '../perfil'
 
 export type QuizSession = {
   id: number
@@ -16,6 +17,10 @@ export type QuizSession = {
   acertos: number | null
   total: number | null
   areaPrioritaria: string | null
+  // Respostas de perfilamento do funil "Raio-X da Base" (alvo, cargo, formação,
+  // editais escolhidos, etc.) — não graduadas, distintas de `respostas`/`areas`.
+  perfil: RespostasPerfil
+  perfilCalculado: PerfilCalculado | null
   startedAt: string
   updatedAt: string
   completedAt: string | null

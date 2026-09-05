@@ -5,10 +5,15 @@ import { salvarEstado } from '@/lib/storage'
 
 const RESULTADO = {
   score_geral_pct: 100,
-  acertos: 3,
-  total: 3,
-  area_prioritaria: 'Direito Constitucional',
-  areas: { 'Direito Constitucional': { acertos: 1, total: 1, pct: 100 } },
+  acertos: 4,
+  total: 4,
+  area_prioritaria: 'Raciocínio Lógico',
+  areas: {
+    'Língua Portuguesa': { acertos: 1, total: 1, pct: 100 },
+    'Direito Constitucional': { acertos: 1, total: 1, pct: 100 },
+    'Direito Processual Civil': { acertos: 1, total: 1, pct: 100 },
+    'Raciocínio Lógico': { acertos: 1, total: 1, pct: 100 },
+  },
 }
 
 // Respostas por endpoint, sobrescritas caso a caso. O corpo de /start usa o mesmo
@@ -22,6 +27,7 @@ function respostaPadrao(): Record<string, () => Response> {
       JSON.stringify({ session_token: 'tok-1', retomando: false, respostas_salvas: [] }),
       { status: 200 },
     ),
+    perfil: () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
     answer: () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
     finish: () => new Response(JSON.stringify(RESULTADO), { status: 200 }),
   }
@@ -33,11 +39,68 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(async (url: string) => {
     if (url.includes('/api/quiz/result')) return respostas.result()
     if (url.includes('/api/quiz/start')) return respostas.start()
+    if (url.includes('/api/quiz/perfil')) return respostas.perfil()
     if (url.includes('/api/quiz/answer')) return respostas.answer()
     if (url.includes('/api/quiz/finish')) return respostas.finish()
     return new Response(JSON.stringify({}), { status: 200 })
   }))
 })
+
+// Preenche a capa e clica em "Iniciar diagnóstico".
+function iniciarDaCapa() {
+  fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
+  fireEvent.change(screen.getByPlaceholderText('(DDD) 00000-0000'), { target: { value: '11987654321' } })
+  fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
+  fireEvent.click(screen.getByText('Iniciar diagnóstico'))
+}
+
+// Anda pelas 12 telas de perfilamento sempre escolhendo a primeira opção —
+// nenhuma delas desqualifica (alvo=tj, formação=direito), então o funil
+// sempre chega em "mirror" ao final.
+function responderPerfilCompleto() {
+  for (let i = 0; i < 9; i++) {
+    fireEvent.click(screen.getAllByRole('button')[0])
+  }
+  // tela multi (editais): escolhe a primeira opção e confirma
+  fireEvent.click(screen.getAllByRole('button')[0])
+  fireEvent.click(screen.getByText('Continuar'))
+  // dor, momento
+  fireEvent.click(screen.getAllByRole('button')[0])
+  fireEvent.click(screen.getAllByRole('button')[0])
+}
+
+// Da capa até a primeira pergunta graduada ("Questão 1 de 4").
+async function chegarAoQuiz() {
+  iniciarDaCapa()
+  await waitFor(() => expect(screen.getByText('Quero descobrir meu momento')).toBeInTheDocument())
+  fireEvent.click(screen.getByText('Quero descobrir meu momento'))
+  responderPerfilCompleto()
+  await waitFor(() => expect(screen.getByText('Está certo, pode seguir')).toBeInTheDocument())
+  fireEvent.click(screen.getByText('Está certo, pode seguir'))
+  await waitFor(() => expect(screen.getByText('Entendi, continuar')).toBeInTheDocument())
+  fireEvent.click(screen.getByText('Entendi, continuar'))
+  await waitFor(() => expect(screen.getAllByRole('button').length).toBeGreaterThan(0))
+  fireEvent.click(screen.getAllByRole('button')[0]) // tela "dinheiro"
+  await waitFor(() => expect(screen.getByText('Quero encurtar esse caminho')).toBeInTheDocument())
+  fireEvent.click(screen.getByText('Quero encurtar esse caminho'))
+  await waitFor(() => expect(screen.getByText(/Questão 1 de 4/)).toBeInTheDocument())
+}
+
+// Responde as 4 perguntas graduadas com o gabarito real (C, C, B, A) e segue
+// até a tela de resultado.
+async function chegarAoResultado() {
+  await chegarAoQuiz()
+  const letras = ['C', 'C', 'B', 'A']
+  for (const letra of letras) {
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${letra} `) }))
+    await waitFor(() => {})
+  }
+  await waitFor(() => expect(screen.getByText(/Você acertou/)).toBeInTheDocument())
+  fireEvent.click(screen.getByText('Fechar meu raio-X'))
+  await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
+  fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
+  await waitFor(() => expect(screen.getByText('Diagnóstico concluído')).toBeInTheDocument())
+}
 
 describe('Quiz', () => {
   it('mostra a tela de capa com o formulário de identificação', () => {
@@ -45,38 +108,36 @@ describe('Quiz', () => {
     expect(screen.getByPlaceholderText('Seu nome')).toBeInTheDocument()
   })
 
-  it('avança para a primeira pergunta depois de preencher o formulário e iniciar', async () => {
+  it('avança pra tela de intro depois de preencher o formulário e iniciar', async () => {
     render(<Quiz />)
-    fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
-    fireEvent.change(screen.getByPlaceholderText('(DDD) 00000-0000'), { target: { value: '11987654321' } })
-    fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
-    fireEvent.click(screen.getByText('Iniciar diagnóstico'))
-    await waitFor(() => expect(screen.getByText(/Questão 1/)).toBeInTheDocument())
+    iniciarDaCapa()
+    await waitFor(() => expect(screen.getByText('Quero descobrir meu momento')).toBeInTheDocument())
   })
 
   it('gera um session_token novo no início manual, sem reaproveitar o do cache', async () => {
     render(<Quiz />)
-    fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
-    fireEvent.change(screen.getByPlaceholderText('(DDD) 00000-0000'), { target: { value: '11987654321' } })
-    fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
-    fireEvent.click(screen.getByText('Iniciar diagnóstico'))
-    await waitFor(() => expect(screen.getByText(/Questão 1/)).toBeInTheDocument())
+    iniciarDaCapa()
+    await waitFor(() => expect(screen.getByText('Quero descobrir meu momento')).toBeInTheDocument())
 
     const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
     const corpo = JSON.parse((chamada![1] as RequestInit).body as string)
     expect(corpo.session_token).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
   })
 
-  it('usa o session_token devolvido pelo servidor ao responder', async () => {
+  it('percorre perfilamento + vídeo + calculadora e chega às perguntas graduadas', async () => {
     render(<Quiz />)
-    fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
-    fireEvent.change(screen.getByPlaceholderText('(DDD) 00000-0000'), { target: { value: '11987654321' } })
-    fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
-    fireEvent.click(screen.getByText('Iniciar diagnóstico'))
-    await waitFor(() => expect(screen.getByText(/Questão 1/)).toBeInTheDocument())
+    await chegarAoQuiz()
+    // a resposta de perfil foi persistida (não graduada, chave/valor genéricos)
+    const chamadaPerfil = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/perfil'))
+    expect(chamadaPerfil).toBeTruthy()
+  })
 
-    fireEvent.click(screen.getByRole('button', { name: /^A / }))
-    await waitFor(() => expect(screen.getByText(/Questão 2/)).toBeInTheDocument())
+  it('usa o session_token devolvido pelo servidor ao responder uma pergunta graduada', async () => {
+    render(<Quiz />)
+    await chegarAoQuiz()
+
+    fireEvent.click(screen.getByRole('button', { name: /^C / }))
+    await waitFor(() => expect(screen.getByText(/Questão 2 de 4/)).toBeInTheDocument())
 
     const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/answer'))
     const corpo = JSON.parse((chamada![1] as RequestInit).body as string)
@@ -85,16 +146,21 @@ describe('Quiz', () => {
 
   it('não avança quando /answer falha e mostra o erro', async () => {
     render(<Quiz />)
-    fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
-    fireEvent.change(screen.getByPlaceholderText('(DDD) 00000-0000'), { target: { value: '11987654321' } })
-    fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
-    fireEvent.click(screen.getByText('Iniciar diagnóstico'))
-    await waitFor(() => expect(screen.getByText(/Questão 1/)).toBeInTheDocument())
+    await chegarAoQuiz()
 
     respostas.answer = () => new Response(JSON.stringify({ erro: 'x' }), { status: 422 })
-    fireEvent.click(screen.getByRole('button', { name: /^A / }))
+    fireEvent.click(screen.getByRole('button', { name: /^C / }))
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
-    expect(screen.getByText(/Questão 1/)).toBeInTheDocument()
+    expect(screen.getByText(/Questão 1 de 4/)).toBeInTheDocument()
+  })
+
+  it('percorre a correção e a tela de resultado, com CTA de WhatsApp', async () => {
+    render(<Quiz />)
+    await chegarAoResultado()
+    expect(screen.getAllByText('100%').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText(/4 de 4 respostas corretas/)).toBeInTheDocument()
+    const cta = screen.getByText('Falar com o time no WhatsApp')
+    expect(cta.closest('a')).toHaveAttribute('href', expect.stringContaining('https://wa.me/'))
   })
 
   it('reexibe o resultado ao recarregar uma sessão já concluída', async () => {
@@ -103,21 +169,20 @@ describe('Quiz', () => {
 
     render(<Quiz />)
     await waitFor(() => expect(screen.getByText('Diagnóstico concluído')).toBeInTheDocument())
-    // '100%' aparece duas vezes: o placar geral e o único bloco de área do fixture.
     expect(screen.getAllByText('100%').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/3 de 3 respostas corretas/)).toBeInTheDocument()
+    expect(screen.getByText(/4 de 4 respostas corretas/)).toBeInTheDocument()
     expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/start'))).toBe(false)
   })
 
-  it('retoma na pergunta certa ao recarregar no meio do quiz, sem repedir os dados', async () => {
+  it('retoma pro início do funil (tela intro) quando há sessão em cache ainda não concluída', async () => {
     salvarEstado({ sessionToken: 'tok-1', nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com' })
     respostas.start = () => new Response(
-      JSON.stringify({ session_token: 'tok-1', retomando: true, respostas_salvas: [{ num: 1, escolhida: 'B' }] }),
+      JSON.stringify({ session_token: 'tok-1', retomando: true, respostas_salvas: [{ num: 1, escolhida: 'C' }] }),
       { status: 200 },
     )
 
     render(<Quiz />)
-    await waitFor(() => expect(screen.getByText(/Questão 2 de 3/)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Quero descobrir meu momento')).toBeInTheDocument())
 
     const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
     const corpo = JSON.parse((chamada![1] as RequestInit).body as string)

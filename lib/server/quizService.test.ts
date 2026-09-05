@@ -4,6 +4,7 @@ import { criarFakeSessionRepo } from './testHelpers/fakeSessionRepo'
 import {
   iniciarSessao,
   registrarResposta,
+  registrarPerfil,
   concluirSessao,
   buscarResultado,
   SessaoInvalidaError,
@@ -43,9 +44,10 @@ describe('iniciarSessao', () => {
   it('sobrescreve (reseta) quando reaproveita uma sessão já concluída', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
-    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'B' })
-    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'C' })
     await registrarResposta(repo, 'tok-1', { num: 3, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 4, escolhida: 'A' })
     await concluirSessao(repo, 'tok-1')
 
     const r = await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-2', evento: EVENTO })
@@ -92,9 +94,10 @@ describe('registrarResposta', () => {
   it('lança SessaoConcluidaError para sessão já concluída', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
-    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'B' })
-    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'C' })
     await registrarResposta(repo, 'tok-1', { num: 3, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 4, escolhida: 'A' })
     await concluirSessao(repo, 'tok-1')
     await expect(registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'A' })).rejects.toThrow(SessaoConcluidaError)
   })
@@ -109,6 +112,32 @@ describe('registrarResposta', () => {
   })
 })
 
+describe('registrarPerfil', () => {
+  it('mescla respostas de perfil sem sobrescrever chaves já salvas', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await registrarPerfil(repo, 'tok-1', { alvo: 'trt' })
+    await registrarPerfil(repo, 'tok-1', { cargo: 'analista' })
+    expect(repo.linhas[0].perfil).toEqual({ alvo: 'trt', cargo: 'analista' })
+  })
+
+  it('lança SessaoInvalidaError para token inexistente', async () => {
+    const repo = criarFakeSessionRepo()
+    await expect(registrarPerfil(repo, 'nao-existe', { alvo: 'trt' })).rejects.toThrow(SessaoInvalidaError)
+  })
+
+  it('lança SessaoConcluidaError para sessão já concluída', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 3, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 4, escolhida: 'A' })
+    await concluirSessao(repo, 'tok-1')
+    await expect(registrarPerfil(repo, 'tok-1', { alvo: 'trt' })).rejects.toThrow(SessaoConcluidaError)
+  })
+})
+
 describe('concluirSessao', () => {
   it('lança SessaoIncompletaError quando faltam perguntas', async () => {
     const repo = criarFakeSessionRepo()
@@ -120,21 +149,26 @@ describe('concluirSessao', () => {
   it('calcula e grava o resultado quando todas as perguntas foram respondidas', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
-    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'B' })
-    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'B' })
+    await registrarPerfil(repo, 'tok-1', { alvo: 'trt', cargo: 'analista', formacao: 'direito', horas: 'h3', edital: 'previsto', dor: 'base' })
+    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'C' })
     await registrarResposta(repo, 'tok-1', { num: 3, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 4, escolhida: 'A' })
     const sessao = await concluirSessao(repo, 'tok-1')
     expect(sessao.status).toBe('concluido')
     expect(sessao.scoreGeralPct).toBe(100)
     expect(sessao.completedAt).not.toBeNull()
+    // perfilCalculado é derivado de perfil + score no momento do finish, nunca do cliente.
+    expect(sessao.perfilCalculado).toEqual({ classe: 'A', pontos: 9, curso: 'Curso 1 · Analista de TRT (168 temas)', cursoCod: 'C1-TRT', ritmo: 'base em menos de 6 meses' })
   })
 
   it('lança SessaoConcluidaError numa segunda chamada de finish', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
-    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'B' })
-    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'C' })
     await registrarResposta(repo, 'tok-1', { num: 3, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 4, escolhida: 'A' })
     await concluirSessao(repo, 'tok-1')
     await expect(concluirSessao(repo, 'tok-1')).rejects.toThrow(SessaoConcluidaError)
   })
@@ -150,9 +184,10 @@ describe('buscarResultado', () => {
   it('retorna a sessão quando concluída', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
-    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'B' })
-    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'C' })
     await registrarResposta(repo, 'tok-1', { num: 3, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 4, escolhida: 'A' })
     await concluirSessao(repo, 'tok-1')
     const sessao = await buscarResultado(repo, 'tok-1')
     expect(sessao?.status).toBe('concluido')

@@ -3,8 +3,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { QUESTIONS } from '@/lib/questions'
 import { carregarEstado, salvarEstado, criarNovoSessionToken, type EstadoQuiz } from '@/lib/storage'
+import {
+  CONFIG,
+  PERFIL_SCREENS,
+  TELA_DINHEIRO,
+  TELA_LEITURA,
+  DIAG,
+  L,
+  labelCargo,
+  editaisEscolhidos,
+  waLink,
+  type TelaPerfil,
+  type Opcao,
+} from '@/lib/quizContent'
+import { calcularPerfil, nivelTeste, type RespostasPerfil } from '@/lib/perfil'
 
-type Tela = 'capa' | 'quiz' | 'resultado'
+type Tela =
+  | 'capa' | 'restaurando'
+  | 'intro' | 'perfil' | 'desqualificado'
+  | 'mirror' | 'video' | 'dinheiro' | 'conta'
+  | 'quiz' | 'correcao' | 'leitura'
+  | 'resultado'
+
 type Resultado = {
   score_geral_pct: number
   acertos: number
@@ -32,6 +52,10 @@ function indiceDeRetomada(json: RespostaStart): number {
   return Math.min(salvas, TOTAL - 1)
 }
 
+function valAplicado<T>(x: T | ((r: RespostasPerfil) => T), r: RespostasPerfil): T {
+  return typeof x === 'function' ? (x as (r: RespostasPerfil) => T)(r) : x
+}
+
 export default function Quiz() {
   const [tela, setTela] = useState<Tela>('capa')
   const [atual, setAtual] = useState(0)
@@ -43,6 +67,13 @@ export default function Quiz() {
   const [enviando, setEnviando] = useState(false)
   const [restaurando, setRestaurando] = useState(false)
   const [resultado, setResultado] = useState<Resultado | null>(null)
+
+  const [passoPerfil, setPassoPerfil] = useState(0)
+  const [respostasPerfil, setRespostasPerfil] = useState<RespostasPerfil>({})
+  const [selecaoMulti, setSelecaoMulti] = useState<string[]>([])
+  const [respostasTeste, setRespostasTeste] = useState<Record<number, string>>({})
+  const [motivoDesqualificacao, setMotivoDesqualificacao] = useState<'outro' | 'juridica' | 'cargo_baixo' | null>(null)
+
   // Trava síncrona: `enviando` só vale a partir do próximo render, então um duplo
   // clique no mesmo tick passaria pelo `disabled` e chamaria setAtual duas vezes.
   const emVooRef = useRef(false)
@@ -106,8 +137,12 @@ export default function Quiz() {
         }
         salvarEstado(novoEstado)
         setEstado(novoEstado)
+        // Retomada de perfil/teste no meio do funil não é reconstruída aqui (o
+        // servidor guarda o progresso, mas a UI sempre volta pro início do
+        // funil de perfilamento após um F5 no meio dele — só a identificação
+        // e as respostas GRADUADAS já registradas são preservadas).
         setAtual(indiceDeRetomada(json))
-        setTela('quiz')
+        setTela('intro')
       } catch {
         if (cancelado) return
         setNome(salvo.nome)
@@ -157,14 +192,79 @@ export default function Quiz() {
       const novoEstado: EstadoQuiz = { sessionToken: token, nome, whatsapp, email }
       salvarEstado(novoEstado)
       setEstado(novoEstado)
-      setAtual(indiceDeRetomada(json))
-      setTela('quiz')
+      setTela('intro')
     } catch {
       setErro('Não foi possível iniciar. Verifique sua conexão.')
     } finally {
       emVooRef.current = false
       setEnviando(false)
     }
+  }
+
+  // Perfilamento (não graduado): grava no servidor sem travar a navegação —
+  // perda de uma resposta de perfil não compromete a sessão, ao contrário de
+  // uma resposta graduada.
+  function persistirPerfil(chave: string, valor: string | string[]) {
+    if (!estado) return
+    void fetch('/api/quiz/perfil', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_token: estado.sessionToken, chave, valor }),
+    }).catch(() => {})
+  }
+
+  function avancarPerfil(proximasRespostas: RespostasPerfil) {
+    const telaAtual = PERFIL_SCREENS[passoPerfil]
+    if (telaAtual.type === 'single' && telaAtual.after) {
+      const motivo = telaAtual.after(proximasRespostas)
+      if (motivo === 'desqualificado') {
+        const chave = telaAtual.key
+        setMotivoDesqualificacao(chave === 'alvo' ? (proximasRespostas.alvo === 'outro' ? 'outro' : 'juridica') : 'cargo_baixo')
+        setTela('desqualificado')
+        return
+      }
+    }
+    const proximoPasso = passoPerfil + 1
+    if (proximoPasso >= PERFIL_SCREENS.length) {
+      setTela('mirror')
+      return
+    }
+    setPassoPerfil(proximoPasso)
+    setSelecaoMulti([])
+  }
+
+  function responderPerfilSingle(chave: string, valor: string) {
+    const proximasRespostas: RespostasPerfil = { ...respostasPerfil, [chave]: valor }
+    setRespostasPerfil(proximasRespostas)
+    persistirPerfil(chave, valor)
+    avancarPerfil(proximasRespostas)
+  }
+
+  function confirmarPerfilMulti(chave: string) {
+    const proximasRespostas: RespostasPerfil = { ...respostasPerfil, [chave]: selecaoMulti }
+    setRespostasPerfil(proximasRespostas)
+    persistirPerfil(chave, selecaoMulti)
+    const proximoPasso = passoPerfil + 1
+    if (proximoPasso >= PERFIL_SCREENS.length) {
+      setTela('mirror')
+      return
+    }
+    setPassoPerfil(proximoPasso)
+    setSelecaoMulti([])
+  }
+
+  function responderDinheiro(valor: string) {
+    const proximasRespostas: RespostasPerfil = { ...respostasPerfil, dinheiro: valor }
+    setRespostasPerfil(proximasRespostas)
+    persistirPerfil('dinheiro', valor)
+    setTela('conta')
+  }
+
+  function responderLeitura(valor: string) {
+    const proximasRespostas: RespostasPerfil = { ...respostasPerfil, leitura: valor }
+    setRespostasPerfil(proximasRespostas)
+    persistirPerfil('leitura', valor)
+    setTela('resultado')
   }
 
   async function responder(letra: string) {
@@ -184,6 +284,7 @@ export default function Quiz() {
         setErro('Não foi possível registrar sua resposta. Tente novamente.')
         return
       }
+      setRespostasTeste((r) => ({ ...r, [questao.num]: letra }))
       if (atual === TOTAL - 1) {
         await concluir(estado.sessionToken)
       } else {
@@ -209,7 +310,7 @@ export default function Quiz() {
       return
     }
     setResultado(await res.json())
-    setTela('resultado')
+    setTela('correcao')
   }
 
   const marca = (
@@ -277,6 +378,222 @@ export default function Quiz() {
     )
   }
 
+  if (tela === 'intro') {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 py-16">
+        <div className="w-full max-w-md text-center">
+          <p className="text-sm font-medium text-brand-navy">A janela é agora</p>
+          <h1 className="mt-3 text-2xl font-semibold leading-tight text-brand-navy-ink">
+            O segundo semestre de 2026 e o ano de 2027 vão ser dos concursos de tribunais.
+          </h1>
+          <p className="mt-4 text-brand-ink/70">
+            TRT8 já com banca definida. TRF3, TRT4, TJ AM, TJ GO e a DPU na fila — a maior sequência de editais de tribunal dos últimos anos.
+          </p>
+          <p className="mt-4 text-brand-ink/70">
+            Quem chega despreparado não perde só uma prova: perde o ciclo inteiro, porque o próximo edital do mesmo tribunal demora anos.
+          </p>
+          <p className="mt-4 text-brand-ink/70">
+            Este diagnóstico revela em que momento da preparação você está, em menos de 3 minutos.
+          </p>
+          <button
+            onClick={() => setTela('perfil')}
+            className="mt-8 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
+          >
+            Quero descobrir meu momento
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  if (tela === 'perfil') {
+    const telaAtual = PERFIL_SCREENS[passoPerfil]
+    const opts = valAplicado(telaAtual.opts, respostasPerfil)
+    const hint = telaAtual.hint ? valAplicado(telaAtual.hint, respostasPerfil) : undefined
+    return (
+      <main className="flex min-h-screen justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          <p className="text-sm text-brand-ink/60">Pergunta {passoPerfil + 1} de {PERFIL_SCREENS.length}</p>
+          <h1 className="mt-2 text-2xl font-semibold leading-tight text-brand-navy-ink">{telaAtual.title}</h1>
+          {hint && <p className="mt-2 text-sm text-brand-ink/60">{hint}</p>}
+
+          <div className="mt-6 flex flex-col gap-2.5">
+            {opts.map(([valor, texto, sub]: Opcao) => {
+              const selecionado = telaAtual.type === 'multi' ? selecaoMulti.includes(valor) : respostasPerfil[telaAtual.key] === valor
+              return (
+                <button
+                  key={valor}
+                  onClick={() => {
+                    if (telaAtual.type === 'multi') {
+                      if (valor === 'qualquer') {
+                        setSelecaoMulti(['qualquer'])
+                        return
+                      }
+                      setSelecaoMulti((sel) => {
+                        const semQualquer = sel.filter((v) => v !== 'qualquer')
+                        return semQualquer.includes(valor) ? semQualquer.filter((v) => v !== valor) : [...semQualquer, valor]
+                      })
+                      return
+                    }
+                    responderPerfilSingle(telaAtual.key, valor)
+                  }}
+                  className={`rounded-lg border px-4 py-3 text-left text-brand-ink transition-colors ${
+                    selecionado ? 'border-brand-navy bg-brand-navy/5' : 'border-brand-line bg-white hover:border-brand-navy'
+                  }`}
+                >
+                  <span>{texto}</span>
+                  {sub && <span className="mt-0.5 block text-sm text-brand-ink/60">{sub}</span>}
+                </button>
+              )
+            })}
+          </div>
+
+          {telaAtual.type === 'multi' && (
+            <button
+              onClick={() => confirmarPerfilMulti(telaAtual.key)}
+              disabled={selecaoMulti.length === 0}
+              className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink disabled:opacity-50"
+            >
+              Continuar
+            </button>
+          )}
+        </div>
+      </main>
+    )
+  }
+
+  if (tela === 'desqualificado') {
+    let mensagem: string
+    if (motivoDesqualificacao === 'outro') {
+      mensagem = 'Pelo que você me contou, o seu foco hoje não é um concurso de tribunal. O VDE Tribunais foi feito sob medida pra TJ, TRF, TRT e os órgãos das funções essenciais — prefiro te dizer isso agora e você chegar no seu concurso pelo caminho certo.'
+    } else if (motivoDesqualificacao === 'juridica') {
+      mensagem = 'Juiz, promotor, defensor e procurador são carreiras jurídicas, com uma preparação diferente: mais profundidade, mais fases. O VDE Tribunais foi feito pra servidor de tribunal, então não é o curso certo pro seu objetivo agora.'
+    } else {
+      mensagem = 'O VDE Tribunais é calibrado pro nível de analista e oficial de justiça, então aprofunda as matérias jurídicas mais do que a prova que você mira pede. Se em algum momento seu alvo virar analista, esse diagnóstico continua aqui.'
+    }
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 py-16">
+        <div className="w-full max-w-md text-center">
+          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">O seu caso pede outro caminho.</h1>
+          <p className="mt-4 text-brand-ink/70">{mensagem}</p>
+          <a
+            href={CONFIG.instagram}
+            target="_blank"
+            rel="noopener"
+            className="mt-8 inline-block font-medium text-brand-navy underline"
+          >
+            @vdeconcursos
+          </a>
+        </div>
+      </main>
+    )
+  }
+
+  if (tela === 'mirror') {
+    const cargo = labelCargo(respostasPerfil)
+    const alvoLongo = respostasPerfil.alvo ? L.alvoLongo[respostasPerfil.alvo] : ''
+    const escolhidos = editaisEscolhidos(respostasPerfil)
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">Anotei tudo. A sua ficha ficou assim:</h1>
+          <div className="mt-6 flex flex-col gap-2">
+            <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+              <span className="text-brand-ink/60">Seu alvo</span>
+              <span className="font-medium text-right">{cargo} · {alvoLongo}</span>
+            </div>
+            <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+              <span className="text-brand-ink/60">Gargalo</span>
+              <span className="font-medium text-right">{respostasPerfil.dor ? L.dorCurta[respostasPerfil.dor] : ''}</span>
+            </div>
+            <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+              <span className="text-brand-ink/60">Momento</span>
+              <span className="font-medium text-right">{respostasPerfil.momento ? L.momento[respostasPerfil.momento] : ''}</span>
+            </div>
+            {escolhidos[0] && (
+              <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+                <span className="text-brand-ink/60">Prova na mira</span>
+                <span className="font-medium text-right">{escolhidos[0].label}</span>
+              </div>
+            )}
+          </div>
+          <p className="mt-6 text-brand-ink/70">Se estiver errado, ajusta antes de seguir. Se estiver certo, eu consigo te dizer com precisão o que atacar primeiro.</p>
+          <button
+            onClick={() => setTela('video')}
+            className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
+          >
+            Está certo, pode seguir
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  if (tela === 'video') {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 py-16">
+        <div className="w-full max-w-md text-center">
+          <h2 className="text-xl font-semibold leading-tight text-brand-navy-ink">Para tudo. Isso aqui vale os seus próximos 40 segundos.</h2>
+          <div className="mx-auto mt-6 flex aspect-[9/16] max-w-64 items-center justify-center rounded-2xl bg-brand-navy-ink px-6 text-white">
+            <p className="text-sm text-white/80">Vídeo em preparação — pendente do link final.</p>
+          </div>
+          <button
+            onClick={() => setTela('dinheiro')}
+            className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
+          >
+            Entendi, continuar
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  if (tela === 'dinheiro') {
+    const opts = valAplicado(TELA_DINHEIRO.opts, respostasPerfil)
+    return (
+      <main className="flex min-h-screen justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">{TELA_DINHEIRO.title}</h1>
+          {TELA_DINHEIRO.hint && <p className="mt-2 text-sm text-brand-ink/60">{valAplicado(TELA_DINHEIRO.hint, respostasPerfil)}</p>}
+          <div className="mt-6 flex flex-col gap-2.5">
+            {opts.map(([valor, texto, sub]: Opcao) => (
+              <button
+                key={valor}
+                onClick={() => responderDinheiro(valor)}
+                className="rounded-lg border border-brand-line bg-white px-4 py-3 text-left text-brand-ink transition-colors hover:border-brand-navy"
+              >
+                <span>{texto}</span>
+                {sub && <span className="mt-0.5 block text-sm text-brand-ink/60">{sub}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (tela === 'conta') {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">O que a espera custa.</h1>
+          <p className="mt-4 text-brand-ink/70">
+            Cada ano que você adia o começo custa uma diferença real entre o que você ganha hoje e o salário do cargo que você mira.
+          </p>
+          <p className="mt-4 text-brand-ink/70">
+            Agora eu preciso ver a sua base na prática. Vêm 4 questões reais de FGV e FCC: Português, Constitucional, Processo Civil e Raciocínio Lógico. Pode errar à vontade — elas servem pra medir o seu nível de partida, e o resultado entra no seu diagnóstico.
+          </p>
+          <button
+            onClick={() => setTela('quiz')}
+            className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
+          >
+            Quero encurtar esse caminho
+          </button>
+        </div>
+      </main>
+    )
+  }
+
   if (tela === 'quiz') {
     const questao = QUESTIONS[atual]
     const progresso = Math.round((atual / TOTAL) * 100)
@@ -320,7 +637,68 @@ export default function Quiz() {
     )
   }
 
+  if (tela === 'correcao') {
+    const acertos = Object.entries(respostasTeste).filter(([num, letra]) => {
+      const q = QUESTIONS.find((qq) => qq.num === Number(num))
+      return q && q.correct === letra
+    }).length
+    return (
+      <main className="flex min-h-screen justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          <p className="text-sm text-brand-navy">Corrigido na hora</p>
+          <h1 className="mt-2 text-2xl font-semibold leading-tight text-brand-navy-ink">Você acertou {acertos} de {QUESTIONS.length}.</h1>
+          <div className="mt-6 flex flex-col gap-2.5">
+            {QUESTIONS.map((q) => {
+              const ok = respostasTeste[q.num] === q.correct
+              return (
+                <div key={q.num} className={`rounded-lg border px-4 py-3 ${ok ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                  <p className="text-sm font-medium text-brand-navy-ink">{q.area} · gabarito {q.correct}</p>
+                  <p className="mt-1 text-sm text-brand-ink/70">{q.comment.join(' ')}</p>
+                </div>
+              )
+            })}
+          </div>
+          <button
+            onClick={() => setTela('leitura')}
+            className="mt-8 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
+          >
+            Fechar meu raio-X
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  if (tela === 'leitura') {
+    const opts = valAplicado(TELA_LEITURA.opts, respostasPerfil)
+    return (
+      <main className="flex min-h-screen justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">{TELA_LEITURA.title}</h1>
+          <div className="mt-6 flex flex-col gap-2.5">
+            {opts.map(([valor, texto]: Opcao) => (
+              <button
+                key={valor}
+                onClick={() => responderLeitura(valor)}
+                className="rounded-lg border border-brand-line bg-white px-4 py-3 text-left text-brand-ink transition-colors hover:border-brand-navy"
+              >
+                {texto}
+              </button>
+            ))}
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  // resultado
   const areaPrioritaria = resultado?.area_prioritaria
+  const diagnostico = respostasPerfil.momento ? DIAG[respostasPerfil.momento] : undefined
+  const perfilCalculado = resultado ? calcularPerfil(respostasPerfil, resultado.acertos) : null
+  const nivel = resultado ? nivelTeste(resultado.acertos) : ''
+  const link = resultado
+    ? waLink(nome || estado?.nome || '', respostasPerfil, perfilCalculado?.classe ?? 'B', perfilCalculado?.cursoCod ?? 'C2-TJTRF', nivel, resultado.acertos, resultado.total)
+    : '#'
 
   return (
     <main className="flex min-h-screen justify-center px-6 py-16">
@@ -332,6 +710,25 @@ export default function Quiz() {
             <p className="mt-1 text-brand-ink/70">
               {resultado.acertos} de {resultado.total} respostas corretas
             </p>
+
+            {diagnostico && (
+              <div className="mt-8">
+                <p className="font-medium text-brand-navy-ink">{diagnostico.titulo}</p>
+                {diagnostico.texto.map((t, i) => (
+                  <p key={i} className="mt-2 text-brand-ink/70">{t}</p>
+                ))}
+                <p className="mt-3 rounded-lg bg-brand-lilac/15 px-4 py-3 text-sm text-brand-navy-ink">
+                  Começa por aqui: {diagnostico.prescricao}
+                </p>
+                {respostasPerfil.leitura === 'completa' && (
+                  <ol className="mt-4 list-decimal pl-5 text-sm text-brand-ink/70">
+                    {diagnostico.ordem.map((item, i) => (
+                      <li key={i} className="mt-1">{item}</li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            )}
 
             <div className="mt-10 flex flex-col gap-4">
               {Object.entries(resultado.areas).map(([area, dados]) => (
@@ -352,11 +749,15 @@ export default function Quiz() {
               ))}
             </div>
 
-            {areaPrioritaria && (
-              <p className="mt-8 rounded-lg bg-brand-lilac/15 px-4 py-3 text-sm text-brand-navy-ink">
-                Foco sugerido: <span className="font-medium">{areaPrioritaria}</span>
-              </p>
-            )}
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener"
+              className="mt-8 block w-full rounded-lg bg-brand-navy px-6 py-3 text-center font-medium text-white transition-colors hover:bg-brand-navy-ink"
+            >
+              Falar com o time no WhatsApp
+            </a>
+            <p className="mt-2 text-center text-xs text-brand-ink/50">Abre o WhatsApp com a sua mensagem já escrita.</p>
           </>
         )}
       </div>

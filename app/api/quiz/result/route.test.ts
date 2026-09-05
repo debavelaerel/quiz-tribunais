@@ -49,10 +49,12 @@ describe('GET /api/quiz/result', () => {
       headers: { 'x-forwarded-for': ip() },
     }))
     const answer = criarHandlerAnswer(repo)
-    for (const num of [1, 2, 3]) {
+    // Gabarito real das 4 perguntas (lib/questions.ts): C, C, B, A.
+    const RESPOSTAS_CORRETAS: Record<number, string> = { 1: 'C', 2: 'C', 3: 'B', 4: 'A' }
+    for (const num of [1, 2, 3, 4]) {
       await answer(new Request('http://localhost/api/quiz/answer', {
         method: 'POST',
-        body: JSON.stringify({ session_token: TOKEN, num, escolhida: 'B' }),
+        body: JSON.stringify({ session_token: TOKEN, num, escolhida: RESPOSTAS_CORRETAS[num] }),
         headers: { 'x-forwarded-for': ip() },
       }))
     }

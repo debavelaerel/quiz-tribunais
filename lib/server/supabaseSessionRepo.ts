@@ -18,6 +18,8 @@ type LinhaBanco = {
   acertos: number | null
   total: number | null
   area_prioritaria: string | null
+  perfil: QuizSession['perfil']
+  perfil_calculado: QuizSession['perfilCalculado']
   started_at: string
   updated_at: string
   completed_at: string | null
@@ -40,6 +42,8 @@ function paraSessao(linha: LinhaBanco): QuizSession {
     acertos: linha.acertos,
     total: linha.total,
     areaPrioritaria: linha.area_prioritaria,
+    perfil: linha.perfil,
+    perfilCalculado: linha.perfil_calculado,
     startedAt: linha.started_at,
     updatedAt: linha.updated_at,
     completedAt: linha.completed_at,
@@ -62,6 +66,8 @@ function paraLinhaPatch(patch: Partial<QuizSession>): Record<string, unknown> {
   if (patch.acertos !== undefined) linha.acertos = patch.acertos
   if (patch.total !== undefined) linha.total = patch.total
   if (patch.areaPrioritaria !== undefined) linha.area_prioritaria = patch.areaPrioritaria
+  if (patch.perfil !== undefined) linha.perfil = patch.perfil
+  if (patch.perfilCalculado !== undefined) linha.perfil_calculado = patch.perfilCalculado
   if (patch.startedAt !== undefined) linha.started_at = patch.startedAt
   if (patch.completedAt !== undefined) linha.completed_at = patch.completedAt
   return linha
