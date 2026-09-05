@@ -72,17 +72,17 @@ function responderPerfilCompleto() {
 // Da capa até a primeira pergunta graduada ("Questão 1 de 4").
 async function chegarAoQuiz() {
   iniciarDaCapa()
-  await waitFor(() => expect(screen.getByText('Quero descobrir meu momento')).toBeInTheDocument())
-  fireEvent.click(screen.getByText('Quero descobrir meu momento'))
+  await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
+  fireEvent.click(screen.getByText(/Quero descobrir meu momento/))
   responderPerfilCompleto()
-  await waitFor(() => expect(screen.getByText('Está certo, pode seguir')).toBeInTheDocument())
-  fireEvent.click(screen.getByText('Está certo, pode seguir'))
-  await waitFor(() => expect(screen.getByText('Entendi, continuar')).toBeInTheDocument())
-  fireEvent.click(screen.getByText('Entendi, continuar'))
+  await waitFor(() => expect(screen.getByText(/Está certo, pode seguir/)).toBeInTheDocument())
+  fireEvent.click(screen.getByText(/Está certo, pode seguir/))
+  await waitFor(() => expect(screen.getByText(/Entendi, continuar/)).toBeInTheDocument())
+  fireEvent.click(screen.getByText(/Entendi, continuar/))
   await waitFor(() => expect(screen.getAllByRole('button').length).toBeGreaterThan(0))
   fireEvent.click(screen.getAllByRole('button')[0]) // tela "dinheiro"
-  await waitFor(() => expect(screen.getByText('Quero encurtar esse caminho')).toBeInTheDocument())
-  fireEvent.click(screen.getByText('Quero encurtar esse caminho'))
+  await waitFor(() => expect(screen.getByText(/Quero encurtar esse caminho/)).toBeInTheDocument())
+  fireEvent.click(screen.getByText(/Quero encurtar esse caminho/))
   await waitFor(() => expect(screen.getByText(/Questão 1 de 4/)).toBeInTheDocument())
 }
 
@@ -96,10 +96,10 @@ async function chegarAoResultado() {
     await waitFor(() => {})
   }
   await waitFor(() => expect(screen.getByText(/Você acertou/)).toBeInTheDocument())
-  fireEvent.click(screen.getByText('Fechar meu raio-X'))
+  fireEvent.click(screen.getByText(/Fechar meu raio-X/))
   await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
   fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
-  await waitFor(() => expect(screen.getByText('Diagnóstico concluído')).toBeInTheDocument())
+  await waitFor(() => expect(screen.getByText(/o que eu enxerguei no seu caso/)).toBeInTheDocument())
 }
 
 describe('Quiz', () => {
@@ -111,13 +111,13 @@ describe('Quiz', () => {
   it('avança pra tela de intro depois de preencher o formulário e iniciar', async () => {
     render(<Quiz />)
     iniciarDaCapa()
-    await waitFor(() => expect(screen.getByText('Quero descobrir meu momento')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
   })
 
   it('gera um session_token novo no início manual, sem reaproveitar o do cache', async () => {
     render(<Quiz />)
     iniciarDaCapa()
-    await waitFor(() => expect(screen.getByText('Quero descobrir meu momento')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
 
     const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
     const corpo = JSON.parse((chamada![1] as RequestInit).body as string)
@@ -157,10 +157,11 @@ describe('Quiz', () => {
   it('percorre a correção e a tela de resultado, com CTA de WhatsApp', async () => {
     render(<Quiz />)
     await chegarAoResultado()
-    expect(screen.getAllByText('100%').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/4 de 4 respostas corretas/)).toBeInTheDocument()
+    expect(screen.getByText(/o que eu enxerguei no seu caso/)).toBeInTheDocument()
+    expect(screen.getByText(/Nível no teste/)).toBeInTheDocument()
+    expect(screen.getByText(/intermediário|avançado|inicial/)).toBeInTheDocument()
     const cta = screen.getByText('Falar com o time no WhatsApp')
-    expect(cta.closest('a')).toHaveAttribute('href', expect.stringContaining('https://wa.me/'))
+    expect(cta).toHaveAttribute('href', expect.stringContaining('https://wa.me/'))
   })
 
   it('reexibe o resultado ao recarregar uma sessão já concluída', async () => {
@@ -168,9 +169,8 @@ describe('Quiz', () => {
     respostas.result = () => new Response(JSON.stringify(RESULTADO), { status: 200 })
 
     render(<Quiz />)
-    await waitFor(() => expect(screen.getByText('Diagnóstico concluído')).toBeInTheDocument())
-    expect(screen.getAllByText('100%').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/4 de 4 respostas corretas/)).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText(/Maria, o que eu enxerguei no seu caso/)).toBeInTheDocument())
+    expect(screen.getByText('Falar com o time no WhatsApp')).toBeInTheDocument()
     expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/start'))).toBe(false)
   })
 
@@ -182,7 +182,7 @@ describe('Quiz', () => {
     )
 
     render(<Quiz />)
-    await waitFor(() => expect(screen.getByText('Quero descobrir meu momento')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
 
     const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
     const corpo = JSON.parse((chamada![1] as RequestInit).body as string)

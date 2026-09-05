@@ -10,13 +10,19 @@ import {
   TELA_LEITURA,
   DIAG,
   L,
+  MENSAGENS_CORRECAO,
   labelCargo,
   editaisEscolhidos,
+  fraseEdital,
+  fraseRetaFinal,
+  fraseExtraCargo,
+  fraseVde,
   waLink,
   type TelaPerfil,
   type Opcao,
+  type FraseComNegrito,
 } from '@/lib/quizContent'
-import { calcularPerfil, nivelTeste, type RespostasPerfil } from '@/lib/perfil'
+import { calcularPerfil, calcularConta, nivelTeste, type RespostasPerfil } from '@/lib/perfil'
 
 type Tela =
   | 'capa' | 'restaurando'
@@ -387,19 +393,19 @@ export default function Quiz() {
             O segundo semestre de 2026 e o ano de 2027 vão ser dos concursos de tribunais.
           </h1>
           <p className="mt-4 text-brand-ink/70">
-            TRT8 já com banca definida. TRF3, TRT4, TJ AM, TJ GO e a DPU na fila — a maior sequência de editais de tribunal dos últimos anos.
+            TRT8 já com banca definida. TRF3, TRT4, TJ AM, TJ GO e a DPU na fila. <b>É a maior sequência de editais de tribunal dos últimos anos.</b>
           </p>
           <p className="mt-4 text-brand-ink/70">
-            Quem chega despreparado não perde só uma prova: perde o ciclo inteiro, porque o próximo edital do mesmo tribunal demora anos.
+            Não dá pra desperdiçar essas oportunidades. Quem chega despreparado não perde só uma prova: perde o ciclo inteiro, porque o próximo edital do mesmo tribunal demora anos.
           </p>
           <p className="mt-4 text-brand-ink/70">
-            Este diagnóstico revela em que momento da preparação você está, em menos de 3 minutos.
+            E o que separa quem aproveita essa janela de quem assiste ela passar é saber em que momento da preparação está. <b>Este diagnóstico revela o seu em menos de 3 minutos.</b>
           </p>
           <button
             onClick={() => setTela('perfil')}
             className="mt-8 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
           >
-            Quero descobrir meu momento
+            Quero descobrir meu momento →
           </button>
         </div>
       </main>
@@ -463,26 +469,40 @@ export default function Quiz() {
   }
 
   if (tela === 'desqualificado') {
-    let mensagem: string
+    let paragrafos: string[]
     if (motivoDesqualificacao === 'outro') {
-      mensagem = 'Pelo que você me contou, o seu foco hoje não é um concurso de tribunal. O VDE Tribunais foi feito sob medida pra TJ, TRF, TRT e os órgãos das funções essenciais — prefiro te dizer isso agora e você chegar no seu concurso pelo caminho certo.'
+      paragrafos = [
+        'Pelo que você me contou, o seu foco hoje não é um concurso de tribunal. E o VDE Tribunais foi feito sob medida pra tribunal: TJ, TRF, TRT e os órgãos das funções essenciais.',
+        'Prefiro te dizer isso agora e você chegar no seu concurso pelo caminho certo.',
+      ]
     } else if (motivoDesqualificacao === 'juridica') {
-      mensagem = 'Juiz, promotor, defensor e procurador são carreiras jurídicas, com uma preparação diferente: mais profundidade, mais fases. O VDE Tribunais foi feito pra servidor de tribunal, então não é o curso certo pro seu objetivo agora.'
+      paragrafos = [
+        'Juiz, promotor, defensor e procurador são carreiras jurídicas, e a preparação é outra: mais profundidade, mais fases, outro tipo de prova. O VDE Tribunais foi feito pra servidor de tribunal, então não é o curso certo pro seu objetivo.',
+        'Pra carreiras jurídicas o VDE tem outra formação de base, o VDE Carreiras Jurídicas. Se fizer sentido, me chama no Instagram que eu te aponto o caminho.',
+      ]
     } else {
-      mensagem = 'O VDE Tribunais é calibrado pro nível de analista e oficial de justiça, então aprofunda as matérias jurídicas mais do que a prova que você mira pede. Se em algum momento seu alvo virar analista, esse diagnóstico continua aqui.'
+      const alvoTxt = respostasPerfil.cargo === 'escrevente' ? 'escrevente' : 'técnico de nível médio'
+      paragrafos = [
+        `O VDE Tribunais é calibrado pro nível de analista e oficial de justiça, então ele aprofunda as matérias jurídicas mais do que a prova de ${alvoTxt} pede.`,
+        'Prefiro te dizer isso agora. Se em algum momento o seu alvo virar analista, o raio-X continua aqui.',
+      ]
     }
     return (
       <main className="flex min-h-screen items-center justify-center px-6 py-16">
         <div className="w-full max-w-md text-center">
-          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">O seu caso pede outro caminho.</h1>
-          <p className="mt-4 text-brand-ink/70">{mensagem}</p>
+          <p className="text-sm font-medium text-brand-navy">Obrigada por responder</p>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight text-brand-navy-ink">Vou ser sincera com você: o seu caso pede outro caminho.</h2>
+          {paragrafos.map((p, i) => (
+            <p key={i} className="mt-4 text-brand-ink/70">{p}</p>
+          ))}
+          <p className="mt-4 text-brand-ink/70">Me acompanha no Instagram, que lá eu falo de concursos todo dia, de graça.</p>
           <a
             href={CONFIG.instagram}
             target="_blank"
             rel="noopener"
-            className="mt-8 inline-block font-medium text-brand-navy underline"
+            className="mt-4 inline-block font-medium text-brand-navy underline"
           >
-            @vdeconcursos
+            @vdeconcursos →
           </a>
         </div>
       </main>
@@ -493,10 +513,12 @@ export default function Quiz() {
     const cargo = labelCargo(respostasPerfil)
     const alvoLongo = respostasPerfil.alvo ? L.alvoLongo[respostasPerfil.alvo] : ''
     const escolhidos = editaisEscolhidos(respostasPerfil)
+    const edFrase = escolhidos[0] ? `O ${escolhidos[0].label} já está na fila (${escolhidos[0].sub}), então o seu tempo tem dono. ` : ''
     return (
       <main className="flex min-h-screen items-center justify-center px-6 py-16">
         <div className="w-full max-w-md">
-          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">Anotei tudo. A sua ficha ficou assim:</h1>
+          <p className="text-sm font-medium text-brand-navy">Ficha fechada</p>
+          <h1 className="mt-2 text-2xl font-semibold leading-tight text-brand-navy-ink">Anotei tudo. A sua ficha ficou assim:</h1>
           <div className="mt-6 flex flex-col gap-2">
             <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
               <span className="text-brand-ink/60">Seu alvo</span>
@@ -510,6 +532,10 @@ export default function Quiz() {
               <span className="text-brand-ink/60">Momento</span>
               <span className="font-medium text-right">{respostasPerfil.momento ? L.momento[respostasPerfil.momento] : ''}</span>
             </div>
+            <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+              <span className="text-brand-ink/60">Tempo disponível</span>
+              <span className="font-medium text-right">{respostasPerfil.horas ? L.horas[respostasPerfil.horas] : ''}</span>
+            </div>
             {escolhidos[0] && (
               <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
                 <span className="text-brand-ink/60">Prova na mira</span>
@@ -517,7 +543,7 @@ export default function Quiz() {
               </div>
             )}
           </div>
-          <p className="mt-6 text-brand-ink/70">Se estiver errado, ajusta antes de seguir. Se estiver certo, eu consigo te dizer com precisão o que atacar primeiro.</p>
+          <p className="mt-6 text-brand-ink/70">{edFrase}Se estiver errado, volta e corrige. Se estiver certo, eu consigo te dizer com precisão o que atacar primeiro.</p>
           <button
             onClick={() => setTela('video')}
             className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
@@ -534,14 +560,15 @@ export default function Quiz() {
       <main className="flex min-h-screen items-center justify-center px-6 py-16">
         <div className="w-full max-w-md text-center">
           <h2 className="text-xl font-semibold leading-tight text-brand-navy-ink">Para tudo. Isso aqui vale os seus próximos 40 segundos.</h2>
-          <div className="mx-auto mt-6 flex aspect-[9/16] max-w-64 items-center justify-center rounded-2xl bg-brand-navy-ink px-6 text-white">
-            <p className="text-sm text-white/80">Vídeo em preparação — pendente do link final.</p>
+          <div className="mx-auto mt-6 flex aspect-[9/16] max-w-64 flex-col items-center justify-center gap-2 rounded-2xl bg-brand-navy-ink px-6 text-center text-white">
+            <b>Vídeo da Ana Clara</b>
+            <p className="text-sm text-white/80">Roteiro em roteiro-video.md. Troque CONFIG.videoSrc pelo link do arquivo.</p>
           </div>
           <button
             onClick={() => setTela('dinheiro')}
             className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
           >
-            Entendi, continuar
+            Entendi, continuar →
           </button>
         </div>
       </main>
@@ -573,21 +600,23 @@ export default function Quiz() {
   }
 
   if (tela === 'conta') {
+    const conta = calcularConta(respostasPerfil)
     return (
       <main className="flex min-h-screen items-center justify-center px-6 py-16">
         <div className="w-full max-w-md">
-          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">O que a espera custa.</h1>
+          <h1 className="text-2xl font-semibold leading-tight text-brand-navy-ink">{conta.titulo}</h1>
+          <p className="mt-4 text-brand-ink/70">{conta.paragrafo}</p>
           <p className="mt-4 text-brand-ink/70">
-            Cada ano que você adia o começo custa uma diferença real entre o que você ganha hoje e o salário do cargo que você mira.
+            Escrevi isso porque essa conta só para de correr quando a preparação deixa de ser improviso e vira base.
           </p>
           <p className="mt-4 text-brand-ink/70">
-            Agora eu preciso ver a sua base na prática. Vêm 4 questões reais de FGV e FCC: Português, Constitucional, Processo Civil e Raciocínio Lógico. Pode errar à vontade — elas servem pra medir o seu nível de partida, e o resultado entra no seu diagnóstico.
+            <b>Agora eu preciso ver a sua base na prática.</b> Vêm 4 questões reais de FGV e FCC: Português, Constitucional, Processo Civil e Raciocínio Lógico. Pode errar à vontade: elas servem pra medir o seu nível de partida, e o resultado entra no seu diagnóstico.
           </p>
           <button
             onClick={() => setTela('quiz')}
             className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
           >
-            Quero encurtar esse caminho
+            Quero encurtar esse caminho →
           </button>
         </div>
       </main>
@@ -645,24 +674,28 @@ export default function Quiz() {
     return (
       <main className="flex min-h-screen justify-center px-6 py-16">
         <div className="w-full max-w-md">
-          <p className="text-sm text-brand-navy">Corrigido na hora</p>
+          <p className="text-sm font-medium text-brand-navy">Corrigido na hora</p>
           <h1 className="mt-2 text-2xl font-semibold leading-tight text-brand-navy-ink">Você acertou {acertos} de {QUESTIONS.length}.</h1>
+          <p className="mt-3 text-brand-ink/70">{MENSAGENS_CORRECAO[acertos]}</p>
           <div className="mt-6 flex flex-col gap-2.5">
             {QUESTIONS.map((q) => {
               const ok = respostasTeste[q.num] === q.correct
               return (
                 <div key={q.num} className={`rounded-lg border px-4 py-3 ${ok ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                  <p className="text-sm font-medium text-brand-navy-ink">{q.area} · gabarito {q.correct}</p>
+                  <p className="text-sm font-medium text-brand-navy-ink">{ok ? '✓' : '✗'} {q.area} · gabarito {q.correct}</p>
                   <p className="mt-1 text-sm text-brand-ink/70">{q.comment.join(' ')}</p>
                 </div>
               )
             })}
           </div>
+          <p className="mt-6 text-brand-ink/70">
+            Sozinho, esse número vale pouco. Cruzado com o seu tempo de estudo, o seu ritmo e o seu histórico de provas, ele fecha a leitura.
+          </p>
           <button
             onClick={() => setTela('leitura')}
-            className="mt-8 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
+            className="mt-6 w-full rounded-lg bg-brand-navy px-6 py-3 font-medium text-white transition-colors hover:bg-brand-navy-ink"
           >
-            Fechar meu raio-X
+            Fechar meu raio-X →
           </button>
         </div>
       </main>
@@ -692,72 +725,106 @@ export default function Quiz() {
   }
 
   // resultado
-  const areaPrioritaria = resultado?.area_prioritaria
   const diagnostico = respostasPerfil.momento ? DIAG[respostasPerfil.momento] : undefined
   const perfilCalculado = resultado ? calcularPerfil(respostasPerfil, resultado.acertos) : null
   const nivel = resultado ? nivelTeste(resultado.acertos) : ''
+  const primeiroNome = (nome || estado?.nome || '').split(' ')[0]
+  const cargo = labelCargo(respostasPerfil)
+  const alvoLabel = respostasPerfil.alvo ? L.alvo[respostasPerfil.alvo] : ''
+  const alvoLongo = respostasPerfil.alvo ? L.alvoLongo[respostasPerfil.alvo] : ''
   const link = resultado
     ? waLink(nome || estado?.nome || '', respostasPerfil, perfilCalculado?.classe ?? 'B', perfilCalculado?.cursoCod ?? 'C2-TJTRF', nivel, resultado.acertos, resultado.total)
     : '#'
 
+  const frases: (FraseComNegrito | null)[] = [
+    fraseEdital(respostasPerfil),
+    fraseRetaFinal(respostasPerfil),
+    fraseExtraCargo(respostasPerfil),
+    fraseVde(respostasPerfil),
+  ]
+
   return (
     <main className="flex min-h-screen justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <p className="text-sm text-brand-ink/60">Diagnóstico concluído</p>
+        <p className="text-sm font-medium text-brand-navy">Raio-X da Base</p>
+        <h2 className="mt-2 text-2xl font-semibold leading-tight text-brand-navy-ink">
+          {primeiroNome ? `${primeiroNome}, o` : 'O'} que eu enxerguei no seu caso.
+        </h2>
+
         {resultado && (
           <>
-            <p className="mt-2 text-6xl font-semibold text-brand-navy-ink">{resultado.score_geral_pct}%</p>
-            <p className="mt-1 text-brand-ink/70">
-              {resultado.acertos} de {resultado.total} respostas corretas
-            </p>
+            <div className="mt-6 flex flex-col gap-2">
+              <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+                <span className="text-brand-ink/60">Onde você está</span>
+                <span className="font-medium text-right">{respostasPerfil.momento ? L.momento[respostasPerfil.momento] : ''}</span>
+              </div>
+              <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+                <span className="text-brand-ink/60">Alvo</span>
+                <span className="font-medium text-right">{cargo} · {alvoLabel}</span>
+              </div>
+              <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+                <span className="text-brand-ink/60">Curso indicado</span>
+                <span className="font-medium text-right">{perfilCalculado?.curso}</span>
+              </div>
+              <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+                <span className="text-brand-ink/60">Nível no teste</span>
+                <span className="font-medium text-right">{nivel} · {resultado.acertos} de {resultado.total}</span>
+              </div>
+              <div className="flex justify-between rounded-lg border border-brand-line bg-white px-4 py-3 text-sm">
+                <span className="text-brand-ink/60">Ritmo</span>
+                <span className="font-medium text-right">{perfilCalculado?.ritmo}</span>
+              </div>
+            </div>
 
+            <h3 className="mt-8 font-semibold text-brand-navy">O que eu li do seu caso</h3>
             {diagnostico && (
-              <div className="mt-8">
-                <p className="font-medium text-brand-navy-ink">{diagnostico.titulo}</p>
+              <>
+                <p className="mt-2"><b className="text-brand-navy-ink">{diagnostico.titulo}</b></p>
                 {diagnostico.texto.map((t, i) => (
                   <p key={i} className="mt-2 text-brand-ink/70">{t}</p>
                 ))}
-                <p className="mt-3 rounded-lg bg-brand-lilac/15 px-4 py-3 text-sm text-brand-navy-ink">
-                  Começa por aqui: {diagnostico.prescricao}
-                </p>
+                <div className="mt-3 rounded-lg border-l-4 border-l-brand-navy bg-white px-4 py-3">
+                  <p><b>Começa por aqui:</b> {diagnostico.prescricao}</p>
+                </div>
                 {respostasPerfil.leitura === 'completa' && (
-                  <ol className="mt-4 list-decimal pl-5 text-sm text-brand-ink/70">
-                    {diagnostico.ordem.map((item, i) => (
-                      <li key={i} className="mt-1">{item}</li>
-                    ))}
-                  </ol>
+                  <>
+                    <h3 className="mt-6 font-semibold text-brand-navy">A ordem que eu seguiria</h3>
+                    <ol className="mt-2 list-decimal pl-5 text-brand-ink/70">
+                      {diagnostico.ordem.map((item, i) => (
+                        <li key={i} className="mt-1">{item}</li>
+                      ))}
+                    </ol>
+                  </>
                 )}
-              </div>
+              </>
             )}
 
-            <div className="mt-10 flex flex-col gap-4">
-              {Object.entries(resultado.areas).map(([area, dados]) => (
-                <div key={area}>
-                  <div className="flex items-baseline justify-between text-sm">
-                    <span className={area === areaPrioritaria ? 'font-medium text-brand-navy-ink' : 'text-brand-ink/80'}>
-                      {area}
-                    </span>
-                    <span className="text-brand-ink/60">{dados.pct}%</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 w-full rounded-full bg-brand-lilac/25">
-                    <div
-                      className={`h-1.5 rounded-full ${area === areaPrioritaria ? 'bg-brand-lilac' : 'bg-brand-navy'}`}
-                      style={{ width: `${dados.pct}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            {frases.map((f, i) => f && (
+              <p key={i} className="mt-4 text-brand-ink/70">
+                {f.negrito && <b className="text-brand-navy-ink">{f.negrito} </b>}
+                {f.texto}
+              </p>
+            ))}
+
+            <h3 className="mt-8 inline-block rounded bg-brand-lilac/25 px-2 py-1 font-semibold text-brand-navy">Onde isso vira um plano</h3>
+            <p className="mt-4 text-brand-ink/70">
+              Este raio-X leu o seu caso por cima, com o que dá pra ler em doze perguntas e quatro questões.
+            </p>
+            <p className="mt-4 text-brand-ink/70">
+              O seu caso tem os requisitos pra ir mais fundo: uma <b>conversa de uns 20 minutos com um consultor do meu time</b>. É ele quem abre o seu caso em detalhe, cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação: o que priorizar agora, o que vem depois e o que pode esperar.
+            </p>
+            <p className="mt-4 text-brand-ink/70">Não custa nada. Só que a agenda é curta: cada consultor abre poucos horários por semana.</p>
+            <p className="mt-4 text-brand-ink/70">Clica aqui embaixo e vê o que sobrou pra esta semana.</p>
 
             <a
               href={link}
               target="_blank"
               rel="noopener"
-              className="mt-8 block w-full rounded-lg bg-brand-navy px-6 py-3 text-center font-medium text-white transition-colors hover:bg-brand-navy-ink"
+              className="mt-6 block w-full rounded-lg bg-brand-navy px-6 py-3 text-center font-medium text-white transition-colors hover:bg-brand-navy-ink"
             >
               Falar com o time no WhatsApp
             </a>
-            <p className="mt-2 text-center text-xs text-brand-ink/50">Abre o WhatsApp com a sua mensagem já escrita.</p>
+            <p className="mt-2 text-center text-xs text-brand-ink/50">Abre o WhatsApp com a sua mensagem já escrita. É só enviar.</p>
           </>
         )}
       </div>

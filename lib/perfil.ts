@@ -80,3 +80,29 @@ export function nivelTeste(acertos: number): string {
   const niveis: Record<number, string> = { 0: 'inicial', 1: 'inicial', 2: 'intermediário', 3: 'avançado', 4: 'avançado' }
   return niveis[acertos] ?? 'inicial'
 }
+
+const ANOS_POR_TEMPO: Record<string, number> = { t0: 0, t1: 0.5, t2: 0.75, t3: 1.5, t4: 3, t5: 5 }
+const ROTULO_POR_TEMPO: Record<string, string> = { t1: 'seis meses', t2: 'quase um ano', t3: 'um ano e meio', t4: 'três anos', t5: 'cinco anos' }
+
+export type Conta = { titulo: string; paragrafo: string }
+
+// Calculadora de custo da espera (tela "conta") — texto muda conforme o
+// tempo de estudo já investido (retrospectivo) ou não (prospectivo).
+export function calcularConta(r: RespostasPerfil): Conta {
+  const anual = Number(r.dinheiro || 120)
+  const anos = ANOS_POR_TEMPO[r.tempo ?? ''] ?? 0
+  const rotulo = ROTULO_POR_TEMPO[r.tempo ?? ''] ?? ''
+  const acumulado = Math.round(anual * anos)
+  const retro = anos > 0
+
+  if (retro) {
+    return {
+      titulo: 'O que a espera já te custou.',
+      paragrafo: `Você estuda há ${rotulo}. Nesse tempo, a diferença entre o que você ganha hoje e o salário do cargo que você mira soma perto de R$ ${acumulado} mil que já não entraram na sua conta.`,
+    }
+  }
+  return {
+    titulo: 'O que a espera custa.',
+    paragrafo: `Cada ano que você adia o começo custa cerca de R$ ${anual} mil, a diferença entre o que você ganha hoje e o salário do cargo que você mira.`,
+  }
+}

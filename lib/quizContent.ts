@@ -404,6 +404,51 @@ export function editaisEscolhidos(r: RespostasPerfil): Edital[] {
   return (r.editais ?? []).filter((x) => x !== 'qualquer').map((id) => lista.find((e) => e.id === id)).filter((e): e is Edital => Boolean(e))
 }
 
+// Frase da tela de correção, indexada pelo número de acertos (0 a 4).
+export const MENSAGENS_CORRECAO: string[] = [
+  'Nenhuma das quatro. E tudo bem: é exatamente esse tipo de questão que a sua base precisa dar conta.',
+  'Uma das quatro. O nível da banca já está claro, e ele é alcançável com base bem construída.',
+  'Duas das quatro. Você tem alicerce em pé, e ele ainda não sustenta a régua de um tribunal.',
+  'Três das quatro. Está perto do corte, e o corte só paga quem passa dele.',
+  'As quatro. Nível bom de partida, e a prova real cobra isso em 70 questões seguidas.',
+]
+
+export type FraseComNegrito = { negrito?: string; texto: string }
+
+export function fraseEdital(r: RespostasPerfil): FraseComNegrito | null {
+  const ed = editaisEscolhidos(r)[0]
+  if (!ed) return null
+  return {
+    negrito: `Sobre o ${ed.label}:`,
+    texto: `está com ${ed.sub}. Ele não vai esperar a base ficar pronta, então a ordem do que você estuda agora importa mais do que a quantidade.`,
+  }
+}
+
+export function fraseRetaFinal(r: RespostasPerfil): FraseComNegrito | null {
+  if (r.edital !== 'reta') return null
+  return {
+    negrito: 'Sobre a sua prova em menos de 3 meses:',
+    texto: 'o plano imediato é reta final, questões da banca e lei seca nas matérias de maior peso. A base a gente constrói pro edital seguinte, e ele vem: são 27 TJs, 6 TRFs e 24 TRTs abrindo em ciclo.',
+  }
+}
+
+export function fraseExtraCargo(r: RespostasPerfil): FraseComNegrito | null {
+  if (r.cargo === 'tecnico' && (r.formacao === 'direito' || r.formacao === 'outra') && r.alvo !== 'fe') {
+    return {
+      negrito: 'Um detalhe que muda o jogo:',
+      texto: 'com curso superior você já pode concorrer a analista, que paga quase o dobro do técnico e cai com o mesmo tronco de matérias. Vale levar isso pra conversa com o consultor.',
+    }
+  }
+  return null
+}
+
+export function fraseVde(r: RespostasPerfil): FraseComNegrito | null {
+  if (r.vde === 'exaluno' || r.vde === 'aluno') {
+    return { texto: 'Você já conhece o jeito VDE de estudar: PDF direto ao ponto, lei e questão. O VDE Tribunais é isso aplicado aos concursos de tribunal, com o cronograma calculado pelo número de temas.' }
+  }
+  return null
+}
+
 export function waLink(nome: string, r: RespostasPerfil, classe: string, cursoCod: string, nivel: string, acertos: number, total: number): string {
   const cargo = labelCargo(r)
   const ref = `VDE-TRIB ${classe} | ${cursoCod} | ${r.momento} | ${r.dor} | ${L.horas[r.horas ?? '']} | edital:${r.edital} | teste ${acertos}/${total} | vde:${r.vde}`
