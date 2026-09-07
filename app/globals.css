@@ -1,23 +1,38 @@
 @import "tailwindcss";
 
 /*
- * Paleta: navy (#203C7C) e lilás (#B7ADFD) são os hex confirmados do guia
- * oficial da marca. Dourado, roxo profundo e as 4 cores secundárias ainda
- * não têm hex confirmado (ver spec) — os tokens abaixo usam só derivações
- * seguras do navy/lilás enquanto isso, pra trocar sem reestruturar nada.
+ * Paleta oficial "vde-tribunais" (variante clara). Hex extraídos do funil de
+ * referência "Raio-X da Base" (docs/superpowers/specs) — a fonte de verdade
+ * do design system agora que dourado/roxo profundo/secundárias, antes
+ * pendentes, chegaram resolvidos nesse arquivo. Todo o projeto (Header,
+ * OptionButton, Button, Quiz) consome só esses tokens — nada de hex solto.
  */
 @theme {
-  --color-brand-navy: #203C7C;
-  --color-brand-navy-ink: #16234A;
-  --color-brand-lilac: #B7ADFD;
-  --color-brand-paper: #F6F5FB;
-  --color-brand-ink: #1C2333;
-  --color-brand-line: #E4E1F2;
+  --color-brand-bg: #f7f5f0;
+  --color-brand-card: #ffffff;
+  --color-brand-ink: #0b1a3f;
+  --color-brand-ink-soft: #4a5578;
+  --color-brand-ink-dim: #7c86a6;
+  --color-brand-line: #e2dff0;
+  --color-brand-line-strong: #c9c4e8;
+  --color-brand-lav: #c3bef9;
+  --color-brand-lav-soft: #f1effc;
+  --color-brand-purple: #5421a1;
+  --color-brand-navy: #01123a;
+  --color-brand-navy-2: #022053;
+  --color-brand-gold: #f9e08a;
+  --color-brand-gold-deep: #c89b18;
+  --color-brand-gold-text: #8a6a0c;
+  --color-brand-green: #2fb367;
+  --color-brand-red: #e03131;
+
   --font-brand: var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 body {
   font-family: var(--font-brand);
-  background: var(--color-brand-paper);
+  background: var(--color-brand-bg);
   color: var(--color-brand-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
