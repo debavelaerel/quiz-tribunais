@@ -46,6 +46,12 @@ beforeEach(() => {
   }))
 })
 
+// Clica no CTA da tela de abertura (hero) pra chegar na capa (formulário de
+// identificação) — a abertura é a primeira tela, igual ao funil de referência.
+function abrirCapa() {
+  fireEvent.click(screen.getByText(/Quero descobrir meu momento/))
+}
+
 // Preenche a capa e clica em "Iniciar diagnóstico".
 function iniciarDaCapa() {
   fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
@@ -69,11 +75,11 @@ function responderPerfilCompleto() {
   fireEvent.click(screen.getAllByRole('button')[0])
 }
 
-// Da capa até a primeira pergunta graduada ("Questão 1 de 4").
+// Da abertura até a primeira pergunta graduada ("Questão 1 de 4").
 async function chegarAoQuiz() {
+  abrirCapa()
   iniciarDaCapa()
-  await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
-  fireEvent.click(screen.getByText(/Quero descobrir meu momento/))
+  await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
   responderPerfilCompleto()
   await waitFor(() => expect(screen.getByText(/Está certo, pode seguir/)).toBeInTheDocument())
   fireEvent.click(screen.getByText(/Está certo, pode seguir/))
@@ -103,21 +109,30 @@ async function chegarAoResultado() {
 }
 
 describe('Quiz', () => {
-  it('mostra a tela de capa com o formulário de identificação', () => {
+  it('mostra a tela de abertura (hero), sem formulário, igual ao funil de referência', () => {
     render(<Quiz />)
+    expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Seu nome')).not.toBeInTheDocument()
+  })
+
+  it('mostra a capa com o formulário de identificação só depois do CTA da abertura', () => {
+    render(<Quiz />)
+    abrirCapa()
     expect(screen.getByPlaceholderText('Seu nome')).toBeInTheDocument()
   })
 
-  it('avança pra tela de intro depois de preencher o formulário e iniciar', async () => {
+  it('avança pro perfilamento depois de preencher o formulário e iniciar', async () => {
     render(<Quiz />)
+    abrirCapa()
     iniciarDaCapa()
-    await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
   })
 
   it('gera um session_token novo no início manual, sem reaproveitar o do cache', async () => {
     render(<Quiz />)
+    abrirCapa()
     iniciarDaCapa()
-    await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
 
     const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
     const corpo = JSON.parse((chamada![1] as RequestInit).body as string)

@@ -89,7 +89,7 @@ function AlertaErro({ mensagem }: { mensagem: string }) {
 }
 
 export default function Quiz() {
-  const [tela, setTela] = useState<Tela>('capa')
+  const [tela, setTela] = useState<Tela>('intro')
   const [atual, setAtual] = useState(0)
   const [estado, setEstado] = useState<EstadoQuiz | null>(null)
   const [nome, setNome] = useState('')
@@ -158,6 +158,7 @@ export default function Quiz() {
           setWhatsapp(salvo.whatsapp)
           setEmail(salvo.email)
           setErro('Não foi possível retomar seu diagnóstico. Confira seus dados e comece de novo.')
+          setTela('capa')
           return
         }
 
@@ -181,6 +182,7 @@ export default function Quiz() {
         setWhatsapp(salvo.whatsapp)
         setEmail(salvo.email)
         setErro('Não foi possível retomar seu diagnóstico. Verifique sua conexão.')
+        setTela('capa')
       } finally {
         // Em StrictMode o efeito roda duas vezes; a execução cancelada não pode
         // soltar a trava da execução que ainda está no ar.
@@ -224,7 +226,7 @@ export default function Quiz() {
       const novoEstado: EstadoQuiz = { sessionToken: token, nome, whatsapp, email }
       salvarEstado(novoEstado)
       setEstado(novoEstado)
-      setTela('intro')
+      setTela('perfil')
     } catch {
       setErro('Não foi possível iniciar. Verifique sua conexão.')
     } finally {
@@ -433,7 +435,9 @@ export default function Quiz() {
             <p className="mt-4 text-[17px] leading-relaxed text-brand-ink-soft">
               E o que separa quem aproveita essa janela de quem assiste ela passar é saber em que momento da preparação está. <b className="text-brand-ink">Este diagnóstico revela o seu em menos de 3 minutos.</b>
             </p>
-            <Button variant="gold" onClick={() => setTela('perfil')} className="mt-8">
+            {/* Sem sessão em cache: precisa se identificar antes do perfilamento.
+                Retomando (F5 no meio do funil): `estado` já existe, pula a capa. */}
+            <Button variant="gold" onClick={() => setTela(estado ? 'perfil' : 'capa')} className="mt-8">
               Quero descobrir meu momento <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
           </div>
