@@ -2,7 +2,7 @@
 
 <!-- meta
 source: código do projeto (não há Figma — o código é a fonte da verdade)
-paleta extraída de: funil de referência "Raio-X da Base" (docs/superpowers/specs)
+paleta: guia oficial "Guia Visual — VDE Tribunais" (TRIBUNAIS.pdf) + public/brand/*.svg
 last-reviewed: 2026-09-08
 -->
 
@@ -14,39 +14,44 @@ last-reviewed: 2026-09-08
 
 ## 1. Identity
 
-Design system em **Poppins** (única fonte carregada — sem par de fontes).
-Fundo bege quente (`#F7F5F0`), texto primário navy bem escuro (`#0B1A3F`),
-accent de narrativa dourado (`#F9E08A`/`#C89B18`), accent de seleção roxo
-(`#5421A1`), selo de sub-marca lilás (`#C3BEF9`). Linguagem de formas com 3
-raios (pill, 18px, 14px), sem sistema de sombra em cards — sombra é reservada
-pra elementos flutuantes/acionáveis (botões, o cartão de vídeo).
+Design system em **Poppins** (única fonte carregada — confirmada como fonte
+oficial da marca no guia; "Degular" também consta no guia pro texto, mas sem
+licença de uso confirmada, então fica de fora por ora).
+
+**Só 3 cores, de propósito** — decisão explícita do cliente depois de testar
+(e rejeitar) versões com roxo profundo, lilás como accent e múltiplos tons de
+navy: branco, azul da logo e dourado. Nada além disso é "cor" no sentido de
+marca; cinzas são neutro puro (hierarquia de texto/borda) e verde/vermelho são
+função (certo/errado na correção), nunca decoração. A única exceção é o
+próprio logotipo: a assinatura "Tribunais" vem com um selo lilás de fábrica
+(`public/brand/versao01-color0.svg`) — isso **não muda**, é regra do guia
+oficial nunca alterar as cores do logotipo.
+
+Formas com 3 raios (pill, 18px, 14px), sem sistema de sombra em cards — sombra
+é reservada pra elementos flutuantes/acionáveis (botões, o cartão de vídeo).
 
 ## 2. Color (canônico — `app/globals.css`)
 
 | Token | Hex | Uso |
 |---|---|---|
-| `brand-bg` | `#F7F5F0` | Fundo de toda tela |
-| `brand-card` | `#FFFFFF` | Cartões (opções, kv-rows, correção) |
-| `brand-ink` | `#0B1A3F` | Texto primário, títulos |
-| `brand-ink-soft` | `#4A5578` | Parágrafos de corpo |
-| `brand-ink-dim` | `#7C86A6` | Metadados, legendas, placeholders |
-| `brand-line` | `#E2DFF0` | Borda padrão de cartões/inputs |
-| `brand-line-strong` | `#C9C4E8` | Borda em hover, inputs |
-| `brand-lav` | `#C3BEF9` | Selo "Tribunais" no logo, chip sólido |
-| `brand-lav-soft` | `#F1EFFC` | Fundo de opção selecionada |
-| `brand-purple` | `#5421A1` | Estado selecionado (dot, borda), links |
-| `brand-navy` | `#01123A` | Fundo de botão neutro, texto sobre dourado |
-| `brand-navy-2` | `#022053` | Hover do botão neutro, gradiente do vídeo |
+| `brand-bg` | `#FFFFFF` | Fundo de toda tela |
+| `brand-card` | `#FFFFFF` | Cartões (opções, kv-rows, correção) — mesma cor do fundo, separados só por borda |
+| `brand-ink` | `#203C7C` | **O azul da logo.** Texto primário, títulos, estado selecionado, links |
+| `brand-ink-soft` | `#5B6478` | Parágrafos de corpo (cinza neutro, não é "cor") |
+| `brand-ink-dim` | `#7C86A6` | Metadados, legendas, placeholders (cinza neutro) |
+| `brand-line` | `#E7E7EA` | Borda padrão de cartões/inputs (cinza neutro) |
+| `brand-line-strong` | `#C9C9CE` | Borda em hover (cinza neutro) |
+| `brand-tint` | `#EEF1F8` | Tinta clara do próprio azul — fundo de opção selecionada, chip, hover do botão voltar |
+| `brand-navy` | `#203C7C` | Fundo de botão neutro (mesmo azul de `brand-ink`) |
+| `brand-navy-2` | `#16305F` | Hover do botão neutro / gradiente do cartão de vídeo — sombra do mesmo azul |
 | `brand-gold` | `#F9E08A` | Ponta clara do gradiente dourado |
 | `brand-gold-deep` | `#C89B18` | Ponta escura do gradiente dourado |
 | `brand-gold-text` | `#8A6A0C` | Texto do selo eyebrow (sobre `#FBF3D6`) |
-| `brand-green` | `#2FB367` | Badge de acerto na correção |
-| `brand-red` | `#E03131` | Badge de erro, alerta de erro |
+| `brand-green` | `#2FB367` | Badge de acerto na correção (função, não decoração) |
+| `brand-red` | `#E03131` | Badge de erro, alerta de erro (função, não decoração) |
 
-**Pendente de virar token** (achado na revisão de código — hoje hardcoded):
-`#ECE9F5` (trilho da barra de progresso, `ProgressBar.tsx`) e `#FBF3D6`
-(fundo do selo eyebrow, `Quiz.tsx`). Promover a `brand-track` e
-`brand-gold-chip` na próxima passada.
+**Pendente de virar token** (hoje hardcoded): `#ECE9F5` (trilho da barra de
+progresso, `ProgressBar.tsx`) e `#FBF3D6` (fundo do selo eyebrow, `Quiz.tsx`).
 
 ## 3. Typography (Poppins, pesos 400/500/600/700)
 
@@ -77,21 +82,25 @@ pra elementos flutuantes/acionáveis (botões, o cartão de vídeo).
 ## 5. Shadow (sem elevation numerada — só 3 papéis)
 
 - **botão dourado**: `0 10px 24px rgba(200,155,24,.28)`, hover `0 14px 28px rgba(200,155,24,.32)` + `-translate-y-0.5`.
-- **botão navy**: `0 10px 24px rgba(1,18,58,.18)`, hover `0 14px 28px rgba(1,18,58,.22)` + `-translate-y-0.5`.
-- **cartão flutuante** (vídeo): `0 10px 30px rgba(1,18,58,.25)`.
+- **botão navy**: `0 10px 24px rgba(32,60,124,.18)`, hover `0 14px 28px rgba(32,60,124,.22)` + `-translate-y-0.5`.
+- **cartão flutuante** (vídeo): `0 10px 30px rgba(32,60,124,.25)`.
 - **brilho de destaque** (só o CTA da abertura, uso único e deliberado):
   `0 0 0 1px rgba(255,255,255,.4) inset, 0 0 40px rgba(249,224,138,.6)` por cima da sombra de botão dourado.
 - **Cards não têm sombra** — só borda (`brand-line`). Sombra é exclusiva de
   elementos acionáveis/flutuantes; usar sombra num card estático quebra essa
   regra e não deve acontecer sem motivo forte.
+- Todas as sombras de UI usam o mesmo azul (`rgba(32,60,124,...)`) — nunca um
+  cinza puro (`rgba(0,0,0,...)`): sombra tingida da própria cor de marca lê
+  como escolhida, não padrão do navegador.
 
 ## 6. States
 
 - **Hover** (botões): `-translate-y-0.5` + sombra mais funda (ver seção 5).
   `OptionButton` não selecionado: borda vai de `brand-line` pra `brand-line-strong`.
-- **Selected** (`OptionButton`): borda `brand-purple`, fundo `brand-lav-soft`,
-  dot preenchido de `brand-purple`.
-- **Focus** (inputs): `focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/10`.
+- **Selected** (`OptionButton`): borda `brand-ink`, fundo `brand-tint`,
+  dot preenchido de `brand-ink`. (Antes disso já foram testadas e descartadas
+  versões com roxo/lilás — ver seção 7, Don't.)
+- **Focus** (inputs): `focus:border-brand-ink focus:ring-4 focus:ring-brand-ink/10`.
   **Gap conhecido**: `Button`/`OptionButton` não têm `focus-visible` customizado
   hoje (dependem do outline padrão do navegador) — corrigir antes de expor o
   quiz pra navegação por teclado como requisito.
@@ -109,8 +118,15 @@ pra elementos flutuantes/acionáveis (botões, o cartão de vídeo).
   não do código.
 - Texto visível ao usuário final é sempre copy de produto — nunca nome de
   arquivo, variável de config ou instrução de desenvolvedor (ver Don't).
+- Manter a paleta em 3 cores (branco, dourado, azul da logo) + neutro +
+  função. Antes de adicionar qualquer cor nova, checar se não dá pra resolver
+  com uma tinta/sombra do próprio azul ou dourado.
 
 **Don't:**
+- Não introduzir uma 4ª cor (a versão com roxo profundo + lilás como accent
+  foi testada e rejeitada explicitamente — "mistureba de cores"). Variações
+  de tinta do azul (`brand-tint`) ou do dourado não contam como cor nova;
+  roxo, lilás (fora do logo) ou qualquer hue novo, conta.
 - Não introduzir elementos de gamificação (corredor/bandeira, streak, badge de
   conquista) sem aprovação explícita — já testamos uma trilha com bandeira de
   chegada na barra de progresso e foi revertida por soar jovem/lúdica demais
@@ -119,6 +135,8 @@ pra elementos flutuantes/acionáveis (botões, o cartão de vídeo).
 - Não deixar texto de placeholder/instrução de dev em tela que o usuário
   final vê (aconteceu com a tela de vídeo — "Troque CONFIG.videoSrc..." foi
   parar em produção; virou comentário de código, não mais texto renderizado).
+- Não alterar as cores/proporções do logotipo — regra do guia oficial, vale
+  inclusive pro selo lilás da assinatura "Tribunais".
 - Não inventar um raio, sombra ou cor fora das seções 2, 4 e 5 sem atualizar
   este arquivo primeiro.
 
@@ -129,18 +147,16 @@ pra elementos flutuantes/acionáveis (botões, o cartão de vídeo).
   "$schema": "design-tokens.v1",
   "meta": { "source": "app/globals.css + components/*.tsx", "generated": "2026-09-08" },
   "color": {
-    "brand-bg": "#F7F5F0",
+    "brand-bg": "#FFFFFF",
     "brand-card": "#FFFFFF",
-    "brand-ink": "#0B1A3F",
-    "brand-ink-soft": "#4A5578",
+    "brand-ink": "#203C7C",
+    "brand-ink-soft": "#5B6478",
     "brand-ink-dim": "#7C86A6",
-    "brand-line": "#E2DFF0",
-    "brand-line-strong": "#C9C4E8",
-    "brand-lav": "#C3BEF9",
-    "brand-lav-soft": "#F1EFFC",
-    "brand-purple": "#5421A1",
-    "brand-navy": "#01123A",
-    "brand-navy-2": "#022053",
+    "brand-line": "#E7E7EA",
+    "brand-line-strong": "#C9C9CE",
+    "brand-tint": "#EEF1F8",
+    "brand-navy": "#203C7C",
+    "brand-navy-2": "#16305F",
     "brand-gold": "#F9E08A",
     "brand-gold-deep": "#C89B18",
     "brand-gold-text": "#8A6A0C",
@@ -161,9 +177,9 @@ pra elementos flutuantes/acionáveis (botões, o cartão de vídeo).
   "shadow": {
     "botao-dourado": "0 10px 24px rgba(200,155,24,0.28)",
     "botao-dourado-hover": "0 14px 28px rgba(200,155,24,0.32)",
-    "botao-navy": "0 10px 24px rgba(1,18,58,0.18)",
-    "botao-navy-hover": "0 14px 28px rgba(1,18,58,0.22)",
-    "cartao-video": "0 10px 30px rgba(1,18,58,0.25)",
+    "botao-navy": "0 10px 24px rgba(32,60,124,0.18)",
+    "botao-navy-hover": "0 14px 28px rgba(32,60,124,0.22)",
+    "cartao-video": "0 10px 30px rgba(32,60,124,0.25)",
     "brilho-cta-abertura": "0 0 0 1px rgba(255,255,255,0.4) inset, 0 0 40px rgba(249,224,138,0.6)"
   },
   "fonts": ["Poppins"]

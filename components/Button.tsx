@@ -16,7 +16,7 @@ export const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   // do funil de referência: quase todo CTA de avanço usa `.btn.gold`).
   gold: 'bg-gradient-to-br from-brand-gold to-brand-gold-deep text-brand-navy shadow-[0_10px_24px_rgba(200,155,24,0.28)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(200,155,24,0.32)]',
   // Navy = confirmação neutra (ex.: "Continuar" depois de uma seleção múltipla).
-  navy: 'bg-brand-navy text-white shadow-[0_10px_24px_rgba(1,18,58,0.18)] hover:-translate-y-0.5 hover:bg-brand-navy-2 hover:shadow-[0_14px_28px_rgba(1,18,58,0.22)]',
+  navy: 'bg-brand-navy text-white shadow-[0_10px_24px_rgba(32,60,124,0.18)] hover:-translate-y-0.5 hover:bg-brand-navy-2 hover:shadow-[0_14px_28px_rgba(32,60,124,0.22)]',
 }
 
 export default function Button({ variant = 'navy', className = '', ...props }: ButtonProps) {

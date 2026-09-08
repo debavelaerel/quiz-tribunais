@@ -24,7 +24,7 @@ export default function Header({ progresso = 0, onVoltar }: HeaderProps) {
           <button
             type="button"
             onClick={onVoltar}
-            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[13px] font-medium text-brand-ink-dim transition-colors hover:bg-brand-lav-soft hover:text-brand-ink"
+            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[13px] font-medium text-brand-ink-dim transition-colors hover:bg-brand-tint hover:text-brand-ink"
           >
             <ArrowLeft size={15} strokeWidth={2.25} />
             voltar

@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 /*
- * Paleta oficial "vde-tribunais" (variante clara). Hex extraídos do funil de
- * referência "Raio-X da Base" (docs/superpowers/specs) — a fonte de verdade
- * do design system agora que dourado/roxo profundo/secundárias, antes
- * pendentes, chegaram resolvidos nesse arquivo. Todo o projeto (Header,
- * OptionButton, Button, Quiz) consome só esses tokens — nada de hex solto.
+ * Paleta oficial VDE Tribunais — reduzida a propósito a 3 cores (branco,
+ * amarelo/dourado, azul da logo), decisão explícita do cliente depois de
+ * ver a versão com roxo profundo + lilás como "mistureba de cores".
+ * Hex do azul e do dourado extraídos do guia oficial (TRIBUNAIS.pdf) e/ou
+ * dos próprios arquivos de logo em public/brand — não são mais uma
+ * aproximação do funil de referência. Cinzas são neutro (não contam como
+ * "cor"), e verde/vermelho são só função (correção), nunca decoração.
  */
 @theme {
-  --color-brand-bg: #f7f5f0;
+  --color-brand-bg: #ffffff;
   --color-brand-card: #ffffff;
-  --color-brand-ink: #0b1a3f;
-  --color-brand-ink-soft: #4a5578;
+  --color-brand-ink: #203c7c;
+  --color-brand-ink-soft: #5b6478;
   --color-brand-ink-dim: #7c86a6;
-  --color-brand-line: #e2dff0;
-  --color-brand-line-strong: #c9c4e8;
-  --color-brand-lav: #c3bef9;
-  --color-brand-lav-soft: #f1effc;
-  --color-brand-purple: #5421a1;
-  --color-brand-navy: #01123a;
-  --color-brand-navy-2: #022053;
+  --color-brand-line: #e7e7ea;
+  --color-brand-line-strong: #c9c9ce;
+  --color-brand-tint: #eef1f8;
+  --color-brand-navy: #203c7c;
+  --color-brand-navy-2: #16305f;
   --color-brand-gold: #f9e08a;
   --color-brand-gold-deep: #c89b18;
   --color-brand-gold-text: #8a6a0c;
