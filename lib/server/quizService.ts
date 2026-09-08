@@ -17,38 +17,26 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
   if (!existente) existente = await repo.buscarPorWhatsapp(input.evento, whatsappNormalizado)
 
   if (existente) {
-    if (existente.status === 'em_andamento') {
-      const atualizada = await repo.atualizar(existente.id, {
-        sessionToken: input.sessionToken,
-        nome: input.nome,
-        email: input.email,
-        emailNormalizado,
-        whatsapp: input.whatsapp,
-        whatsappNormalizado,
-      })
-      return { sessionToken: atualizada.sessionToken, retomando: true, respostasSalvas: atualizada.respostas }
-    }
-    const reiniciada = await repo.atualizar(existente.id, {
+    // NUNCA reseta uma sessão já existente, concluída ou não — achado do
+    // /security-review, deixado pendente até agora: qualquer um que soubesse
+    // o e-mail ou WhatsApp de um lead conseguia, batendo aqui, apagar o
+    // diagnóstico já concluído dele (perfil/respostas voltavam pra vazio) e
+    // recomeçar do zero "como" essa pessoa — perda de dado irreversível pra
+    // quem já tinha terminado, sem precisar de senha nenhuma. Sem
+    // autenticação de verdade (fora de escopo por ora — precisaria de um elo
+    // como confirmação por SMS/e-mail), a troca do session_token pro valor
+    // que o requisitante mandou continua sendo uma limitação conhecida
+    // (quem sabe o contato de alguém ainda consegue *retomar* a sessão
+    // dela) — mas o pior efeito, destruir um resultado já pronto, para aqui.
+    const atualizada = await repo.atualizar(existente.id, {
       sessionToken: input.sessionToken,
       nome: input.nome,
       email: input.email,
       emailNormalizado,
       whatsapp: input.whatsapp,
       whatsappNormalizado,
-      fluxo,
-      status: 'em_andamento',
-      respostas: [],
-      areas: {},
-      scoreGeralPct: null,
-      acertos: null,
-      total: null,
-      areaPrioritaria: null,
-      perfil: {},
-      perfilCalculado: null,
-      startedAt: new Date().toISOString(),
-      completedAt: null,
     })
-    return { sessionToken: reiniciada.sessionToken, retomando: false, respostasSalvas: [] }
+    return { sessionToken: atualizada.sessionToken, retomando: true, respostasSalvas: atualizada.respostas }
   }
 
   const agora = new Date().toISOString()

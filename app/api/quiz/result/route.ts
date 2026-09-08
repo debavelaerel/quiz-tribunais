@@ -31,6 +31,10 @@ export function criarHandlerResult(repo: SessionRepo) {
       total: sessao.total,
       area_prioritaria: sessao.areaPrioritaria,
       areas: sessao.areas,
+      // Sem isso, o cliente não tinha como remontar a ficha (alvo, cargo,
+      // momento etc.) ao reexibir um resultado já concluído — respostasPerfil
+      // só existe em memória, nunca em cache local.
+      perfil: sessao.perfil,
     }, { status: 200 })
   }
 }

@@ -44,6 +44,10 @@ type Resultado = {
   total: number
   area_prioritaria: string
   areas: Record<string, { acertos: number; total: number; pct: number }>
+  // Respostas de perfilamento salvas no servidor — sem isso, reexibir o
+  // resultado de uma sessão concluída (F5, outro navegador) não tinha como
+  // montar a ficha, já que respostasPerfil só existe em memória.
+  perfil?: RespostasPerfil
 }
 // Fronteira JSON de POST /api/quiz/start (snake_case, igual a /finish e /result).
 type RespostaStart = {
@@ -69,6 +73,24 @@ function tokenDaResposta(json: RespostaStart): string | null {
 function indiceDeRetomada(json: RespostaStart): number {
   const salvas = Array.isArray(json.respostas_salvas) ? json.respostas_salvas.length : 0
   return Math.min(salvas, TOTAL - 1)
+}
+
+// Reconstrói { num: letra escolhida } a partir de `respostas_salvas` — sem
+// isso, retomar no meio das 4 questões graduadas (F5) pulava pra pergunta
+// certa (indiceDeRetomada) mas esquecia o que já tinha sido respondido:
+// a tela de correção contava esses acertos como "não respondida" (✕),
+// errando a nota mostrada ali (a nota final do resultado sempre vem do
+// servidor, /finish, e nunca teve esse problema — só a correção era afetada).
+function respostasTesteDeRetomada(json: RespostaStart): Record<number, string> {
+  const mapa: Record<number, string> = {}
+  if (!Array.isArray(json.respostas_salvas)) return mapa
+  for (const item of json.respostas_salvas) {
+    const r = item as { num?: unknown; escolhida?: unknown }
+    if (typeof r?.num === 'number' && typeof r?.escolhida === 'string') {
+      mapa[r.num] = r.escolhida
+    }
+  }
+  return mapa
 }
 
 function valAplicado<T>(x: T | ((r: RespostasPerfil) => T), r: RespostasPerfil): T {
@@ -213,8 +235,15 @@ export default function Quiz() {
 
         // 200 = sessão já concluída: reexibe o diagnóstico.
         if (resResultado.ok) {
+          const json: Resultado = await resResultado.json()
           setEstado(salvo)
-          setResultado(await resResultado.json())
+          setResultado(json)
+          // Sem isso, a tela de resultado (que lê respostasPerfil do state,
+          // nunca do cache) renderizava com tudo em branco/undefined num F5
+          // ou numa sessão retomada em outro navegador — respostasPerfil só
+          // existia enquanto a pessoa tinha acabado de terminar o quiz na
+          // mesma aba. `/api/quiz/result` agora devolve o `perfil` salvo.
+          setRespostasPerfil(json.perfil ?? {})
           setTela('resultado')
           return
         }
@@ -258,6 +287,7 @@ export default function Quiz() {
         // funil de perfilamento após um F5 no meio dele — só a identificação
         // e as respostas GRADUADAS já registradas são preservadas).
         setAtual(indiceDeRetomada(json))
+        setRespostasTeste(respostasTesteDeRetomada(json))
         setTela('intro')
       } catch {
         if (cancelado) return
@@ -347,7 +377,13 @@ export default function Quiz() {
       return
     }
     setPassoPerfil(proximoPasso)
-    setSelecaoMulti([])
+    // Se a pessoa voltou da ficha (mirror) pra corrigir algo e a próxima
+    // tela é a de múltipla escolha (editais), pré-marca o que ela já tinha
+    // escolhido antes — sem isso, "Continuar" ficava travado até escolher
+    // de novo, mesmo pra quem só queria confirmar a resposta que já deu.
+    const proximaTela = PERFIL_SCREENS[proximoPasso]
+    const jaEscolhido = proximaTela.type === 'multi' ? proximasRespostas[proximaTela.key] : undefined
+    setSelecaoMulti(Array.isArray(jaEscolhido) ? jaEscolhido : [])
   }
 
   function responderPerfilSingle(chave: string, valor: string) {
@@ -357,17 +393,14 @@ export default function Quiz() {
     avancarPerfil(proximasRespostas)
   }
 
+  // Reaproveita avancarPerfil em vez de duplicar a lógica de avanço: 'multi'
+  // nunca tem `after` (só telas 'single' desqualificam), então o guard de
+  // desqualificação lá dentro simplesmente não dispara aqui — seguro reusar.
   function confirmarPerfilMulti(chave: string) {
     const proximasRespostas: RespostasPerfil = { ...respostasPerfil, [chave]: selecaoMulti }
     setRespostasPerfil(proximasRespostas)
     persistirPerfil(chave, selecaoMulti)
-    const proximoPasso = passoPerfil + 1
-    if (proximoPasso >= PERFIL_SCREENS.length) {
-      setTela('mirror')
-      return
-    }
-    setPassoPerfil(proximoPasso)
-    setSelecaoMulti([])
+    avancarPerfil(proximasRespostas)
   }
 
   function responderDinheiro(valor: string) {
@@ -811,7 +844,10 @@ export default function Quiz() {
     const progresso = Math.round((PERFIL_SCREENS.length / PASSOS_POS_INTRO) * 100)
     return (
       <div className="flex min-h-screen flex-col">
-        <Header progresso={progresso} />
+        {/* O texto logo abaixo promete "volta e corrige" — sem o onVoltar
+            aqui, essa promessa era falsa: Header já tinha o botão pronto
+            (props onVoltar), só nunca era passado em lugar nenhum do app. */}
+        <Header progresso={progresso} onVoltar={() => { setPassoPerfil(0); setTela('perfil') }} />
         <main className="flex flex-1 items-start justify-center px-6 py-8">
           <div className="w-full max-w-md">
             <Eyebrow>Ficha fechada</Eyebrow>

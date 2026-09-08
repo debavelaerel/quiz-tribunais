@@ -41,7 +41,14 @@ describe('iniciarSessao', () => {
     expect(repo.linhas[0].emailNormalizado).toBe('maria2@x.com')
   })
 
-  it('sobrescreve (reseta) quando reaproveita uma sessão já concluída', async () => {
+  // Segurança: uma sessão já concluída (email/whatsapp batendo) nunca pode
+  // ser resetada por quem quer que esteja chamando /start — antes disso,
+  // bastava saber o contato de alguém pra apagar o diagnóstico já pronto
+  // dela e recomeçar do zero "como" essa pessoa (achado do /security-review,
+  // corrigido aqui). O único efeito aceito e documentado que sobra é a troca
+  // de session_token — sem autenticação de verdade não dá pra fechar isso
+  // também sem quebrar a conveniência de retomar via email/whatsapp.
+  it('NÃO reseta uma sessão já concluída — preserva status, respostas e perfil', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
     await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'C' })
@@ -51,11 +58,12 @@ describe('iniciarSessao', () => {
     await concluirSessao(repo, 'tok-1')
 
     const r = await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-2', evento: EVENTO })
-    expect(r.retomando).toBe(false)
-    expect(r.respostasSalvas).toHaveLength(0)
+    expect(r.retomando).toBe(true)
+    expect(r.respostasSalvas).toHaveLength(4)
     expect(repo.linhas).toHaveLength(1)
-    expect(repo.linhas[0].status).toBe('em_andamento')
-    expect(repo.linhas[0].completedAt).toBeNull()
+    expect(repo.linhas[0].status).toBe('concluido')
+    expect(repo.linhas[0].completedAt).not.toBeNull()
+    expect(repo.linhas[0].respostas).toHaveLength(4)
   })
 
   // Mesmo navegador, pessoa diferente: o cliente sempre gera um session_token novo
