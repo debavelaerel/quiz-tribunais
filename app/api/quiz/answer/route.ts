@@ -5,12 +5,9 @@ import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { registrarResposta, SessaoInvalidaError, SessaoConcluidaError } from '@/lib/server/quizService'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
 import { isUuid } from '@/lib/server/uuid'
+import { ipDaRequisicao } from '@/lib/server/ip'
 
 export const runtime = 'nodejs'
-
-function ipDaRequisicao(req: Request): string {
-  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'desconhecido'
-}
 
 export function criarHandlerAnswer(repo: SessionRepo) {
   return async function handler(req: Request): Promise<Response> {

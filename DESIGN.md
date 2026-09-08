@@ -122,6 +122,12 @@ progresso, `ProgressBar.tsx`) e `#FBF3D6` (fundo do selo eyebrow, `Quiz.tsx`).
 - Manter a paleta em 3 cores (branco, dourado, azul da logo) + neutro +
   função. Antes de adicionar qualquer cor nova, checar se não dá pra resolver
   com uma tinta/sombra do próprio azul ou dourado.
+- Personalizar com o primeiro nome só nos toques pontuais já aprovados: 1ª
+  pergunta do perfil, ficha (mirror), calculadora de custo (conta), correção,
+  leitura e resultado (`comNome()` em `lib/quizContent.ts`). O nome já está
+  disponível antes de qualquer tela de perfilamento nos dois fluxos (capa ou
+  tela `nome`), então dá pra usar em qualquer uma dessas telas sem pedir de
+  novo.
 
 **Don't:**
 - Não introduzir uma 4ª cor (a versão com roxo profundo + lilás como accent
@@ -140,6 +146,9 @@ progresso, `ProgressBar.tsx`) e `#FBF3D6` (fundo do selo eyebrow, `Quiz.tsx`).
   inclusive pro selo lilás da assinatura "Tribunais".
 - Não inventar um raio, sombra ou cor fora das seções 2, 4 e 5 sem atualizar
   este arquivo primeiro.
+- Não repetir o nome em todas as 12 perguntas de perfil — testado e descartado
+  por soar mala-direta; o efeito de "conversa" vem de usar em poucos
+  momentos-chave, não em todo lugar.
 
 ## 8. Machine-readable tokens
 

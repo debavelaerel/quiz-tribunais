@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { SessionRepo } from './sessionRepo'
+import type { SessionRepo, FiltroListagem } from './sessionRepo'
 import type { QuizSession } from './types'
 
 type LinhaBanco = {
@@ -11,6 +11,7 @@ type LinhaBanco = {
   whatsapp_normalizado: string
   email: string
   email_normalizado: string
+  fluxo: QuizSession['fluxo']
   status: 'em_andamento' | 'concluido'
   respostas: QuizSession['respostas']
   areas: QuizSession['areas']
@@ -35,6 +36,7 @@ function paraSessao(linha: LinhaBanco): QuizSession {
     whatsappNormalizado: linha.whatsapp_normalizado,
     email: linha.email,
     emailNormalizado: linha.email_normalizado,
+    fluxo: linha.fluxo,
     status: linha.status,
     respostas: linha.respostas,
     areas: linha.areas,
@@ -57,6 +59,7 @@ function paraLinhaPatch(patch: Partial<QuizSession>): Record<string, unknown> {
   if (patch.nome !== undefined) linha.nome = patch.nome
   if (patch.email !== undefined) linha.email = patch.email
   if (patch.emailNormalizado !== undefined) linha.email_normalizado = patch.emailNormalizado
+  if (patch.fluxo !== undefined) linha.fluxo = patch.fluxo
   if (patch.whatsapp !== undefined) linha.whatsapp = patch.whatsapp
   if (patch.whatsappNormalizado !== undefined) linha.whatsapp_normalizado = patch.whatsappNormalizado
   if (patch.status !== undefined) linha.status = patch.status
@@ -71,6 +74,22 @@ function paraLinhaPatch(patch: Partial<QuizSession>): Record<string, unknown> {
   if (patch.startedAt !== undefined) linha.started_at = patch.startedAt
   if (patch.completedAt !== undefined) linha.completed_at = patch.completedAt
   return linha
+}
+
+// Base compartilhada entre a query de listagem e o fallback de contagem
+// (ver comentário em `listar`) — mesmo filtro status/fluxo/busca nas duas,
+// só muda o que cada uma pede de volta (linhas+count vs. só count).
+function aplicarFiltro(client: SupabaseClient, evento: string, filtro: Omit<FiltroListagem, 'pagina' | 'porPagina'>, opts: { count: 'exact'; head?: boolean }) {
+  let query = client.from('quiz_sessions').select('*', opts).eq('evento', evento)
+  if (filtro.status) query = query.eq('status', filtro.status)
+  if (filtro.fluxo) query = query.eq('fluxo', filtro.fluxo)
+  if (filtro.busca) {
+    // Substring case-insensitive em nome OU email OU whatsapp — os três
+    // sempre em texto puro (não normalizado), igual ao que o time vê.
+    const termo = filtro.busca.replace(/[%,]/g, '')
+    query = query.or(`nome.ilike.%${termo}%,email.ilike.%${termo}%,whatsapp.ilike.%${termo}%`)
+  }
+  return query
 }
 
 export function criarSupabaseSessionRepo(client: SupabaseClient): SessionRepo {
@@ -108,6 +127,27 @@ export function criarSupabaseSessionRepo(client: SupabaseClient): SessionRepo {
       const { data, error } = await client.from('quiz_sessions').update(paraLinhaPatch(patch)).eq('id', id).select('*').single()
       if (error) throw error
       return paraSessao(data as LinhaBanco)
+    },
+    async listar(evento, filtro) {
+      const inicio = (filtro.pagina - 1) * filtro.porPagina
+      const fim = inicio + filtro.porPagina - 1
+      const query = aplicarFiltro(client, evento, filtro, { count: 'exact' })
+      const { data, error, count } = await query.order('started_at', { ascending: false }).range(inicio, fim)
+      if (error) {
+        // PGRST103: offset além do total de linhas — ex.: alguém digitou
+        // ?pagina=999 na URL, ou clicou num link "Próxima" que ficou velho
+        // depois que o total mudou (filtro mudou, leads somem). Não é uma
+        // falha de verdade, é só "não tem nada nessa página" — busca a
+        // contagem real (sem range, então não pode dar PGRST103 de novo) e
+        // devolve lista vazia, em vez de deixar a página quebrar com 500.
+        if ((error as { code?: string }).code === 'PGRST103') {
+          const { count: totalReal, error: erroContagem } = await aplicarFiltro(client, evento, filtro, { count: 'exact', head: true })
+          if (erroContagem) throw erroContagem
+          return { sessoes: [], total: totalReal ?? 0 }
+        }
+        throw error
+      }
+      return { sessoes: (data as LinhaBanco[]).map(paraSessao), total: count ?? 0 }
     },
   }
 }

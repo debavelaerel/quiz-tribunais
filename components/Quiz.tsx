@@ -13,6 +13,7 @@ import {
   L,
   MENSAGENS_CORRECAO,
   labelCargo,
+  comNome,
   editaisEscolhidos,
   fraseEdital,
   fraseRetaFinal,
@@ -226,7 +227,7 @@ export default function Quiz() {
       const res = await fetch('/api/quiz/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, whatsapp, email, session_token: criarNovoSessionToken() }),
+        body: JSON.stringify({ nome, whatsapp, email, session_token: criarNovoSessionToken(), fluxo: fluxoFinal ? 'final' : 'padrao' }),
       })
       if (!res.ok) {
         setErro('Não foi possível iniciar. Confira seus dados.')
@@ -403,7 +404,7 @@ export default function Quiz() {
       const resStart = await fetch('/api/quiz/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, whatsapp, email, session_token: token }),
+        body: JSON.stringify({ nome, whatsapp, email, session_token: token, fluxo: 'final' }),
       })
       if (!resStart.ok) {
         setErro('Não foi possível concluir. Confira seus dados.')
@@ -468,6 +469,13 @@ export default function Quiz() {
       setEnviando(false)
     }
   }
+
+  // Primeiro nome de quem responde — disponível a partir da capa (fluxo padrão)
+  // ou da tela 'nome' (fluxo final), ou seja, antes de qualquer tela de
+  // perfilamento nos dois fluxos. Usado nos toques pontuais de personalização
+  // (1ª pergunta do perfil, ficha, calculadora de custo, correção, leitura e
+  // resultado) — não em todas as 12 perguntas, pra não soar mala-direta.
+  const primeiroNome = (nome || estado?.nome || '').split(' ')[0]
 
   if (restaurando) {
     return (
@@ -635,13 +643,16 @@ export default function Quiz() {
     const opts = valAplicado(telaAtual.opts, respostasPerfil)
     const hint = telaAtual.hint ? valAplicado(telaAtual.hint, respostasPerfil) : undefined
     const progresso = Math.round((passoPerfil / PASSOS_POS_INTRO) * 100)
+    // Personalização pontual: só a 1ª pergunta abre com o nome — repetir nas
+    // 12 soaria mala-direta (ver DESIGN.md).
+    const titulo = passoPerfil === 0 ? comNome(primeiroNome, telaAtual.title) : telaAtual.title
     return (
       <div className="flex min-h-screen flex-col">
         <Header progresso={progresso} />
         <main className="flex flex-1 items-start justify-center px-6 py-8">
           <div className="w-full max-w-md">
             <p className="text-sm text-brand-ink-dim">Pergunta {passoPerfil + 1} de {PERFIL_SCREENS.length}</p>
-            <h1 className="mt-2 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">{telaAtual.title}</h1>
+            <h1 className="mt-2 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">{titulo}</h1>
             {hint && <p className="mt-2 text-[15px] text-brand-ink-dim">{hint}</p>}
 
             <div className="mt-6 flex flex-col gap-2.5">
@@ -747,7 +758,7 @@ export default function Quiz() {
         <main className="flex flex-1 items-start justify-center px-6 py-8">
           <div className="w-full max-w-md">
             <Eyebrow>Ficha fechada</Eyebrow>
-            <h1 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Anotei tudo. A sua ficha ficou assim:</h1>
+            <h1 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Anotei tudo{primeiroNome ? `, ${primeiroNome}` : ''}. A sua ficha ficou assim:</h1>
             <div className="mt-6 flex flex-col gap-2">
               <LinhaFicha label="Seu alvo" valor={`${cargo} · ${alvoLongo}`} />
               <LinhaFicha label="Gargalo" valor={respostasPerfil.dor ? L.dorCurta[respostasPerfil.dor] : ''} />
@@ -818,7 +829,7 @@ export default function Quiz() {
   }
 
   if (tela === 'conta') {
-    const conta = calcularConta(respostasPerfil)
+    const conta = calcularConta(respostasPerfil, primeiroNome)
     const progresso = Math.round(((PERFIL_SCREENS.length + 3) / PASSOS_POS_INTRO) * 100)
     return (
       <div className="flex min-h-screen flex-col">
@@ -890,7 +901,7 @@ export default function Quiz() {
         <main className="flex flex-1 items-start justify-center px-6 py-8">
           <div className="w-full max-w-md">
             <Eyebrow>Corrigido na hora</Eyebrow>
-            <h1 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Você acertou {acertos} de {QUESTIONS.length}.</h1>
+            <h1 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">{primeiroNome ? `${primeiroNome}, você` : 'Você'} acertou {acertos} de {QUESTIONS.length}.</h1>
             <p className="mt-3 text-brand-ink-soft">{MENSAGENS_CORRECAO[acertos]}</p>
             <div className="mt-6 flex flex-col gap-2.5">
               {QUESTIONS.map((q) => {
@@ -930,7 +941,7 @@ export default function Quiz() {
         <Header progresso={progresso} />
         <main className="flex flex-1 items-start justify-center px-6 py-8">
           <div className="w-full max-w-md">
-            <h1 className="text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">{TELA_LEITURA.title}</h1>
+            <h1 className="text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">{comNome(primeiroNome, TELA_LEITURA.title)}</h1>
             <div className="mt-6 flex flex-col gap-2.5">
               {opts.map(([valor, texto]: Opcao) => (
                 <OptionButton key={valor} selected={false} onClick={() => responderLeitura(valor)}>
@@ -993,7 +1004,6 @@ export default function Quiz() {
   const diagnostico = respostasPerfil.momento ? DIAG[respostasPerfil.momento] : undefined
   const perfilCalculado = resultado ? calcularPerfil(respostasPerfil, resultado.acertos) : null
   const nivel = resultado ? nivelTeste(resultado.acertos) : ''
-  const primeiroNome = (nome || estado?.nome || '').split(' ')[0]
   const cargo = labelCargo(respostasPerfil)
   const alvoLabel = respostasPerfil.alvo ? L.alvo[respostasPerfil.alvo] : ''
   const alvoLongo = respostasPerfil.alvo ? L.alvoLongo[respostasPerfil.alvo] : ''

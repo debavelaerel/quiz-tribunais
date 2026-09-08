@@ -10,6 +10,9 @@ export type QuizSession = {
   whatsappNormalizado: string
   email: string
   emailNormalizado: string
+  // Variante do funil que gerou a sessão — puramente informativa pro painel
+  // administrativo, não afeta nenhuma regra de negócio.
+  fluxo: 'padrao' | 'final'
   status: 'em_andamento' | 'concluido'
   respostas: RespostaResumo[]
   areas: Record<string, AreaResumo>
@@ -32,6 +35,9 @@ export type IniciarSessaoInput = {
   email: string
   sessionToken: string
   evento: string
+  // Opcional (default 'padrao' em iniciarSessao) pra não forçar todo call
+  // site de teste a especificar algo irrelevante pro que cada um cobre.
+  fluxo?: 'padrao' | 'final'
 }
 
 export type IniciarSessaoResultado = {

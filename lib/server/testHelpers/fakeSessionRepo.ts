@@ -33,5 +33,25 @@ export function criarFakeSessionRepo(): SessionRepo & { linhas: QuizSession[] } 
       linhas[idx] = { ...linhas[idx], ...patch, updatedAt: new Date().toISOString() }
       return linhas[idx]
     },
+    async listar(evento, filtro) {
+      let resultado = linhas.filter((l) => l.evento === evento)
+      if (filtro.status) resultado = resultado.filter((l) => l.status === filtro.status)
+      if (filtro.fluxo) resultado = resultado.filter((l) => l.fluxo === filtro.fluxo)
+      if (filtro.busca) {
+        const alvo = filtro.busca.toLowerCase()
+        resultado = resultado.filter(
+          (l) =>
+            l.nome.toLowerCase().includes(alvo) ||
+            l.email.toLowerCase().includes(alvo) ||
+            l.whatsapp.toLowerCase().includes(alvo),
+        )
+      }
+      // Mais recente primeiro, igual ao repo real (`order('started_at', desc)`).
+      resultado = [...resultado].sort((a, b) => b.startedAt.localeCompare(a.startedAt))
+      const total = resultado.length
+      const inicio = (filtro.pagina - 1) * filtro.porPagina
+      const sessoes = resultado.slice(inicio, inicio + filtro.porPagina)
+      return { sessoes, total }
+    },
   }
 }

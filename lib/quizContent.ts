@@ -395,6 +395,15 @@ export const TELA_LEITURA: TelaPerfil = {
   ],
 }
 
+// Prefixa uma frase com o primeiro nome, minúscula a primeira letra que
+// sobrou ("Qual concurso..." -> "Maria, qual concurso..."). Sem nome, devolve
+// a frase original intacta. Usado nos poucos pontos de personalização
+// pontual do funil — não em toda pergunta, pra não soar mala-direta.
+export function comNome(nome: string, frase: string): string {
+  if (!nome) return frase
+  return `${nome}, ${frase.charAt(0).toLowerCase()}${frase.slice(1)}`
+}
+
 export function labelCargo(r: RespostasPerfil): string {
   return r.alvo === 'fe' ? (L.cargoFe[r.cargo ?? ''] ?? '') : (L.cargo[r.cargo ?? ''] ?? '')
 }

@@ -87,22 +87,27 @@ const ROTULO_POR_TEMPO: Record<string, string> = { t1: 'seis meses', t2: 'quase 
 export type Conta = { titulo: string; paragrafo: string }
 
 // Calculadora de custo da espera (tela "conta") — texto muda conforme o
-// tempo de estudo já investido (retrospectivo) ou não (prospectivo).
-export function calcularConta(r: RespostasPerfil): Conta {
+// tempo de estudo já investido (retrospectivo) ou não (prospectivo). `nome`
+// é opcional (toque pontual de personalização) e some da frase sem quebrar
+// nada quando não informado.
+export function calcularConta(r: RespostasPerfil, nome?: string): Conta {
   const anual = Number(r.dinheiro || 120)
   const anos = ANOS_POR_TEMPO[r.tempo ?? ''] ?? 0
   const rotulo = ROTULO_POR_TEMPO[r.tempo ?? ''] ?? ''
   const acumulado = Math.round(anual * anos)
   const retro = anos > 0
+  // Sem nome, a frase abre com maiúscula normal ("Você estuda..."); com nome,
+  // vira aposto minúsculo depois da vírgula ("Maria, você estuda...").
+  const abre = (frase: string) => (nome ? `${nome}, ${frase}` : `${frase.charAt(0).toUpperCase()}${frase.slice(1)}`)
 
   if (retro) {
     return {
       titulo: 'O que a espera já te custou.',
-      paragrafo: `Você estuda há ${rotulo}. Nesse tempo, a diferença entre o que você ganha hoje e o salário do cargo que você mira soma perto de R$ ${acumulado} mil que já não entraram na sua conta.`,
+      paragrafo: `${abre(`você estuda há ${rotulo}`)}. Nesse tempo, a diferença entre o que você ganha hoje e o salário do cargo que você mira soma perto de R$ ${acumulado} mil que já não entraram na sua conta.`,
     }
   }
   return {
     titulo: 'O que a espera custa.',
-    paragrafo: `Cada ano que você adia o começo custa cerca de R$ ${anual} mil, a diferença entre o que você ganha hoje e o salário do cargo que você mira.`,
+    paragrafo: `${abre(`cada ano que você adia o começo custa cerca de R$ ${anual} mil`)}, a diferença entre o que você ganha hoje e o salário do cargo que você mira.`,
   }
 }

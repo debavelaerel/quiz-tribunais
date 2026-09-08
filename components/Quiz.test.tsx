@@ -81,8 +81,10 @@ async function chegarAoQuiz() {
   abrirCapa()
   iniciarDaCapa()
   await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
+  // Toque pontual de personalização: só a 1ª pergunta abre com o nome.
+  expect(screen.getByText(/Maria, qual concurso é a sua prioridade hoje\?/)).toBeInTheDocument()
   responderPerfilCompleto()
-  await waitFor(() => expect(screen.getByText(/Está certo, pode seguir/)).toBeInTheDocument())
+  await waitFor(() => expect(screen.getByText(/Anotei tudo, Maria\. A sua ficha ficou assim:/)).toBeInTheDocument())
   fireEvent.click(screen.getByText(/Está certo, pode seguir/))
   await waitFor(() => expect(screen.getByText(/Entendi, continuar/)).toBeInTheDocument())
   fireEvent.click(screen.getByText(/Entendi, continuar/))
@@ -102,9 +104,10 @@ async function chegarAoResultado() {
     fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${letra} `) }))
     await waitFor(() => {})
   }
-  await waitFor(() => expect(screen.getByText(/Você acertou/)).toBeInTheDocument())
+  await waitFor(() => expect(screen.getByText(/Maria, você acertou/)).toBeInTheDocument())
   fireEvent.click(screen.getByText(/Fechar meu raio-X/))
   await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
+  expect(screen.getByText(/Maria, quer que eu inclua no seu resultado/)).toBeInTheDocument()
   fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
   await waitFor(() => expect(screen.getByText(/o que eu enxerguei no seu caso/)).toBeInTheDocument())
 }
@@ -263,7 +266,7 @@ describe('Quiz', () => {
       // Respostas graduadas ficam só locais até o contato ser enviado.
       expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/answer'))).toBe(false)
 
-      await waitFor(() => expect(screen.getByText(/Você acertou/)).toBeInTheDocument())
+      await waitFor(() => expect(screen.getByText(/Maria, você acertou/)).toBeInTheDocument())
       fireEvent.click(screen.getByText(/Fechar meu raio-X/))
       await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
       fireEvent.click(screen.getByText('Só o diagnóstico já basta'))

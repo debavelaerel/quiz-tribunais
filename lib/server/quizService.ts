@@ -11,6 +11,7 @@ export class SessaoIncompletaError extends Error {}
 export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput): Promise<IniciarSessaoResultado> {
   const emailNormalizado = normalizeEmail(input.email)
   const whatsappNormalizado = normalizeWhatsapp(input.whatsapp)
+  const fluxo = input.fluxo ?? 'padrao'
 
   let existente = await repo.buscarPorEmail(input.evento, emailNormalizado)
   if (!existente) existente = await repo.buscarPorWhatsapp(input.evento, whatsappNormalizado)
@@ -34,6 +35,7 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
       emailNormalizado,
       whatsapp: input.whatsapp,
       whatsappNormalizado,
+      fluxo,
       status: 'em_andamento',
       respostas: [],
       areas: {},
@@ -58,6 +60,7 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
     whatsappNormalizado,
     email: input.email,
     emailNormalizado,
+    fluxo,
     status: 'em_andamento',
     respostas: [],
     areas: {},

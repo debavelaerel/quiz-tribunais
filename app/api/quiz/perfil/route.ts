@@ -6,6 +6,7 @@ import { registrarPerfil, SessaoInvalidaError, SessaoConcluidaError } from '@/li
 import { permitirRequisicao } from '@/lib/server/rateLimit'
 import { isUuid } from '@/lib/server/uuid'
 import type { RespostasPerfil } from '@/lib/perfil'
+import { ipDaRequisicao } from '@/lib/server/ip'
 
 export const runtime = 'nodejs'
 
@@ -16,10 +17,6 @@ const CHAVES_PERFIL: (keyof RespostasPerfil)[] = [
   'edital', 'editais', 'dor', 'momento', 'dinheiro', 'leitura',
 ]
 const CHAVES_MULTI: (keyof RespostasPerfil)[] = ['editais']
-
-function ipDaRequisicao(req: Request): string {
-  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'desconhecido'
-}
 
 export function criarHandlerPerfil(repo: SessionRepo) {
   return async function handler(req: Request): Promise<Response> {

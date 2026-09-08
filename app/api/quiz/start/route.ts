@@ -6,12 +6,9 @@ import { iniciarSessao } from '@/lib/server/quizService'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
 import { isUuid } from '@/lib/server/uuid'
 import { EVENTO } from '@/lib/questions'
+import { ipDaRequisicao } from '@/lib/server/ip'
 
 export const runtime = 'nodejs'
-
-function ipDaRequisicao(req: Request): string {
-  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'desconhecido'
-}
 
 function emailValido(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -30,10 +27,13 @@ export function criarHandlerStart(repo: SessionRepo) {
       return NextResponse.json({ erro: 'json inválido' }, { status: 400 })
     }
 
-    const { nome, whatsapp, email, session_token: sessionToken } = (corpo ?? {}) as Record<string, unknown>
+    const { nome, whatsapp, email, session_token: sessionToken, fluxo } = (corpo ?? {}) as Record<string, unknown>
     if (typeof nome !== 'string' || nome.trim() === '') {
       return NextResponse.json({ erro: 'nome obrigatório' }, { status: 422 })
     }
+    // Puramente informativo (ver migration 20260908000001) — cliente antigo
+    // sem o campo, ou valor fora da allowlist, cai em 'padrao' silenciosamente.
+    const fluxoValido: 'padrao' | 'final' = fluxo === 'final' ? 'final' : 'padrao'
     if (typeof email !== 'string' || !emailValido(email)) {
       return NextResponse.json({ erro: 'email inválido' }, { status: 422 })
     }
@@ -47,7 +47,7 @@ export function criarHandlerStart(repo: SessionRepo) {
 
     try {
       const resultado = await iniciarSessao(repo, {
-        nome, whatsapp: whatsapp as string, email, sessionToken, evento: EVENTO,
+        nome, whatsapp: whatsapp as string, email, sessionToken, evento: EVENTO, fluxo: fluxoValido,
       })
       // Fronteira JSON em snake_case (mesma convenção de /finish e /result);
       // internamente o serviço continua em camelCase.
