@@ -314,9 +314,17 @@ export default function Quiz() {
     const proximasRespostas: RespostasPerfil = { ...respostasPerfil, leitura: valor }
     setRespostasPerfil(proximasRespostas)
     persistirPerfil('leitura', valor)
+    if (estado) {
+      // Fluxo padrão: só conclui agora — depois de gravar a última chave de
+      // perfil. Concluir antes (como era) fazia esse /api/quiz/perfil daqui
+      // morrer com "sessão já concluída" (409), silenciado pelo .catch() de
+      // persistirPerfil: a coluna `perfil.leitura` nunca era salva.
+      void concluir(estado.sessionToken, 'resultado')
+      return
+    }
     // Sem sessão ainda (fluxo com contato no final): pede WhatsApp/e-mail
-    // antes de revelar o resultado. Com sessão (fluxo padrão): já tem tudo.
-    setTela(estado ? 'resultado' : 'contato')
+    // antes de revelar o resultado.
+    setTela('contato')
   }
 
   async function responder(letra: string) {
@@ -351,8 +359,11 @@ export default function Quiz() {
         return
       }
       setRespostasTeste((r) => ({ ...r, [questao.num]: letra }))
+      // Só avança pra correção — o /api/quiz/finish acontece depois da
+      // leitura (em responderLeitura), não aqui. Concluir cedo demais fazia
+      // o /api/quiz/perfil da leitura falhar silenciosamente (ver ali).
       if (atual === TOTAL - 1) {
-        await concluir(estado.sessionToken)
+        setTela('correcao')
       } else {
         setAtual((n) => n + 1)
       }
@@ -364,8 +375,9 @@ export default function Quiz() {
     }
   }
 
-  // Chamada só a partir de `responder`, que já segura a trava de envio.
-  async function concluir(sessionToken: string) {
+  // Chamada só depois da leitura (responderLeitura) — sessão já tem todas as
+  // respostas graduadas e todas as chaves de perfil gravadas nesse ponto.
+  async function concluir(sessionToken: string, proximaTela: Tela) {
     const res = await fetch('/api/quiz/finish', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -376,7 +388,7 @@ export default function Quiz() {
       return
     }
     setResultado(await res.json())
-    setTela('correcao')
+    setTela(proximaTela)
   }
 
   // Fluxo com contato no final: só agora a sessão é criada. Reaproveita as
@@ -403,6 +415,22 @@ export default function Quiz() {
       if (!sessionToken) {
         setErro('Resposta inesperada do servidor. Tente novamente.')
         return
+      }
+
+      // Perfilamento acumulado localmente durante o funil inteiro — grava
+      // agora, aguardando cada chamada (ao contrário do fire-and-forget de
+      // persistirPerfil): aqui a perda compromete a sessão, porque é a
+      // única chance de gravar esses dados nesse fluxo.
+      for (const [chave, valor] of Object.entries(respostasPerfil)) {
+        const resPerfil = await fetch('/api/quiz/perfil', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_token: sessionToken, chave, valor }),
+        })
+        if (!resPerfil.ok) {
+          setErro('Não foi possível registrar seu perfil. Tente novamente.')
+          return
+        }
       }
 
       for (const questao of QUESTIONS) {
@@ -754,8 +782,11 @@ export default function Quiz() {
                 <Play size={22} strokeWidth={2} className="ml-0.5 fill-brand-gold text-brand-gold" />
               </span>
               <p className="text-[14px] font-semibold text-brand-gold">Vídeo da Ana Clara</p>
+              {/* Placeholder até o vídeo real entrar (roteiro em roteiro-video.md,
+                  link em CONFIG.videoSrc) — texto abaixo é o que o usuário vê
+                  enquanto isso, sem instrução de configuração exposta. */}
               <p className="text-[13px] leading-relaxed text-white/80">
-                Roteiro em roteiro-video.md. Troque CONFIG.videoSrc pelo link do arquivo.
+                Vídeo em produção — em breve aqui.
               </p>
             </div>
             <Button variant="gold" onClick={() => setTela('dinheiro')} className="mt-6">

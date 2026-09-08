@@ -178,6 +178,19 @@ describe('Quiz', () => {
     expect(screen.getByText(/intermediário|avançado|inicial/)).toBeInTheDocument()
     const cta = screen.getByText('Falar com o time no WhatsApp')
     expect(cta).toHaveAttribute('href', expect.stringContaining('https://wa.me/'))
+
+    // Regressão: a chave 'leitura' precisa chegar em /api/quiz/perfil ANTES
+    // de /api/quiz/finish — concluir cedo demais fazia esse /perfil morrer
+    // com "sessão já concluída" (409), silenciado pelo catch de persistirPerfil.
+    const chamadas = vi.mocked(fetch).mock.calls
+    const idxLeitura = chamadas.findIndex(
+      ([u, opts]) => String(u).includes('/api/quiz/perfil') && String((opts as RequestInit)?.body).includes('"leitura"'),
+    )
+    let idxFinish = -1
+    chamadas.forEach(([u], i) => { if (String(u).includes('/api/quiz/finish')) idxFinish = i })
+    expect(idxLeitura).toBeGreaterThanOrEqual(0)
+    expect(idxFinish).toBeGreaterThanOrEqual(0)
+    expect(idxLeitura).toBeLessThan(idxFinish)
   })
 
   it('reexibe o resultado ao recarregar uma sessão já concluída', async () => {
@@ -271,6 +284,14 @@ describe('Quiz', () => {
       })
       expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))).toHaveLength(4)
       expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/finish'))).toBe(true)
+
+      // Regressão: o perfilamento inteiro (respondido em memória o funil todo)
+      // precisa ser enviado pro servidor junto do contato — sem isso, a
+      // sessão fechava com perfil vazio e a classificação (classe/curso/
+      // ritmo) do time comercial ficava toda errada.
+      const chamadasPerfil = vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/perfil'))
+      expect(chamadasPerfil.length).toBeGreaterThan(0)
+      expect(chamadasPerfil.some(([, opts]) => String((opts as RequestInit)?.body).includes('"leitura"'))).toBe(true)
     })
   })
 })
