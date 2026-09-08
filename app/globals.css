@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/*
+ * Paleta oficial VDE Tribunais — reduzida a propósito a 3 cores (branco,
+ * amarelo/dourado, azul da logo), decisão explícita do cliente depois de
+ * ver a versão com roxo profundo + lilás como "mistureba de cores".
+ * Hex do azul e do dourado extraídos do guia oficial (TRIBUNAIS.pdf) e/ou
+ * dos próprios arquivos de logo em public/brand — não são mais uma
+ * aproximação do funil de referência. Cinzas são neutro (não contam como
+ * "cor"), e verde/vermelho são só função (correção), nunca decoração.
+ */
+@theme {
+  --color-brand-bg: #ffffff;
+  --color-brand-card: #ffffff;
+  --color-brand-ink: #203c7c;
+  --color-brand-ink-soft: #5b6478;
+  --color-brand-ink-dim: #7c86a6;
+  --color-brand-line: #e7e7ea;
+  --color-brand-line-strong: #c9c9ce;
+  --color-brand-tint: #eef1f8;
+  --color-brand-navy: #203c7c;
+  --color-brand-navy-2: #16305f;
+  --color-brand-gold: #f9e08a;
+  --color-brand-gold-deep: #c89b18;
+  --color-brand-gold-text: #8a6a0c;
+  --color-brand-green: #2fb367;
+  --color-brand-red: #e03131;
+
+  --font-brand: var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font-brand);
+  background: var(--color-brand-bg);
+  color: var(--color-brand-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/*
+ * PRÉVIA temporária (não commitada como decisão) — fundo gradiente + cartão
+ * flutuante copiados 1:1 do github.com/davifacanhaa/vde-diagnostico-tribunais
+ * (app/globals.css de lá), só pra visualização. Isso reabre exatamente o que
+ * a seção 2/7 do DESIGN.md documenta como testado e rejeitado (roxo/lilás
+ * fora do logo, "mistureba de cores") — remover este bloco se a decisão for
+ * manter as 3 cores atuais.
+ */
+body {
+  background:
+    radial-gradient(1100px 560px at 8% -12%, rgba(169, 160, 246, 0.32), transparent 60%),
+    radial-gradient(900px 650px at 100% 102%, rgba(139, 110, 240, 0.2), transparent 55%),
+    #f6f5fc;
+  background-attachment: fixed;
+}
+.preview-qcard {
+  background: #fff;
+  border-radius: 22px;
+  padding: 34px 32px 30px;
+  border: 1px solid rgba(26, 47, 92, 0.1);
+  box-shadow: 0 20px 50px -24px rgba(60, 30, 120, 0.28);
+}
