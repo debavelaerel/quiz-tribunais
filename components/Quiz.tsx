@@ -519,10 +519,14 @@ export default function Quiz() {
   if (tela === 'capa') {
     return (
       <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex flex-1 items-start justify-center px-6 py-10">
+        <main className="flex flex-1 items-start justify-center px-7 py-10">
           <div className="w-full max-w-md text-center">
-            <h1 className="text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
+            {/* Sem Header aqui: capa não tem botão de voltar nem progresso, então
+                o Header (justify-between) deixaria a logo sozinha, pequena e
+                jogada pra esquerda. Mesma logo grande e centralizada da intro. */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca */}
+            <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-16 w-auto" />
+            <h1 className="mt-7 text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
               Descubra seu nível para carreiras de Tribunais
             </h1>
             <p className="mt-3 text-brand-ink-soft">
@@ -556,10 +560,11 @@ export default function Quiz() {
   if (tela === 'nome') {
     return (
       <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex flex-1 items-start justify-center px-6 py-10">
+        <main className="flex flex-1 items-start justify-center px-7 py-10">
           <div className="w-full max-w-md text-center">
-            <h1 className="text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca */}
+            <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-16 w-auto" />
+            <h1 className="mt-7 text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
               Como podemos te chamar?
             </h1>
             <p className="mt-3 text-brand-ink-soft">
