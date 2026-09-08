@@ -521,7 +521,7 @@ export default function Quiz() {
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex flex-1 items-start justify-center px-6 py-10">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md text-center">
             <h1 className="text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
               Descubra seu nível para carreiras de Tribunais
             </h1>
@@ -558,7 +558,7 @@ export default function Quiz() {
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex flex-1 items-start justify-center px-6 py-10">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md text-center">
             <h1 className="text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
               Como podemos te chamar?
             </h1>
@@ -962,7 +962,7 @@ export default function Quiz() {
       <div className="flex min-h-screen flex-col">
         <Header progresso={progresso} />
         <main className="flex flex-1 items-start justify-center px-6 py-8">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md text-center">
             <h1 className="text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Terminei a sua leitura. Pra onde eu mando o seu raio-X?</h1>
 
             {erro && <AlertaErro mensagem={erro} />}
