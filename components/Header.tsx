@@ -1,7 +1,7 @@
 'use client'
 
 import { ArrowLeft } from 'lucide-react'
-import ProgressTrail from './ProgressTrail'
+import ProgressBar from './ProgressBar'
 
 type HeaderProps = {
   // 0-100. Sempre visível — do início (abertura) ao fim (resultado).
@@ -11,8 +11,9 @@ type HeaderProps = {
 
 // Cabeçalho compartilhado por todas as telas do quiz: logo oficial da VDE
 // (wordmark "vde" + selo "Tribunais" já embutidos na própria arte, guia de
-// marca "Raio-X da Base"), botão de voltar opcional e a trilha de progresso
-// do funil (sempre visível, do início ao fim).
+// marca "Raio-X da Base"), botão de voltar opcional e a barra de progresso
+// do funil (sempre visível, do início ao fim — sem marcos de fase, tom
+// institucional).
 export default function Header({ progresso = 0, onVoltar }: HeaderProps) {
   return (
     <header className="mx-auto w-full max-w-md px-6 pt-6">
@@ -30,7 +31,7 @@ export default function Header({ progresso = 0, onVoltar }: HeaderProps) {
           </button>
         )}
       </div>
-      <ProgressTrail progresso={progresso} />
+      <ProgressBar progresso={progresso} />
     </header>
   )
 }

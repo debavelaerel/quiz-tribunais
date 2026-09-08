@@ -27,7 +27,7 @@ import { calcularPerfil, calcularConta, nivelTeste, type RespostasPerfil } from 
 import Header from './Header'
 import OptionButton from './OptionButton'
 import Button from './Button'
-import ProgressTrail from './ProgressTrail'
+import ProgressBar from './ProgressBar'
 
 type Tela =
   | 'capa' | 'restaurando'
@@ -437,7 +437,7 @@ export default function Quiz() {
           <div className="w-full max-w-md text-center">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca, sem necessidade do pipeline de otimização de imagem */}
             <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-16 w-auto" />
-            <ProgressTrail progresso={0} />
+            <ProgressBar progresso={0} />
             <div className="mt-7">
               <Eyebrow>A janela é agora</Eyebrow>
             </div>
