@@ -698,7 +698,7 @@ export default function Quiz() {
 
   if (tela === 'intro') {
     return (
-      <div className="relative flex min-h-screen flex-col overflow-hidden bg-brand-bg">
+      <div className="relative flex min-h-screen flex-col overflow-hidden">
         {/* Ícone da marca (o "olho") como marca-d'água decorativa, atrás do conteúdo. */}
         <svg
           aria-hidden="true"
@@ -974,7 +974,7 @@ export default function Quiz() {
       <div className="flex min-h-screen flex-col">
         <Header progresso={progresso} />
         <main className="flex flex-1 items-start justify-center px-6 py-8">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md preview-qcard">
             <div className="flex items-start justify-between gap-3">
               <span className="text-[18px] font-bold text-brand-ink">Questão {atual + 1} de {TOTAL}</span>
               <span className="text-right text-[12.5px] text-brand-ink-dim">{questao.area}</span>

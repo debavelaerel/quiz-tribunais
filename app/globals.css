@@ -36,3 +36,26 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
+/*
+ * PRÉVIA temporária (não commitada como decisão) — fundo gradiente + cartão
+ * flutuante copiados 1:1 do github.com/davifacanhaa/vde-diagnostico-tribunais
+ * (app/globals.css de lá), só pra visualização. Isso reabre exatamente o que
+ * a seção 2/7 do DESIGN.md documenta como testado e rejeitado (roxo/lilás
+ * fora do logo, "mistureba de cores") — remover este bloco se a decisão for
+ * manter as 3 cores atuais.
+ */
+body {
+  background:
+    radial-gradient(1100px 560px at 8% -12%, rgba(169, 160, 246, 0.32), transparent 60%),
+    radial-gradient(900px 650px at 100% 102%, rgba(139, 110, 240, 0.2), transparent 55%),
+    #f6f5fc;
+  background-attachment: fixed;
+}
+.preview-qcard {
+  background: #fff;
+  border-radius: 22px;
+  padding: 34px 32px 30px;
+  border: 1px solid rgba(26, 47, 92, 0.1);
+  box-shadow: 0 20px 50px -24px rgba(60, 30, 120, 0.28);
+}
