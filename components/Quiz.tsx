@@ -30,10 +30,10 @@ import Button from './Button'
 import ProgressBar from './ProgressBar'
 
 type Tela =
-  | 'capa' | 'restaurando'
+  | 'capa' | 'nome' | 'restaurando'
   | 'intro' | 'perfil' | 'desqualificado'
   | 'mirror' | 'video' | 'dinheiro' | 'conta'
-  | 'quiz' | 'correcao' | 'leitura'
+  | 'quiz' | 'correcao' | 'leitura' | 'contato'
   | 'resultado'
 
 type Resultado = {
@@ -52,9 +52,11 @@ type RespostaStart = {
 
 const TOTAL = QUESTIONS.length
 // Passos do funil depois da capa/intro, na ordem em que acontecem — usado só
-// para desenhar a barra de progresso do Header (mesma regra visual do funil
-// de referência: escondida em idx===0 e nas telas terminais).
-const PASSOS_POS_INTRO = PERFIL_SCREENS.length + 4 /* mirror, video, dinheiro, conta */ + TOTAL + 2 /* correcao, leitura */
+// para desenhar a barra de progresso do Header. O "+1" cobre a tela de
+// contato (só existe no fluxo ?fluxo=final); no fluxo padrão essa etapa
+// nunca é exibida, então o denominador fica levemente conservador — efeito
+// puramente cosmético na barra, sem impacto funcional.
+const PASSOS_POS_INTRO = PERFIL_SCREENS.length + 4 /* mirror, video, dinheiro, conta */ + TOTAL + 2 /* correcao, leitura */ + 1 /* contato */
 
 function tokenDaResposta(json: RespostaStart): string | null {
   return typeof json.session_token === 'string' && json.session_token !== '' ? json.session_token : null
@@ -100,6 +102,19 @@ export default function Quiz() {
   const [enviando, setEnviando] = useState(false)
   const [restaurando, setRestaurando] = useState(false)
   const [resultado, setResultado] = useState<Resultado | null>(null)
+
+  // Duas versões do funil, escolhidas por query string (ex.: ?fluxo=final),
+  // pra comparar lado a lado sem duplicar o app: 'inicio' (padrão) pede nome
+  // + WhatsApp + e-mail juntos na capa, antes do perfilamento; 'final' pede
+  // só o nome no começo e WhatsApp + e-mail depois da leitura, antes do
+  // resultado — o quiz inteiro roda em memória no navegador até esse ponto
+  // (sem sessão no servidor), e só então chama /start, /answer e /finish em
+  // sequência, exatamente como o fluxo padrão já faz — nenhuma rota nova.
+  const [fluxoFinal, setFluxoFinal] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setFluxoFinal(new URLSearchParams(window.location.search).get('fluxo') === 'final')
+  }, [])
 
   const [passoPerfil, setPassoPerfil] = useState(0)
   const [respostasPerfil, setRespostasPerfil] = useState<RespostasPerfil>({})
@@ -299,13 +314,29 @@ export default function Quiz() {
     const proximasRespostas: RespostasPerfil = { ...respostasPerfil, leitura: valor }
     setRespostasPerfil(proximasRespostas)
     persistirPerfil('leitura', valor)
-    setTela('resultado')
+    // Sem sessão ainda (fluxo com contato no final): pede WhatsApp/e-mail
+    // antes de revelar o resultado. Com sessão (fluxo padrão): já tem tudo.
+    setTela(estado ? 'resultado' : 'contato')
   }
 
   async function responder(letra: string) {
-    if (!estado || emVooRef.current) return
+    if (emVooRef.current) return
     const questao = QUESTIONS[atual]
     if (!questao) return
+
+    if (!estado) {
+      // Fluxo com contato no final: ainda não existe sessão no servidor —
+      // guarda a resposta localmente e segue. O /api/quiz/answer de verdade
+      // só é chamado em enviarContato(), depois que a sessão é criada.
+      setRespostasTeste((r) => ({ ...r, [questao.num]: letra }))
+      if (atual === TOTAL - 1) {
+        setTela('correcao')
+      } else {
+        setAtual((n) => n + 1)
+      }
+      return
+    }
+
     emVooRef.current = true
     setEnviando(true)
     setErro(null)
@@ -346,6 +377,69 @@ export default function Quiz() {
     }
     setResultado(await res.json())
     setTela('correcao')
+  }
+
+  // Fluxo com contato no final: só agora a sessão é criada. Reaproveita as
+  // mesmas rotas do fluxo padrão (start → answer × N → finish), em sequência
+  // — nenhuma rota nova, nenhum dado de dedupe/schema muda.
+  async function enviarContato() {
+    if (emVooRef.current) return
+    emVooRef.current = true
+    setEnviando(true)
+    setErro(null)
+    try {
+      const token = criarNovoSessionToken()
+      const resStart = await fetch('/api/quiz/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, whatsapp, email, session_token: token }),
+      })
+      if (!resStart.ok) {
+        setErro('Não foi possível concluir. Confira seus dados.')
+        return
+      }
+      const jsonStart: RespostaStart = await resStart.json()
+      const sessionToken = tokenDaResposta(jsonStart)
+      if (!sessionToken) {
+        setErro('Resposta inesperada do servidor. Tente novamente.')
+        return
+      }
+
+      for (const questao of QUESTIONS) {
+        const escolhida = respostasTeste[questao.num]
+        if (!escolhida) continue
+        const resAnswer = await fetch('/api/quiz/answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_token: sessionToken, num: questao.num, escolhida }),
+        })
+        if (!resAnswer.ok) {
+          setErro('Não foi possível registrar suas respostas. Tente novamente.')
+          return
+        }
+      }
+
+      const resFinish = await fetch('/api/quiz/finish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: sessionToken }),
+      })
+      if (!resFinish.ok) {
+        setErro('Não foi possível concluir o diagnóstico. Tente novamente.')
+        return
+      }
+
+      const novoEstado: EstadoQuiz = { sessionToken, nome, whatsapp, email }
+      salvarEstado(novoEstado)
+      setEstado(novoEstado)
+      setResultado(await resFinish.json())
+      setTela('resultado')
+    } catch {
+      setErro('Não foi possível concluir. Verifique sua conexão.')
+    } finally {
+      emVooRef.current = false
+      setEnviando(false)
+    }
   }
 
   if (restaurando) {
@@ -416,6 +510,46 @@ export default function Quiz() {
     )
   }
 
+  // Fluxo com contato no final (?fluxo=final): só o nome, sem chamar o
+  // servidor ainda — WhatsApp e e-mail só são pedidos na tela 'contato'.
+  if (tela === 'nome') {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex flex-1 items-start justify-center px-6 py-10">
+          <div className="w-full max-w-md">
+            <h1 className="text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
+              Como podemos te chamar?
+            </h1>
+            <p className="mt-3 text-brand-ink-soft">
+              Só isso — o resto a gente pergunta ao longo do caminho.
+            </p>
+
+            <div className="mt-8 text-left">
+              <label htmlFor="nome-completo" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">Nome completo</label>
+              <input
+                id="nome-completo"
+                placeholder="Seu nome completo"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-purple focus:outline-none focus:ring-4 focus:ring-brand-purple/10"
+              />
+            </div>
+
+            <Button
+              variant="gold"
+              onClick={() => setTela('perfil')}
+              disabled={!nome.trim()}
+              className="mt-6"
+            >
+              Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
+            </Button>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   if (tela === 'intro') {
     return (
       <div className="relative flex min-h-screen flex-col overflow-hidden bg-brand-bg">
@@ -454,12 +588,13 @@ export default function Quiz() {
             <p className="mt-4 text-[17px] leading-relaxed text-brand-ink-soft">
               E o que separa quem aproveita essa janela de quem assiste ela passar é saber em que momento da preparação está. <b className="text-brand-ink">Este diagnóstico revela o seu em menos de 3 minutos.</b>
             </p>
-            {/* Sem sessão em cache: precisa se identificar antes do perfilamento.
-                Retomando (F5 no meio do funil): `estado` já existe, pula a capa.
+            {/* Retomando (F5 no meio do funil): `estado` já existe, pula direto pro
+                perfilamento. Sem sessão em cache: fluxo 'final' pede só o nome
+                agora (capa vem no fim); fluxo padrão pede tudo na capa já.
                 Brilho na borda (anel claro + halo dourado) por cima da sombra padrão do Button. */}
             <Button
               variant="gold"
-              onClick={() => setTela(estado ? 'perfil' : 'capa')}
+              onClick={() => setTela(estado ? 'perfil' : fluxoFinal ? 'nome' : 'capa')}
               className="mt-8"
               style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.4) inset, 0 0 40px rgba(249,224,138,0.6), 0 10px 24px rgba(200,155,24,0.28)' }}
             >
@@ -776,6 +911,51 @@ export default function Quiz() {
                 </OptionButton>
               ))}
             </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Fluxo com contato no final: pede WhatsApp/e-mail depois da leitura, cria
+  // a sessão só agora e submete tudo de uma vez (start → answer × N → finish).
+  if (tela === 'contato') {
+    const progresso = Math.round(((PERFIL_SCREENS.length + 4 + TOTAL + 2) / PASSOS_POS_INTRO) * 100)
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header progresso={progresso} />
+        <main className="flex flex-1 items-start justify-center px-6 py-8">
+          <div className="w-full max-w-md">
+            <h1 className="text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Terminei a sua leitura. Pra onde eu mando o seu raio-X?</h1>
+
+            {erro && <AlertaErro mensagem={erro} />}
+
+            <div className="mt-6 flex flex-col gap-3.5">
+              <div className="text-left">
+                <label htmlFor="contato-whatsapp" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">WhatsApp</label>
+                <input
+                  id="contato-whatsapp"
+                  placeholder="(DDD) 00000-0000"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-purple focus:outline-none focus:ring-4 focus:ring-brand-purple/10"
+                />
+              </div>
+              <div className="text-left">
+                <label htmlFor="contato-email" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">E-mail</label>
+                <input
+                  id="contato-email"
+                  placeholder="Seu melhor e-mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-purple focus:outline-none focus:ring-4 focus:ring-brand-purple/10"
+                />
+              </div>
+            </div>
+
+            <Button variant="gold" onClick={enviarContato} disabled={enviando} className="mt-6">
+              Ver meu diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
+            </Button>
           </div>
         </main>
       </div>

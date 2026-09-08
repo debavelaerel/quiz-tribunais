@@ -35,6 +35,7 @@ function respostaPadrao(): Record<string, () => Response> {
 
 beforeEach(() => {
   localStorage.clear()
+  window.history.pushState({}, '', '/')
   respostas = respostaPadrao()
   vi.stubGlobal('fetch', vi.fn(async (url: string) => {
     if (url.includes('/api/quiz/result')) return respostas.result()
@@ -211,5 +212,65 @@ describe('Quiz', () => {
     render(<Quiz />)
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByPlaceholderText('Seu nome')).toHaveValue('Maria')
+  })
+
+  describe('fluxo com contato no final (?fluxo=final)', () => {
+    it('pede só o nome na abertura; WhatsApp e e-mail só depois da leitura, com sessão criada ali', async () => {
+      window.history.pushState({}, '', '/?fluxo=final')
+      render(<Quiz />)
+
+      await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Quero descobrir meu momento/))
+
+      // Só pede o nome — sem WhatsApp/e-mail nessa tela.
+      expect(screen.getByText('Como podemos te chamar?')).toBeInTheDocument()
+      expect(screen.queryByPlaceholderText('(DDD) 00000-0000')).not.toBeInTheDocument()
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria' } })
+      fireEvent.click(screen.getByText('Iniciar diagnóstico'))
+
+      await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
+      expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/start'))).toBe(false)
+
+      responderPerfilCompleto()
+      await waitFor(() => expect(screen.getByText(/Está certo, pode seguir/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Está certo, pode seguir/))
+      await waitFor(() => expect(screen.getByText(/Entendi, continuar/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Entendi, continuar/))
+      await waitFor(() => expect(screen.getAllByRole('button').length).toBeGreaterThan(0))
+      fireEvent.click(screen.getAllByRole('button')[0]) // tela "dinheiro"
+      await waitFor(() => expect(screen.getByText(/Quero encurtar esse caminho/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Quero encurtar esse caminho/))
+      await waitFor(() => expect(screen.getByText(/Questão 1 de 4/)).toBeInTheDocument())
+
+      const letras = ['C', 'C', 'B', 'A']
+      for (const letra of letras) {
+        fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${letra} `) }))
+        await waitFor(() => {})
+      }
+      // Respostas graduadas ficam só locais até o contato ser enviado.
+      expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/answer'))).toBe(false)
+
+      await waitFor(() => expect(screen.getByText(/Você acertou/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Fechar meu raio-X/))
+      await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
+      fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
+
+      // Só agora pede WhatsApp e e-mail.
+      await waitFor(() => expect(screen.getByLabelText('WhatsApp')).toBeInTheDocument())
+      fireEvent.change(screen.getByLabelText('WhatsApp'), { target: { value: '11987654321' } })
+      fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'maria@x.com' } })
+      fireEvent.click(screen.getByText('Ver meu diagnóstico'))
+
+      await waitFor(() => expect(screen.getByText(/Maria, o que eu enxerguei no seu caso/)).toBeInTheDocument())
+
+      const chamadaStart = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
+      expect(JSON.parse((chamadaStart![1] as RequestInit).body as string)).toMatchObject({
+        nome: 'Maria',
+        whatsapp: '11987654321',
+        email: 'maria@x.com',
+      })
+      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))).toHaveLength(4)
+      expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/finish'))).toBe(true)
+    })
   })
 })
