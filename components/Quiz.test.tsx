@@ -343,5 +343,60 @@ describe('Quiz', () => {
       expect(chamadasPerfil.length).toBeGreaterThan(0)
       expect(chamadasPerfil.some(([, opts]) => String((opts as RequestInit)?.body).includes('"leitura"'))).toBe(true)
     })
+
+    // Regressão: antes, a sessão só nascia no servidor no clique de "Ver meu
+    // diagnóstico" — se a pessoa digitasse o contato e fechasse a aba sem
+    // clicar, o lead se perdia (nenhuma linha era criada). Agora a sessão e
+    // as respostas acumuladas são enviadas assim que WhatsApp e e-mail ficam
+    // válidos (ao sair do campo), sem esperar o clique.
+    it('salva a sessão e as respostas assim que WhatsApp e e-mail ficam válidos, antes do clique final', async () => {
+      window.history.pushState({}, '', '/?fluxo=final')
+      render(<Quiz />)
+      fireEvent.click(screen.getByText(/Quero descobrir meu momento/))
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria Silva' } })
+      fireEvent.click(screen.getByText('Iniciar diagnóstico'))
+      await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
+      responderPerfilCompleto()
+      await waitFor(() => expect(screen.getByText(/Está certo, pode seguir/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Está certo, pode seguir/))
+      await waitFor(() => expect(screen.getByText(/Entendi, continuar/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Entendi, continuar/))
+      await waitFor(() => expect(screen.getAllByRole('button').length).toBeGreaterThan(0))
+      fireEvent.click(screen.getAllByRole('button')[0]) // tela "dinheiro"
+      await waitFor(() => expect(screen.getByText(/Quero encurtar esse caminho/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Quero encurtar esse caminho/))
+      await waitFor(() => expect(screen.getByText(/Questão 1 de 4/)).toBeInTheDocument())
+      for (const letra of ['C', 'C', 'B', 'A']) {
+        fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${letra} `) }))
+        await waitFor(() => {})
+      }
+      await waitFor(() => expect(screen.getByText(/Maria, você acertou/)).toBeInTheDocument())
+      fireEvent.click(screen.getByText(/Fechar meu raio-X/))
+      await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
+      fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
+      await waitFor(() => expect(screen.getByLabelText('WhatsApp')).toBeInTheDocument())
+
+      fireEvent.change(screen.getByLabelText('WhatsApp'), { target: { value: '11987654321' } })
+      fireEvent.blur(screen.getByLabelText('WhatsApp'))
+      fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'maria@x.com' } })
+      fireEvent.blur(screen.getByLabelText('E-mail'))
+
+      const botao = screen.getByText('Ver meu diagnóstico')
+      await waitFor(() => expect(botao).not.toBeDisabled())
+
+      // Antes de qualquer clique: sessão criada e as 4 respostas graduadas já
+      // replicadas pro servidor.
+      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/start'))).toHaveLength(1)
+      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))).toHaveLength(4)
+      expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/finish'))).toBe(false)
+
+      fireEvent.click(botao)
+      await waitFor(() => expect(screen.getByText(/Maria, o que eu enxerguei no seu caso/)).toBeInTheDocument())
+
+      // O clique final não repete start/perfil/respostas — só conclui.
+      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/start'))).toHaveLength(1)
+      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))).toHaveLength(4)
+      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/finish'))).toHaveLength(1)
+    })
   })
 })

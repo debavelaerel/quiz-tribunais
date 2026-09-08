@@ -491,62 +491,87 @@ export default function Quiz() {
     setTela(proximaTela)
   }
 
-  // Fluxo com contato no final: só agora a sessão é criada. Reaproveita as
-  // mesmas rotas do fluxo padrão (start → answer × N → finish), em sequência
-  // — nenhuma rota nova, nenhum dado de dedupe/schema muda.
+  // Fluxo com contato no final: cria (ou atualiza, se o salvamento antecipado
+  // já rodou — ver tentarSalvamentoAntecipado) a sessão e replica tudo que foi
+  // respondido localmente até aqui. Reaproveita as mesmas rotas do fluxo
+  // padrão (start → perfil × N → answer × N), nenhuma rota nova, nenhum dado
+  // de dedupe/schema muda. Retorna o session_token, ou null se algo falhou —
+  // quem chama decide se mostra erro (silencioso no salvamento antecipado,
+  // visível no clique final).
+  async function criarOuAtualizarSessaoFinal(): Promise<string | null> {
+    const token = estado?.sessionToken ?? criarNovoSessionToken()
+    const resStart = await fetch('/api/quiz/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, whatsapp, email, session_token: token, fluxo: 'final' }),
+    })
+    if (!resStart.ok) return null
+    const jsonStart: RespostaStart = await resStart.json()
+    const sessionToken = tokenDaResposta(jsonStart)
+    if (!sessionToken) return null
+
+    // Perfilamento acumulado localmente durante o funil inteiro — grava
+    // agora, aguardando cada chamada (ao contrário do fire-and-forget de
+    // persistirPerfil): aqui a perda compromete a sessão, porque pode ser a
+    // única chance de gravar esses dados nesse fluxo.
+    for (const [chave, valor] of Object.entries(respostasPerfil)) {
+      const resPerfil = await fetch('/api/quiz/perfil', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: sessionToken, chave, valor }),
+      })
+      if (!resPerfil.ok) return null
+    }
+
+    for (const questao of QUESTIONS) {
+      const escolhida = respostasTeste[questao.num]
+      if (!escolhida) continue
+      const resAnswer = await fetch('/api/quiz/answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: sessionToken, num: questao.num, escolhida }),
+      })
+      if (!resAnswer.ok) return null
+    }
+
+    const novoEstado: EstadoQuiz = { sessionToken, nome, whatsapp, email }
+    salvarEstado(novoEstado)
+    setEstado(novoEstado)
+    return sessionToken
+  }
+
+  // Salvamento antecipado: assim que WhatsApp e e-mail ficam válidos (ao sair
+  // do campo), já cria a sessão e envia tudo que foi respondido até aqui —
+  // sem esperar o clique em "Ver meu diagnóstico". Sem isso, quem digitasse o
+  // contato e fechasse a aba antes de clicar não deixava rastro nenhum no
+  // servidor. Falha aqui é silenciosa: a pessoa ainda está preenchendo o
+  // formulário: o clique final trata o erro de verdade (e refaz tudo, se o
+  // salvamento antecipado não tiver terminado a tempo).
+  async function tentarSalvamentoAntecipado() {
+    if (!whatsappValido(whatsapp) || !emailValido(email) || emVooRef.current) return
+    emVooRef.current = true
+    setEnviando(true)
+    try {
+      await criarOuAtualizarSessaoFinal()
+    } catch {
+      // silencioso — ver comentário acima
+    } finally {
+      emVooRef.current = false
+      setEnviando(false)
+    }
+  }
+
   async function enviarContato() {
     if (emVooRef.current) return
     emVooRef.current = true
     setEnviando(true)
     setErro(null)
     try {
-      const token = criarNovoSessionToken()
-      const resStart = await fetch('/api/quiz/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, whatsapp, email, session_token: token, fluxo: 'final' }),
-      })
-      if (!resStart.ok) {
+      const sessionToken = estado?.sessionToken ?? (await criarOuAtualizarSessaoFinal())
+      if (!sessionToken) {
         setErro('Não foi possível concluir. Confira seus dados.')
         return
       }
-      const jsonStart: RespostaStart = await resStart.json()
-      const sessionToken = tokenDaResposta(jsonStart)
-      if (!sessionToken) {
-        setErro('Resposta inesperada do servidor. Tente novamente.')
-        return
-      }
-
-      // Perfilamento acumulado localmente durante o funil inteiro — grava
-      // agora, aguardando cada chamada (ao contrário do fire-and-forget de
-      // persistirPerfil): aqui a perda compromete a sessão, porque é a
-      // única chance de gravar esses dados nesse fluxo.
-      for (const [chave, valor] of Object.entries(respostasPerfil)) {
-        const resPerfil = await fetch('/api/quiz/perfil', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_token: sessionToken, chave, valor }),
-        })
-        if (!resPerfil.ok) {
-          setErro('Não foi possível registrar seu perfil. Tente novamente.')
-          return
-        }
-      }
-
-      for (const questao of QUESTIONS) {
-        const escolhida = respostasTeste[questao.num]
-        if (!escolhida) continue
-        const resAnswer = await fetch('/api/quiz/answer', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_token: sessionToken, num: questao.num, escolhida }),
-        })
-        if (!resAnswer.ok) {
-          setErro('Não foi possível registrar suas respostas. Tente novamente.')
-          return
-        }
-      }
-
       const resFinish = await fetch('/api/quiz/finish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -556,10 +581,6 @@ export default function Quiz() {
         setErro('Não foi possível concluir o diagnóstico. Tente novamente.')
         return
       }
-
-      const novoEstado: EstadoQuiz = { sessionToken, nome, whatsapp, email }
-      salvarEstado(novoEstado)
-      setEstado(novoEstado)
       setResultado(await resFinish.json())
       setTela('resultado')
     } catch {
@@ -1065,12 +1086,16 @@ export default function Quiz() {
               <CampoTexto
                 id="contato-whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
                 formatador={formatarWhatsapp} inputMode="tel"
-                tocado={camposTocados['contato-whatsapp']} onTocar={() => marcarTocado('contato-whatsapp')} erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
+                tocado={camposTocados['contato-whatsapp']}
+                onTocar={() => { marcarTocado('contato-whatsapp'); void tentarSalvamentoAntecipado() }}
+                erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
               />
               <CampoTexto
                 id="contato-email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail}
                 inputMode="email"
-                tocado={camposTocados['contato-email']} onTocar={() => marcarTocado('contato-email')} erro={!emailValido(email) ? MSG_EMAIL : undefined}
+                tocado={camposTocados['contato-email']}
+                onTocar={() => { marcarTocado('contato-email'); void tentarSalvamentoAntecipado() }}
+                erro={!emailValido(email) ? MSG_EMAIL : undefined}
               />
             </div>
 
