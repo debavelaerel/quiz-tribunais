@@ -1,19 +1,19 @@
 'use client'
 
 import { ArrowLeft } from 'lucide-react'
+import ProgressTrail from './ProgressTrail'
 
 type HeaderProps = {
-  // 0-100. Omitido esconde a barra (abertura do funil e telas terminais —
-  // mesma regra do funil de referência: progress.hidden = idx===0 || terminal).
+  // 0-100. Sempre visível — do início (abertura) ao fim (resultado).
   progresso?: number
   onVoltar?: () => void
 }
 
 // Cabeçalho compartilhado por todas as telas do quiz: logo oficial da VDE
 // (wordmark "vde" + selo "Tribunais" já embutidos na própria arte, guia de
-// marca "Raio-X da Base"), botão de voltar opcional e a barra de progresso
-// do funil (gradiente dourado, como no funil de referência).
-export default function Header({ progresso, onVoltar }: HeaderProps) {
+// marca "Raio-X da Base"), botão de voltar opcional e a trilha de progresso
+// do funil (sempre visível, do início ao fim).
+export default function Header({ progresso = 0, onVoltar }: HeaderProps) {
   return (
     <header className="mx-auto w-full max-w-md px-6 pt-6">
       <div className="flex items-center justify-between gap-3">
@@ -30,14 +30,7 @@ export default function Header({ progresso, onVoltar }: HeaderProps) {
           </button>
         )}
       </div>
-      {progresso !== undefined && (
-        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#ECE9F5]">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-brand-gold-deep to-brand-gold transition-[width] duration-300 ease-out"
-            style={{ width: `${progresso}%` }}
-          />
-        </div>
-      )}
+      <ProgressTrail progresso={progresso} />
     </header>
   )
 }

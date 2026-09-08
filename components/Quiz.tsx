@@ -27,6 +27,7 @@ import { calcularPerfil, calcularConta, nivelTeste, type RespostasPerfil } from 
 import Header from './Header'
 import OptionButton from './OptionButton'
 import Button from './Button'
+import ProgressTrail from './ProgressTrail'
 
 type Tela =
   | 'capa' | 'restaurando'
@@ -436,7 +437,7 @@ export default function Quiz() {
           <div className="w-full max-w-md text-center">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca, sem necessidade do pipeline de otimização de imagem */}
             <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-16 w-auto" />
-            <div className="mx-auto mt-5 h-[3px] w-14 rounded-full bg-gradient-to-r from-brand-gold-deep to-brand-gold" />
+            <ProgressTrail progresso={0} />
             <div className="mt-7">
               <Eyebrow>A janela é agora</Eyebrow>
             </div>
@@ -549,9 +550,10 @@ export default function Quiz() {
         'Prefiro te dizer isso agora. Se em algum momento o seu alvo virar analista, o raio-X continua aqui.',
       ]
     }
+    const progressoDesqualificado = Math.round((passoPerfil / PASSOS_POS_INTRO) * 100)
     return (
       <div className="flex min-h-screen flex-col">
-        <Header />
+        <Header progresso={progressoDesqualificado} />
         <main className="flex flex-1 items-start justify-center px-6 py-10">
           <div className="w-full max-w-md text-center">
             <Eyebrow>Obrigada por responder</Eyebrow>
@@ -801,7 +803,7 @@ export default function Quiz() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+      <Header progresso={100} />
       <main className="flex flex-1 items-start justify-center px-6 py-8">
         <div className="w-full max-w-md">
           <Eyebrow>Raio-X da Base</Eyebrow>
