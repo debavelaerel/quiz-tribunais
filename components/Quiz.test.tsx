@@ -55,7 +55,7 @@ function abrirCapa() {
 
 // Preenche a capa e clica em "Iniciar diagnóstico".
 function iniciarDaCapa() {
-  fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
+  fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria Silva' } })
   fireEvent.change(screen.getByPlaceholderText('(DDD) 00000-0000'), { target: { value: '11987654321' } })
   fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
   fireEvent.click(screen.getByText('Iniciar diagnóstico'))
@@ -241,7 +241,7 @@ describe('Quiz', () => {
       // Só pede o nome — sem WhatsApp/e-mail nessa tela.
       expect(screen.getByText('Como podemos te chamar?')).toBeInTheDocument()
       expect(screen.queryByPlaceholderText('(DDD) 00000-0000')).not.toBeInTheDocument()
-      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria' } })
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria Silva' } })
       fireEvent.click(screen.getByText('Iniciar diagnóstico'))
 
       await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
@@ -281,7 +281,7 @@ describe('Quiz', () => {
 
       const chamadaStart = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
       expect(JSON.parse((chamadaStart![1] as RequestInit).body as string)).toMatchObject({
-        nome: 'Maria',
+        nome: 'Maria Silva',
         whatsapp: '11987654321',
         email: 'maria@x.com',
       })

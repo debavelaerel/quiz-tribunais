@@ -32,7 +32,7 @@ describe('GET /api/quiz/result', () => {
     const start = criarHandlerStart(repo)
     await start(new Request('http://localhost/api/quiz/start', {
       method: 'POST',
-      body: JSON.stringify({ nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: TOKEN }),
+      body: JSON.stringify({ nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: TOKEN }),
       headers: { 'x-forwarded-for': ip() },
     }))
     const handler = criarHandlerResult(repo)
@@ -45,7 +45,7 @@ describe('GET /api/quiz/result', () => {
     const start = criarHandlerStart(repo)
     await start(new Request('http://localhost/api/quiz/start', {
       method: 'POST',
-      body: JSON.stringify({ nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: TOKEN }),
+      body: JSON.stringify({ nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: TOKEN }),
       headers: { 'x-forwarded-for': ip() },
     }))
     const answer = criarHandlerAnswer(repo)

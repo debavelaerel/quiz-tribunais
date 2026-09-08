@@ -25,6 +25,7 @@ import {
   type FraseComNegrito,
 } from '@/lib/quizContent'
 import { calcularPerfil, calcularConta, nivelTeste, type RespostasPerfil } from '@/lib/perfil'
+import { nomeValido, emailValido, whatsappValido } from '@/lib/validacao'
 import Header from './Header'
 import OptionButton from './OptionButton'
 import Button from './Button'
@@ -536,7 +537,12 @@ export default function Quiz() {
               <CampoTexto id="email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail} />
             </div>
 
-            <Button variant="gold" onClick={iniciar} disabled={enviando} className="mt-5">
+            <Button
+              variant="gold"
+              onClick={iniciar}
+              disabled={enviando || !nomeValido(nome) || !whatsappValido(whatsapp) || !emailValido(email)}
+              className="mt-5"
+            >
               Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
           </div>
@@ -567,7 +573,7 @@ export default function Quiz() {
             <Button
               variant="gold"
               onClick={() => setTela('perfil')}
-              disabled={!nome.trim()}
+              disabled={!nomeValido(nome)}
               className="mt-5"
             >
               Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
@@ -966,7 +972,12 @@ export default function Quiz() {
               <CampoTexto id="contato-email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail} />
             </div>
 
-            <Button variant="gold" onClick={enviarContato} disabled={enviando} className="mt-5">
+            <Button
+              variant="gold"
+              onClick={enviarContato}
+              disabled={enviando || !whatsappValido(whatsapp) || !emailValido(email)}
+              className="mt-5"
+            >
               Ver meu diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
           </div>

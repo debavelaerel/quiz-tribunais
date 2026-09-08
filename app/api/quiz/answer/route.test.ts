@@ -16,7 +16,7 @@ async function iniciarSessaoDeTeste(repo: ReturnType<typeof criarFakeSessionRepo
   const start = criarHandlerStart(repo)
   await start(new Request('http://localhost/api/quiz/start', {
     method: 'POST',
-    body: JSON.stringify({ nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111' }),
+    body: JSON.stringify({ nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111' }),
     headers: { 'x-forwarded-for': `10.0.2.${Math.floor(Math.random() * 250)}` },
   }))
 }

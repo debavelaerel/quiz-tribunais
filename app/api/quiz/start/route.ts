@@ -7,12 +7,9 @@ import { permitirRequisicao } from '@/lib/server/rateLimit'
 import { isUuid } from '@/lib/server/uuid'
 import { EVENTO } from '@/lib/questions'
 import { ipDaRequisicao } from '@/lib/server/ip'
+import { nomeValido, emailValido, whatsappValido } from '@/lib/validacao'
 
 export const runtime = 'nodejs'
-
-function emailValido(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-}
 
 export function criarHandlerStart(repo: SessionRepo) {
   return async function handler(req: Request): Promise<Response> {
@@ -28,8 +25,8 @@ export function criarHandlerStart(repo: SessionRepo) {
     }
 
     const { nome, whatsapp, email, session_token: sessionToken, fluxo } = (corpo ?? {}) as Record<string, unknown>
-    if (typeof nome !== 'string' || nome.trim() === '') {
-      return NextResponse.json({ erro: 'nome obrigatório' }, { status: 422 })
+    if (typeof nome !== 'string' || !nomeValido(nome)) {
+      return NextResponse.json({ erro: 'nome e sobrenome obrigatórios' }, { status: 422 })
     }
     // Puramente informativo (ver migration 20260908000001) — cliente antigo
     // sem o campo, ou valor fora da allowlist, cai em 'padrao' silenciosamente.
@@ -37,8 +34,7 @@ export function criarHandlerStart(repo: SessionRepo) {
     if (typeof email !== 'string' || !emailValido(email)) {
       return NextResponse.json({ erro: 'email inválido' }, { status: 422 })
     }
-    const digitos = typeof whatsapp === 'string' ? whatsapp.replace(/\D/g, '').length : 0
-    if (digitos < 10 || digitos > 13) {
+    if (typeof whatsapp !== 'string' || !whatsappValido(whatsapp)) {
       return NextResponse.json({ erro: 'whatsapp inválido' }, { status: 422 })
     }
     if (typeof sessionToken !== 'string' || !isUuid(sessionToken)) {

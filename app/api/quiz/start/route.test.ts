@@ -15,7 +15,7 @@ describe('POST /api/quiz/start', () => {
   it('cria sessão nova com corpo válido', async () => {
     const handler = criarHandlerStart(criarFakeSessionRepo())
     const res = await handler(fazerRequisicao({
-      nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+      nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
     }))
     expect(res.status).toBe(200)
     const json = await res.json()
@@ -25,7 +25,7 @@ describe('POST /api/quiz/start', () => {
   it('recusa email inválido com 422', async () => {
     const handler = criarHandlerStart(criarFakeSessionRepo())
     const res = await handler(fazerRequisicao({
-      nome: 'Maria', whatsapp: '11987654321', email: 'invalido', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+      nome: 'Maria Silva', whatsapp: '11987654321', email: 'invalido', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
     }))
     expect(res.status).toBe(422)
   })
@@ -33,7 +33,7 @@ describe('POST /api/quiz/start', () => {
   it('recusa whatsapp com poucos dígitos com 422', async () => {
     const handler = criarHandlerStart(criarFakeSessionRepo())
     const res = await handler(fazerRequisicao({
-      nome: 'Maria', whatsapp: '123', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+      nome: 'Maria Silva', whatsapp: '123', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
     }))
     expect(res.status).toBe(422)
   })
@@ -41,7 +41,7 @@ describe('POST /api/quiz/start', () => {
   it('devolve o corpo em snake_case (session_token / respostas_salvas)', async () => {
     const handler = criarHandlerStart(criarFakeSessionRepo())
     const res = await handler(fazerRequisicao({
-      nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+      nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
     }))
     const json = await res.json()
     expect(json.session_token).toBe('aaaaaaaa-1111-1111-1111-111111111111')
@@ -51,7 +51,7 @@ describe('POST /api/quiz/start', () => {
   it('recusa session_token fora do formato uuid com 422', async () => {
     const handler = criarHandlerStart(criarFakeSessionRepo())
     const res = await handler(fazerRequisicao({
-      nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'nao-e-uuid',
+      nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'nao-e-uuid',
     }))
     expect(res.status).toBe(422)
   })
@@ -62,5 +62,29 @@ describe('POST /api/quiz/start', () => {
       nome: '  ', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
     }))
     expect(res.status).toBe(422)
+  })
+
+  it('recusa nome com uma palavra só (exige nome e sobrenome) com 422', async () => {
+    const handler = criarHandlerStart(criarFakeSessionRepo())
+    const res = await handler(fazerRequisicao({
+      nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+    }))
+    expect(res.status).toBe(422)
+  })
+
+  it('recusa whatsapp com 10 dígitos (sem o 9º dígito) com 422', async () => {
+    const handler = criarHandlerStart(criarFakeSessionRepo())
+    const res = await handler(fazerRequisicao({
+      nome: 'Maria Silva', whatsapp: '1187654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+    }))
+    expect(res.status).toBe(422)
+  })
+
+  it('aceita whatsapp com +55 na frente (13 dígitos)', async () => {
+    const handler = criarHandlerStart(criarFakeSessionRepo())
+    const res = await handler(fazerRequisicao({
+      nome: 'Maria Silva', whatsapp: '+55 11 98765-4321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+    }))
+    expect(res.status).toBe(200)
   })
 })
