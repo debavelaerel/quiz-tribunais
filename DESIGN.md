@@ -84,8 +84,9 @@ progresso, `ProgressBar.tsx`) e `#FBF3D6` (fundo do selo eyebrow, `Quiz.tsx`).
 - **botão dourado**: `0 10px 24px rgba(200,155,24,.28)`, hover `0 14px 28px rgba(200,155,24,.32)` + `-translate-y-0.5`.
 - **botão navy**: `0 10px 24px rgba(32,60,124,.18)`, hover `0 14px 28px rgba(32,60,124,.22)` + `-translate-y-0.5`.
 - **cartão flutuante** (vídeo): `0 10px 30px rgba(32,60,124,.25)`.
-- **brilho de destaque** (só o CTA da abertura, uso único e deliberado):
-  `0 0 0 1px rgba(255,255,255,.4) inset, 0 0 40px rgba(249,224,138,.6)` por cima da sombra de botão dourado.
+- Nenhum botão leva sombra além da sua própria (`shadow-[...]` do variant) —
+  um halo/glow extra no CTA da abertura foi testado e removido por criar uma
+  "sobra" visível ao redor do botão sobre fundo branco.
 - **Cards não têm sombra** — só borda (`brand-line`). Sombra é exclusiva de
   elementos acionáveis/flutuantes; usar sombra num card estático quebra essa
   regra e não deve acontecer sem motivo forte.
@@ -179,8 +180,7 @@ progresso, `ProgressBar.tsx`) e `#FBF3D6` (fundo do selo eyebrow, `Quiz.tsx`).
     "botao-dourado-hover": "0 14px 28px rgba(200,155,24,0.32)",
     "botao-navy": "0 10px 24px rgba(32,60,124,0.18)",
     "botao-navy-hover": "0 14px 28px rgba(32,60,124,0.22)",
-    "cartao-video": "0 10px 30px rgba(32,60,124,0.25)",
-    "brilho-cta-abertura": "0 0 0 1px rgba(255,255,255,0.4) inset, 0 0 40px rgba(249,224,138,0.6)"
+    "cartao-video": "0 10px 30px rgba(32,60,124,0.25)"
   },
   "fonts": ["Poppins"]
 }

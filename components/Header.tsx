@@ -4,7 +4,9 @@ import { ArrowLeft } from 'lucide-react'
 import ProgressBar from './ProgressBar'
 
 type HeaderProps = {
-  // 0-100. Sempre visível — do início (abertura) ao fim (resultado).
+  // 0-100. Omitido esconde a barra — só aparece a partir do perfilamento,
+  // depois que a pessoa já deu o nome (abertura/capa/tela de nome não têm
+  // progresso nenhum ainda pra mostrar, nos dois fluxos).
   progresso?: number
   onVoltar?: () => void
 }
@@ -12,9 +14,9 @@ type HeaderProps = {
 // Cabeçalho compartilhado por todas as telas do quiz: logo oficial da VDE
 // (wordmark "vde" + selo "Tribunais" já embutidos na própria arte, guia de
 // marca "Raio-X da Base"), botão de voltar opcional e a barra de progresso
-// do funil (sempre visível, do início ao fim — sem marcos de fase, tom
+// do funil (só a partir de quem já deu o nome — sem marcos de fase, tom
 // institucional).
-export default function Header({ progresso = 0, onVoltar }: HeaderProps) {
+export default function Header({ progresso, onVoltar }: HeaderProps) {
   return (
     <header className="mx-auto w-full max-w-md px-6 pt-6">
       <div className="flex items-center justify-between gap-3">
@@ -31,7 +33,7 @@ export default function Header({ progresso = 0, onVoltar }: HeaderProps) {
           </button>
         )}
       </div>
-      <ProgressBar progresso={progresso} />
+      {progresso !== undefined && <ProgressBar progresso={progresso} />}
     </header>
   )
 }

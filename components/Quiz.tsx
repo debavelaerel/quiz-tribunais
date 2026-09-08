@@ -27,7 +27,6 @@ import { calcularPerfil, calcularConta, nivelTeste, type RespostasPerfil } from 
 import Header from './Header'
 import OptionButton from './OptionButton'
 import Button from './Button'
-import ProgressBar from './ProgressBar'
 
 type Tela =
   | 'capa' | 'nome' | 'restaurando'
@@ -599,7 +598,6 @@ export default function Quiz() {
           <div className="w-full max-w-md text-center">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca, sem necessidade do pipeline de otimização de imagem */}
             <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-16 w-auto" />
-            <ProgressBar progresso={0} />
             <div className="mt-7">
               <Eyebrow>A janela é agora</Eyebrow>
             </div>
@@ -618,13 +616,11 @@ export default function Quiz() {
             </p>
             {/* Retomando (F5 no meio do funil): `estado` já existe, pula direto pro
                 perfilamento. Sem sessão em cache: fluxo 'final' pede só o nome
-                agora (capa vem no fim); fluxo padrão pede tudo na capa já.
-                Brilho na borda (anel claro + halo dourado) por cima da sombra padrão do Button. */}
+                agora (capa vem no fim); fluxo padrão pede tudo na capa já. */}
             <Button
               variant="gold"
               onClick={() => setTela(estado ? 'perfil' : fluxoFinal ? 'nome' : 'capa')}
               className="mt-8"
-              style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.4) inset, 0 0 40px rgba(249,224,138,0.6), 0 10px 24px rgba(200,155,24,0.28)' }}
             >
               Quero descobrir meu momento <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
