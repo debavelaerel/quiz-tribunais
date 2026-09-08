@@ -1,10 +1,12 @@
 import { paraFatias } from '@/lib/pieChart'
 import type { ItemDistribuicao } from '@/lib/analytics'
 
-// Paleta cíclica pras fatias — variações do azul e do dourado da marca (ver
-// DESIGN.md), nunca uma cor nova. Cinza neutro pro resto quando há mais
-// categorias do que cores.
-const CORES = ['#203C7C', '#C89B18', '#7C86A6', '#4A64A0', '#F9E08A', '#16305F', '#B7ADFD', '#9CA3B8']
+// Paleta cíclica pras fatias — só tinta/sombra do azul e do dourado da marca,
+// alternando os dois do mais escuro pro mais claro (ver DESIGN.md: variação
+// de tinta da mesma cor não conta como cor nova; cinza e qualquer outro hue
+// contam — por isso nada de cinza neutro aqui, diferente do resto da UI).
+// Branco já é o fundo da página e o traço entre fatias.
+const CORES = ['#16305F', '#C89B18', '#203C7C', '#D9AC2C', '#3E5C9E', '#EAC652', '#7C93C4', '#F9E08A']
 
 type PieChartProps = {
   titulo: string
