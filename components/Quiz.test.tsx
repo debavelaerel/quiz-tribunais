@@ -56,7 +56,7 @@ function abrirCapa() {
 // Preenche a capa e clica em "Iniciar diagnóstico".
 function iniciarDaCapa() {
   fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria Silva' } })
-  fireEvent.change(screen.getByPlaceholderText('(DDD) 00000-0000'), { target: { value: '11987654321' } })
+  fireEvent.change(screen.getByPlaceholderText('(85) 99682-6067'), { target: { value: '11987654321' } })
   fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
   fireEvent.click(screen.getByText('Iniciar diagnóstico'))
 }
@@ -123,6 +123,53 @@ describe('Quiz', () => {
     render(<Quiz />)
     abrirCapa()
     expect(screen.getByPlaceholderText('Seu nome')).toBeInTheDocument()
+  })
+
+  it('não mostra mensagem de erro do campo antes de sair dele (blur)', () => {
+    render(<Quiz />)
+    abrirCapa()
+    fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
+    expect(screen.queryByText('Informe nome e sobrenome.')).not.toBeInTheDocument()
+  })
+
+  it('mostra a mensagem específica de cada campo depois do blur, some quando corrige', () => {
+    render(<Quiz />)
+    abrirCapa()
+    const campoNome = screen.getByPlaceholderText('Seu nome')
+    fireEvent.change(campoNome, { target: { value: 'Maria' } })
+    fireEvent.blur(campoNome)
+    expect(screen.getByText('Informe nome e sobrenome.')).toBeInTheDocument()
+
+    fireEvent.change(campoNome, { target: { value: 'Maria Silva' } })
+    expect(screen.queryByText('Informe nome e sobrenome.')).not.toBeInTheDocument()
+  })
+
+  it('mostra a mensagem do WhatsApp e do e-mail depois do blur, cada uma no seu campo', () => {
+    render(<Quiz />)
+    abrirCapa()
+    const campoWhatsapp = screen.getByPlaceholderText('(85) 99682-6067')
+    const campoEmail = screen.getByPlaceholderText('Seu melhor e-mail')
+    fireEvent.change(campoWhatsapp, { target: { value: '123' } })
+    fireEvent.blur(campoWhatsapp)
+    fireEvent.change(campoEmail, { target: { value: 'invalido' } })
+    fireEvent.blur(campoEmail)
+    expect(screen.getByText('WhatsApp inválido. Use o formato (85) 99682-6067.')).toBeInTheDocument()
+    expect(screen.getByText('E-mail inválido.')).toBeInTheDocument()
+  })
+
+  it('exibe o WhatsApp com máscara (85) 99682-6067, mas guarda só os dígitos', async () => {
+    render(<Quiz />)
+    abrirCapa()
+    fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria Silva' } })
+    fireEvent.change(screen.getByPlaceholderText('(85) 99682-6067'), { target: { value: '85996826067' } })
+    fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
+    expect(screen.getByPlaceholderText('(85) 99682-6067')).toHaveValue('(85) 99682-6067')
+
+    fireEvent.click(screen.getByText('Iniciar diagnóstico'))
+    await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
+    const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
+    const corpo = JSON.parse((chamada![1] as RequestInit).body as string)
+    expect(corpo.whatsapp).toBe('85996826067')
   })
 
   it('avança pro perfilamento depois de preencher o formulário e iniciar', async () => {
@@ -240,7 +287,7 @@ describe('Quiz', () => {
 
       // Só pede o nome — sem WhatsApp/e-mail nessa tela.
       expect(screen.getByText('Como podemos te chamar?')).toBeInTheDocument()
-      expect(screen.queryByPlaceholderText('(DDD) 00000-0000')).not.toBeInTheDocument()
+      expect(screen.queryByPlaceholderText('(85) 99682-6067')).not.toBeInTheDocument()
       fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria Silva' } })
       fireEvent.click(screen.getByText('Iniciar diagnóstico'))
 

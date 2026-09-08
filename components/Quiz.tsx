@@ -26,6 +26,7 @@ import {
 } from '@/lib/quizContent'
 import { calcularPerfil, calcularConta, nivelTeste, type RespostasPerfil } from '@/lib/perfil'
 import { nomeValido, emailValido, whatsappValido } from '@/lib/validacao'
+import { formatarWhatsapp } from '@/lib/mascara'
 import Header from './Header'
 import OptionButton from './OptionButton'
 import Button from './Button'
@@ -92,29 +93,59 @@ function AlertaErro({ mensagem }: { mensagem: string }) {
   )
 }
 
+// Mensagem específica de cada campo — mostrada só depois do blur (ver
+// `camposTocados`). Uma frase por campo, sem tentar diagnosticar a causa
+// exata do e-mail/telefone inválido, só dizer o formato esperado.
+const MSG_NOME = 'Informe nome e sobrenome.'
+const MSG_WHATSAPP = 'WhatsApp inválido. Use o formato (85) 99682-6067.'
+const MSG_EMAIL = 'E-mail inválido.'
+
 // Campo de formulário compacto, sem rótulo visível — o placeholder já diz o
 // que é (versão aprovada depois de comparar com a anterior, mais pesada:
 // rótulo próprio + padding grande em cada campo). O rótulo continua no DOM
 // como sr-only — some visualmente, mas segue lido por leitor de tela e
 // encontrável por getByLabelText nos testes. Usado em capa/nome/contato, que
 // antes repetiam essa mesma classe de input 6 vezes.
-function CampoTexto({ id, rotulo, placeholder, value, onChange }: {
+function CampoTexto({ id, rotulo, placeholder, value, onChange, erro, tocado, onTocar, formatador, inputMode }: {
   id: string
   rotulo: string
   placeholder: string
   value: string
   onChange: (valor: string) => void
+  // Mensagem específica do que falta/está errado nesse campo — só aparece
+  // depois que a pessoa sai do campo (blur) ou tenta enviar, pra não gritar
+  // "inválido" antes de dar tempo de digitar.
+  erro?: string
+  tocado?: boolean
+  onTocar?: () => void
+  // Máscara só de exibição (ex.: formatarWhatsapp) — `value`/`onChange`
+  // continuam sempre com o dado cru (só dígitos), a máscara nunca é o que
+  // fica guardado no state nem o que é enviado pro servidor.
+  formatador?: (valor: string) => string
+  inputMode?: 'text' | 'tel' | 'email'
 }) {
+  const mostraErro = tocado && erro
   return (
     <div className="text-left">
       <label htmlFor={id} className="sr-only">{rotulo}</label>
       <input
         id={id}
         placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-brand-line bg-brand-card px-3.5 py-3 text-[14.5px] text-brand-ink placeholder:text-brand-ink-dim focus:border-brand-ink focus:outline-none focus:ring-[3px] focus:ring-brand-ink/[0.08]"
+        value={formatador ? formatador(value) : value}
+        inputMode={inputMode}
+        onChange={(e) => onChange(formatador ? e.target.value.replace(/\D/g, '').slice(0, 11) : e.target.value)}
+        onBlur={onTocar}
+        aria-invalid={mostraErro ? true : undefined}
+        aria-describedby={mostraErro ? `${id}-erro` : undefined}
+        className={`font-brand w-full rounded-xl border bg-brand-card px-3.5 py-3 text-[14.5px] text-brand-ink placeholder:text-brand-ink-dim focus:outline-none focus:ring-[3px] ${
+          mostraErro
+            ? 'border-brand-gold-deep/70 focus:border-brand-gold-deep focus:ring-brand-gold-deep/[0.12]'
+            : 'border-brand-line focus:border-brand-ink focus:ring-brand-ink/[0.08]'
+        }`}
       />
+      {mostraErro && (
+        <p id={`${id}-erro`} role="alert" className="mt-1.5 text-[12.5px] text-brand-gold-text">{erro}</p>
+      )}
     </div>
   )
 }
@@ -126,6 +157,14 @@ export default function Quiz() {
   const [nome, setNome] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [email, setEmail] = useState('')
+  // Campos de identificação (capa/nome/contato) já visitados (blur) — só
+  // mostra a mensagem de erro de um campo depois que a pessoa saiu dele,
+  // pra não gritar "inválido" antes de dar tempo de digitar. Chave = id do
+  // CampoTexto; compartilhado entre as 3 telas, sem colisão (ids distintos).
+  const [camposTocados, setCamposTocados] = useState<Record<string, boolean>>({})
+  function marcarTocado(id: string) {
+    setCamposTocados((t) => ({ ...t, [id]: true }))
+  }
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [restaurando, setRestaurando] = useState(false)
@@ -536,9 +575,20 @@ export default function Quiz() {
             {erro && <AlertaErro mensagem={erro} />}
 
             <div className="mt-7 flex flex-col gap-2.5">
-              <CampoTexto id="nome" rotulo="Nome" placeholder="Seu nome" value={nome} onChange={setNome} />
-              <CampoTexto id="whatsapp" rotulo="WhatsApp" placeholder="(DDD) 00000-0000" value={whatsapp} onChange={setWhatsapp} />
-              <CampoTexto id="email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail} />
+              <CampoTexto
+                id="nome" rotulo="Nome" placeholder="Seu nome" value={nome} onChange={setNome}
+                tocado={camposTocados.nome} onTocar={() => marcarTocado('nome')} erro={!nomeValido(nome) ? MSG_NOME : undefined}
+              />
+              <CampoTexto
+                id="whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
+                formatador={formatarWhatsapp} inputMode="tel"
+                tocado={camposTocados.whatsapp} onTocar={() => marcarTocado('whatsapp')} erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
+              />
+              <CampoTexto
+                id="email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail}
+                inputMode="email"
+                tocado={camposTocados.email} onTocar={() => marcarTocado('email')} erro={!emailValido(email) ? MSG_EMAIL : undefined}
+              />
             </div>
 
             <Button
@@ -572,7 +622,10 @@ export default function Quiz() {
             </p>
 
             <div className="mt-7">
-              <CampoTexto id="nome-completo" rotulo="Nome completo" placeholder="Seu nome completo" value={nome} onChange={setNome} />
+              <CampoTexto
+                id="nome-completo" rotulo="Nome completo" placeholder="Seu nome completo" value={nome} onChange={setNome}
+                tocado={camposTocados['nome-completo']} onTocar={() => marcarTocado('nome-completo')} erro={!nomeValido(nome) ? MSG_NOME : undefined}
+              />
             </div>
 
             <Button
@@ -973,8 +1026,16 @@ export default function Quiz() {
             {erro && <AlertaErro mensagem={erro} />}
 
             <div className="mt-6 flex flex-col gap-2.5">
-              <CampoTexto id="contato-whatsapp" rotulo="WhatsApp" placeholder="(DDD) 00000-0000" value={whatsapp} onChange={setWhatsapp} />
-              <CampoTexto id="contato-email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail} />
+              <CampoTexto
+                id="contato-whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
+                formatador={formatarWhatsapp} inputMode="tel"
+                tocado={camposTocados['contato-whatsapp']} onTocar={() => marcarTocado('contato-whatsapp')} erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
+              />
+              <CampoTexto
+                id="contato-email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail}
+                inputMode="email"
+                tocado={camposTocados['contato-email']} onTocar={() => marcarTocado('contato-email')} erro={!emailValido(email) ? MSG_EMAIL : undefined}
+              />
             </div>
 
             <Button
