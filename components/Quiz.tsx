@@ -91,6 +91,33 @@ function AlertaErro({ mensagem }: { mensagem: string }) {
   )
 }
 
+// Campo de formulário compacto, sem rótulo visível — o placeholder já diz o
+// que é (versão aprovada depois de comparar com a anterior, mais pesada:
+// rótulo próprio + padding grande em cada campo). O rótulo continua no DOM
+// como sr-only — some visualmente, mas segue lido por leitor de tela e
+// encontrável por getByLabelText nos testes. Usado em capa/nome/contato, que
+// antes repetiam essa mesma classe de input 6 vezes.
+function CampoTexto({ id, rotulo, placeholder, value, onChange }: {
+  id: string
+  rotulo: string
+  placeholder: string
+  value: string
+  onChange: (valor: string) => void
+}) {
+  return (
+    <div className="text-left">
+      <label htmlFor={id} className="sr-only">{rotulo}</label>
+      <input
+        id={id}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-brand-line bg-brand-card px-3.5 py-3 text-[14.5px] text-brand-ink placeholder:text-brand-ink-dim focus:border-brand-ink focus:outline-none focus:ring-[3px] focus:ring-brand-ink/[0.08]"
+      />
+    </div>
+  )
+}
+
 export default function Quiz() {
   const [tela, setTela] = useState<Tela>('intro')
   const [atual, setAtual] = useState(0)
@@ -503,40 +530,13 @@ export default function Quiz() {
 
             {erro && <AlertaErro mensagem={erro} />}
 
-            <div className="mt-8 flex flex-col gap-3.5">
-              <div className="text-left">
-                <label htmlFor="nome" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">Nome</label>
-                <input
-                  id="nome"
-                  placeholder="Seu nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-brand-ink/10"
-                />
-              </div>
-              <div className="text-left">
-                <label htmlFor="whatsapp" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">WhatsApp</label>
-                <input
-                  id="whatsapp"
-                  placeholder="(DDD) 00000-0000"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-brand-ink/10"
-                />
-              </div>
-              <div className="text-left">
-                <label htmlFor="email" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">E-mail</label>
-                <input
-                  id="email"
-                  placeholder="Seu melhor e-mail"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-brand-ink/10"
-                />
-              </div>
+            <div className="mt-7 flex flex-col gap-2.5">
+              <CampoTexto id="nome" rotulo="Nome" placeholder="Seu nome" value={nome} onChange={setNome} />
+              <CampoTexto id="whatsapp" rotulo="WhatsApp" placeholder="(DDD) 00000-0000" value={whatsapp} onChange={setWhatsapp} />
+              <CampoTexto id="email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail} />
             </div>
 
-            <Button variant="gold" onClick={iniciar} disabled={enviando} className="mt-6">
+            <Button variant="gold" onClick={iniciar} disabled={enviando} className="mt-5">
               Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
           </div>
@@ -560,22 +560,15 @@ export default function Quiz() {
               Só isso — o resto a gente pergunta ao longo do caminho.
             </p>
 
-            <div className="mt-8 text-left">
-              <label htmlFor="nome-completo" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">Nome completo</label>
-              <input
-                id="nome-completo"
-                placeholder="Seu nome completo"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-brand-ink/10"
-              />
+            <div className="mt-7">
+              <CampoTexto id="nome-completo" rotulo="Nome completo" placeholder="Seu nome completo" value={nome} onChange={setNome} />
             </div>
 
             <Button
               variant="gold"
               onClick={() => setTela('perfil')}
               disabled={!nome.trim()}
-              className="mt-6"
+              className="mt-5"
             >
               Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
@@ -968,30 +961,12 @@ export default function Quiz() {
 
             {erro && <AlertaErro mensagem={erro} />}
 
-            <div className="mt-6 flex flex-col gap-3.5">
-              <div className="text-left">
-                <label htmlFor="contato-whatsapp" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">WhatsApp</label>
-                <input
-                  id="contato-whatsapp"
-                  placeholder="(DDD) 00000-0000"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-brand-ink/10"
-                />
-              </div>
-              <div className="text-left">
-                <label htmlFor="contato-email" className="mb-1.5 block text-[14.5px] font-medium text-brand-ink-soft">E-mail</label>
-                <input
-                  id="contato-email"
-                  placeholder="Seu melhor e-mail"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-[14px] border-[1.5px] border-brand-line-strong bg-brand-card px-4 py-4 text-brand-ink placeholder:italic placeholder:text-brand-ink-dim/70 focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-brand-ink/10"
-                />
-              </div>
+            <div className="mt-6 flex flex-col gap-2.5">
+              <CampoTexto id="contato-whatsapp" rotulo="WhatsApp" placeholder="(DDD) 00000-0000" value={whatsapp} onChange={setWhatsapp} />
+              <CampoTexto id="contato-email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail} />
             </div>
 
-            <Button variant="gold" onClick={enviarContato} disabled={enviando} className="mt-6">
+            <Button variant="gold" onClick={enviarContato} disabled={enviando} className="mt-5">
               Ver meu diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
           </div>

@@ -72,8 +72,11 @@ progresso, `ProgressBar.tsx`) e `#FBF3D6` (fundo do selo eyebrow, `Quiz.tsx`).
 
 - **`rounded-full`** (pill) — todo botão de ação, chips/badges, dot de opção.
 - **`18px`** — cartão de opção (`OptionButton`).
-- **`14px`** — cartão de informação (kv-row, item de correção, box de
-  prescrição), input de formulário.
+- **`14px`** — cartão de informação (kv-row, item de correção, box de prescrição).
+- **`12px`** (`rounded-xl`) — input de formulário (`CampoTexto`). Era 14px com
+  borda de 1.5px e padding de 16px — pesado demais (comparado com um
+  concorrente, capa/nome/contato viraram um cartão "carregado" perto do
+  resto do funil). Reduzido pra 12px, borda de 1px, padding de 12/14px.
 - **`22px`** — o cartão do vídeo (único elemento maior, ganha um raio maior de propósito).
 - **`16px`** (`rounded-2xl`) — alerta de erro.
 - Nunca usar um raio fora dessa escala; se precisar de algo entre 14 e 18,
@@ -101,7 +104,8 @@ progresso, `ProgressBar.tsx`) e `#FBF3D6` (fundo do selo eyebrow, `Quiz.tsx`).
 - **Selected** (`OptionButton`): borda `brand-ink`, fundo `brand-tint`,
   dot preenchido de `brand-ink`. (Antes disso já foram testadas e descartadas
   versões com roxo/lilás — ver seção 7, Don't.)
-- **Focus** (inputs): `focus:border-brand-ink focus:ring-4 focus:ring-brand-ink/10`.
+- **Focus** (inputs): `focus:border-brand-ink focus:ring-[3px] focus:ring-brand-ink/[0.08]`
+  (era `ring-4`/`10` — encolheu junto com o resto do campo, ver seção 4).
   **Gap conhecido**: `Button`/`OptionButton` não têm `focus-visible` customizado
   hoje (dependem do outline padrão do navegador) — corrigir antes de expor o
   quiz pra navegação por teclado como requisito.
@@ -111,8 +115,15 @@ progresso, `ProgressBar.tsx`) e `#FBF3D6` (fundo do selo eyebrow, `Quiz.tsx`).
 ## 7. Rules
 
 **Do:**
-- Reusar `Header`, `Button`, `OptionButton`, `ProgressBar`, `Eyebrow` — nunca
-  duplicar o markup de botão/opção/card inline numa tela nova.
+- Reusar `Header`, `Button`, `OptionButton`, `ProgressBar`, `Eyebrow`,
+  `CampoTexto` — nunca duplicar o markup de botão/opção/card/input inline
+  numa tela nova.
+- Campo de formulário (`CampoTexto`) não mostra rótulo visível — só
+  placeholder — desde que o cliente comparou a versão anterior (rótulo +
+  padding grande) com a de um concorrente e achou pesada. O rótulo continua
+  no DOM como `sr-only`: some visualmente, mas segue lido por leitor de tela
+  e encontrável por `getByLabelText` nos testes. Nunca tirar o `<label>` de
+  vez, só escondê-lo.
 - Puxar cor só dos tokens `brand-*` de `app/globals.css`. Hex novo só entra
   ali, nunca direto num componente.
 - Manter só Poppins. Se um dia precisar de uma 2ª fonte, é decisão de marca,
