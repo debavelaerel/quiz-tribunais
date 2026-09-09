@@ -20,7 +20,7 @@ export type QuizSession = {
   acertos: number | null
   total: number | null
   areaPrioritaria: string | null
-  // Respostas de perfilamento do funil "Raio-X da Base" (alvo, cargo, formação,
+  // Respostas de perfilamento do funil "Diagnóstico da Base" (alvo, cargo, formação,
   // editais escolhidos, etc.) — não graduadas, distintas de `respostas`/`areas`.
   perfil: RespostasPerfil
   perfilCalculado: PerfilCalculado | null

@@ -13,7 +13,7 @@ type HeaderProps = {
 
 // Cabeçalho compartilhado por todas as telas do quiz: logo oficial da VDE
 // (wordmark "vde" + selo "Tribunais" já embutidos na própria arte, guia de
-// marca "Raio-X da Base"), botão de voltar opcional e a barra de progresso
+// marca "Diagnóstico da Base"), botão de voltar opcional e a barra de progresso
 // do funil (só a partir de quem já deu o nome — sem marcos de fase, tom
 // institucional).
 export default function Header({ progresso, onVoltar }: HeaderProps) {
