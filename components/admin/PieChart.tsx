@@ -1,12 +1,18 @@
 import { paraFatias } from '@/lib/pieChart'
 import type { ItemDistribuicao } from '@/lib/analytics'
 
-// Paleta cíclica pras fatias — só tinta/sombra do azul e do dourado da marca,
-// alternando os dois do mais escuro pro mais claro (ver DESIGN.md: variação
-// de tinta da mesma cor não conta como cor nova; cinza e qualquer outro hue
-// contam — por isso nada de cinza neutro aqui, diferente do resto da UI).
-// Branco já é o fundo da página e o traço entre fatias.
-const CORES = ['#16305F', '#C89B18', '#203C7C', '#D9AC2C', '#3E5C9E', '#EAC652', '#7C93C4', '#F9E08A']
+// Paleta categórica pro painel administrativo — deliberadamente FORA da
+// regra de 3 cores do DESIGN.md (essa regra é da identidade do quiz que o
+// lead responde, não da ferramenta interna que o time usa). Com só azul e
+// dourado, gráficos de pizza com várias fatias pareciam monocromáticos e
+// difíceis de distinguir; oito fatias da mesma cor em tons diferentes é
+// pior pra achar "qual fatia é qual" do que oito cores realmente diferentes.
+//
+// Ordem e hexadecimais vêm da paleta categórica validada da skill de
+// dataviz (references/palette.md) — não escolhidos no olho: passa nos 4
+// checks de segurança (daltonismo, contraste, banda de luminosidade) nessa
+// ordem exata; trocar a ordem sem revalidar quebra essa garantia.
+const CORES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948']
 
 type PieChartProps = {
   titulo: string
