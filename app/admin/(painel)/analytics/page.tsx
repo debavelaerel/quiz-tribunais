@@ -86,15 +86,12 @@ export default async function AnalyticsPage() {
           { num: `${taxaConclusao}%`, lbl: 'taxa de conclusão' },
           { num: `${mediaAcertos} / ${totalGraduado}`, lbl: 'média de acertos' },
           { num: concluidas.length, lbl: 'concluídas' },
-          { num: `${taxaCliqueGeral}%`, lbl: 'clicou no WhatsApp', destaque: true },
+          { num: `${taxaCliqueGeral}%`, lbl: 'clicou no WhatsApp' },
           { num: tempoMedioMin !== null ? `${Math.round(tempoMedioMin)}min` : '—', lbl: 'tempo médio até concluir' },
         ].map((c) => (
-          <div
-            key={c.lbl}
-            className={`rounded-[14px] border-[1.5px] px-4.5 py-4 ${c.destaque ? 'border-transparent bg-gradient-to-br from-brand-gold to-brand-gold-deep' : 'border-brand-line'}`}
-          >
+          <div key={c.lbl} className="rounded-[14px] border-[1.5px] border-brand-line px-4.5 py-4">
             <div className="text-[22px] font-bold tracking-[-0.01em] text-brand-ink">{c.num}</div>
-            <div className={`mt-1 text-[12px] ${c.destaque ? 'text-brand-ink' : 'text-brand-ink-dim'}`}>{c.lbl}</div>
+            <div className="mt-1 text-[12px] text-brand-ink-dim">{c.lbl}</div>
           </div>
         ))}
       </div>
@@ -122,7 +119,7 @@ export default async function AnalyticsPage() {
             <p className="mb-5 text-[12.5px] text-brand-ink-dim">Só sessões concluídas ({concluidas.length}) — a classificação só existe depois do teste graduado.</p>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
               <PieChart titulo="Classe de qualificação" dados={classes} rotulos={ROTULOS_CLASSE} />
-              <PieChart titulo="Curso indicado" dados={cursos} rotulos={ROTULOS_CURSO} />
+              <RankedBars titulo="Curso indicado" dados={cursos} rotulos={ROTULOS_CURSO} />
             </div>
           </div>
 
