@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { criarHandlerStart } from './route'
 import { criarFakeSessionRepo } from '@/lib/server/testHelpers/fakeSessionRepo'
+import { registrarResposta, concluirSessao } from '@/lib/server/quizService'
 
 function fazerRequisicao(corpo: unknown) {
   return new Request('http://localhost/api/quiz/start', {
@@ -86,5 +87,39 @@ describe('POST /api/quiz/start', () => {
       nome: 'Maria Silva', whatsapp: '+55 11 98765-4321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
     }))
     expect(res.status).toBe(200)
+  })
+
+  // Reproduz o bug: quem já concluiu (mesmo email/whatsapp) e volta a
+  // preencher o formulário recebia 200 com `ja_concluida` ausente — o
+  // cliente seguia adiante achando que ia começar do zero, e só descobria
+  // que a sessão estava fechada bem mais tarde, com "não foi possível
+  // registrar sua resposta" ou "não foi possível concluir". A rota precisa
+  // avisar isso já na resposta do /start.
+  it('avisa ja_concluida:true ao retomar uma sessão que já tinha sido concluída', async () => {
+    const repo = criarFakeSessionRepo()
+    const handler = criarHandlerStart(repo)
+    await handler(fazerRequisicao({
+      nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+    }))
+    for (let num = 1; num <= 4; num++) {
+      await registrarResposta(repo, 'aaaaaaaa-1111-1111-1111-111111111111', { num, escolhida: 'A' })
+    }
+    await concluirSessao(repo, 'aaaaaaaa-1111-1111-1111-111111111111')
+
+    const res = await handler(fazerRequisicao({
+      nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'bbbbbbbb-2222-2222-2222-222222222222',
+    }))
+    const json = await res.json()
+    expect(res.status).toBe(200)
+    expect(json.ja_concluida).toBe(true)
+  })
+
+  it('devolve ja_concluida:false pra sessão nova', async () => {
+    const handler = criarHandlerStart(criarFakeSessionRepo())
+    const res = await handler(fazerRequisicao({
+      nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com', session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+    }))
+    const json = await res.json()
+    expect(json.ja_concluida).toBe(false)
   })
 })

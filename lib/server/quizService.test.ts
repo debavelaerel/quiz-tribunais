@@ -20,6 +20,7 @@ describe('iniciarSessao', () => {
     const repo = criarFakeSessionRepo()
     const r = await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
     expect(r.retomando).toBe(false)
+    expect(r.jaConcluida).toBe(false)
     expect(repo.linhas).toHaveLength(1)
   })
 
@@ -29,6 +30,7 @@ describe('iniciarSessao', () => {
     await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'B' })
     const r = await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'MARIA@X.COM', sessionToken: 'tok-2', evento: EVENTO })
     expect(r.retomando).toBe(true)
+    expect(r.jaConcluida).toBe(false)
     expect(r.respostasSalvas).toHaveLength(1)
     expect(repo.linhas).toHaveLength(1)
   })
@@ -60,6 +62,12 @@ describe('iniciarSessao', () => {
 
     const r = await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-2', evento: EVENTO })
     expect(r.retomando).toBe(true)
+    // Sinaliza pro chamador (rota /start) que essa sessão já estava fechada —
+    // sem isso, quem chama tenta regravar perfil/respostas e concluir de novo
+    // numa sessão que o backend corretamente recusa mexer, e a pessoa esbarra
+    // num "não foi possível concluir"/"não foi possível registrar sua
+    // resposta" sem nunca saber que já tinha um resultado pronto.
+    expect(r.jaConcluida).toBe(true)
     expect(r.respostasSalvas).toHaveLength(4)
     expect(repo.linhas).toHaveLength(1)
     expect(repo.linhas[0].status).toBe('concluido')
