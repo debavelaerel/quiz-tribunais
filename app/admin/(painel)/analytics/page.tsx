@@ -1,11 +1,12 @@
 import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import { EVENTO } from '@/lib/questions'
-import { distribuicao } from '@/lib/analytics'
+import { distribuicao, taxaCliquePorValor } from '@/lib/analytics'
 import { ROTULOS_PERFIL } from '@/lib/adminLabels'
 import { listarTudo } from '@/lib/server/listarTudo'
 import type { RespostasPerfil } from '@/lib/perfil'
 import PieChart from '@/components/admin/PieChart'
+import RankedBars from '@/components/admin/RankedBars'
 
 export const runtime = 'nodejs'
 // Sem searchParams/cookies/headers pra sinalizar dinamismo, o Next tentava
@@ -46,6 +47,13 @@ export default async function AnalyticsPage() {
 
   const classes = distribuicao(concluidas.map((s) => s.perfilCalculado?.classe))
   const cursos = distribuicao(concluidas.map((s) => s.perfilCalculado?.cursoCod))
+
+  // Prioridade comercial: não é "quantos responderam X" — é "de quem
+  // respondeu X, quantos converteram" (clicaram no WhatsApp). Todas as
+  // sessões que responderam entram, concluídas ou não, porque o clique é
+  // registrado independente de a sessão ter fechado (ver lib/server/quizService.ts).
+  const cliqueEdital = taxaCliquePorValor(sessoes.map((s) => ({ valor: s.perfil.edital, clicou: !!s.whatsappClicadoEm })))
+  const cliqueVde = taxaCliquePorValor(sessoes.map((s) => ({ valor: s.perfil.vde, clicou: !!s.whatsappClicadoEm })))
 
   return (
     <div>
@@ -93,6 +101,15 @@ export default async function AnalyticsPage() {
                   rotulos={ROTULOS_PERFIL[chave]}
                 />
               ))}
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-[14px] border-[1.5px] border-brand-line p-6">
+            <h2 className="mb-1 text-[15px] font-bold text-brand-navy">Prioridade comercial</h2>
+            <p className="mb-5 text-[12.5px] text-brand-ink-dim">Taxa de clique no WhatsApp dentro de cada segmento — onde focar a atenção, não só quantos leads existem.</p>
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+              <RankedBars titulo="Clique no WhatsApp × urgência do edital" dados={cliqueEdital} rotulos={ROTULOS_PERFIL.edital} />
+              <RankedBars titulo="Clique no WhatsApp × relação com o VDE" dados={cliqueVde} rotulos={ROTULOS_PERFIL.vde} />
             </div>
           </div>
         </>
