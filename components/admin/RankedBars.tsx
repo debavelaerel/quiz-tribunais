@@ -1,8 +1,12 @@
-import type { TaxaPorValor } from '@/lib/analytics'
+// Aceita qualquer agregação com valor+pct (tanto ItemDistribuicao quanto
+// TaxaPorValor de lib/analytics.ts servem) — o componente não sabe nem
+// precisa saber se o pct é "% do total de respostas" ou "% de clique
+// dentro do segmento", só desenha o ranking.
+type ItemRanqueavel = { valor: string; pct: number }
 
 type RankedBarsProps = {
   titulo: string
-  dados: TaxaPorValor[]
+  dados: ItemRanqueavel[]
   // Mapa opcional de código -> rótulo legível (mesmo formato do PieChart).
   rotulos?: Record<string, string>
 }
