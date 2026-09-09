@@ -1224,7 +1224,7 @@ export default function Quiz() {
         <Header progresso={progresso} />
         <main className="flex flex-1 items-start justify-center px-6 py-8">
           <div className="w-full max-w-md text-center">
-            <h1 className="text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Terminei a sua leitura. Pra onde eu mando o seu raio-X?</h1>
+            <h1 className="text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Para onde podemos enviar o resultado do diagnóstico?</h1>
 
             {erro && <AlertaErro mensagem={erro} />}
 
