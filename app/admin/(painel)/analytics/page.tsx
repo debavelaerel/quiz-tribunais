@@ -1,12 +1,15 @@
 import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import { EVENTO } from '@/lib/questions'
-import { distribuicao, taxaCliquePorValor } from '@/lib/analytics'
+import { distribuicao, taxaCliquePorValor, funilConversao, sessoesPorDia, mediaMinutosConclusao, resumoPorFluxo } from '@/lib/analytics'
 import { ROTULOS_PERFIL } from '@/lib/adminLabels'
 import { listarTudo } from '@/lib/server/listarTudo'
 import type { RespostasPerfil } from '@/lib/perfil'
 import PieChart from '@/components/admin/PieChart'
 import RankedBars from '@/components/admin/RankedBars'
+import Funnel from '@/components/admin/Funnel'
+import Sparkline from '@/components/admin/Sparkline'
+import FlowCompare from '@/components/admin/FlowCompare'
 
 export const runtime = 'nodejs'
 // Sem searchParams/cookies/headers pra sinalizar dinamismo, o Next tentava
@@ -21,6 +24,8 @@ export const dynamic = 'force-dynamic'
 // linha silenciosamente no max_rows do Supabase.
 const LIMITE_ANALYTICS = 5000
 
+// Também define "terminou o perfil" pro funil de conversão (abaixo): uma
+// sessão só conta essa etapa quando respondeu as 6 perguntas desta lista.
 const PERGUNTAS_PERFIL: { chave: keyof RespostasPerfil; titulo: string }[] = [
   { chave: 'alvo', titulo: 'Qual concurso é a sua prioridade hoje?' },
   { chave: 'cargo', titulo: 'Qual cargo você mira?' },
@@ -32,6 +37,7 @@ const PERGUNTAS_PERFIL: { chave: keyof RespostasPerfil; titulo: string }[] = [
 
 const ROTULOS_CLASSE: Record<string, string> = { A: 'Classe A', B: 'Classe B' }
 const ROTULOS_CURSO: Record<string, string> = { 'C1-TRT': 'Curso 1 · TRT (168 temas)', 'C2-TJTRF': 'Curso 2 · TJ e TRF (231 temas)' }
+const FLUXOS: ('padrao' | 'final')[] = ['padrao', 'final']
 
 export default async function AnalyticsPage() {
   const repo = criarSupabaseSessionRepo(criarSupabaseAdmin())
@@ -44,9 +50,23 @@ export default async function AnalyticsPage() {
     ? (comAcerto.reduce((soma, s) => soma + (s.acertos ?? 0), 0) / comAcerto.length).toFixed(1)
     : '—'
   const totalGraduado = comAcerto[0]?.total ?? 4
+  const taxaCliqueGeral = total > 0 ? Math.round((sessoes.filter((s) => s.whatsappClicadoEm).length / total) * 100) : 0
+  const tempoMedioMin = mediaMinutosConclusao(sessoes.map((s) => ({ startedAt: s.startedAt, completedAt: s.completedAt })))
 
   const classes = distribuicao(concluidas.map((s) => s.perfilCalculado?.classe))
   const cursos = distribuicao(concluidas.map((s) => s.perfilCalculado?.cursoCod))
+
+  const funil = funilConversao(sessoes.map((s) => ({
+    perfilCompleto: PERGUNTAS_PERFIL.every(({ chave }) => !!s.perfil[chave]),
+    testeRespondido: s.acertos !== null,
+    concluida: s.status === 'concluido',
+    clicouWhatsapp: !!s.whatsappClicadoEm,
+  })))
+  const porDia = sessoesPorDia(sessoes.map((s) => s.startedAt))
+  const porFluxo = resumoPorFluxo(
+    sessoes.map((s) => ({ fluxo: s.fluxo, concluida: s.status === 'concluido', clicou: !!s.whatsappClicadoEm, acertos: s.acertos })),
+    FLUXOS,
+  )
 
   // Prioridade comercial: não é "quantos responderam X" — é "de quem
   // respondeu X, quantos converteram" (clicaram no WhatsApp). Todas as
@@ -60,16 +80,21 @@ export default async function AnalyticsPage() {
       <h1 className="text-[22px] font-bold tracking-[-0.01em] text-brand-ink">Analytics</h1>
       <p className="mt-1 text-[13.5px] text-brand-ink-dim">Perfil agregado de respostas · {total} {total === 1 ? 'sessão' : 'sessões'}</p>
 
-      <div className="my-6 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+      <div className="my-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-6">
         {[
           { num: total, lbl: 'total de sessões' },
           { num: `${taxaConclusao}%`, lbl: 'taxa de conclusão' },
           { num: `${mediaAcertos} / ${totalGraduado}`, lbl: 'média de acertos' },
           { num: concluidas.length, lbl: 'concluídas' },
+          { num: `${taxaCliqueGeral}%`, lbl: 'clicou no WhatsApp', destaque: true },
+          { num: tempoMedioMin !== null ? `${Math.round(tempoMedioMin)}min` : '—', lbl: 'tempo médio até concluir' },
         ].map((c) => (
-          <div key={c.lbl} className="rounded-[14px] border-[1.5px] border-brand-line px-4.5 py-4">
+          <div
+            key={c.lbl}
+            className={`rounded-[14px] border-[1.5px] px-4.5 py-4 ${c.destaque ? 'border-transparent bg-gradient-to-br from-brand-gold to-brand-gold-deep' : 'border-brand-line'}`}
+          >
             <div className="text-[22px] font-bold tracking-[-0.01em] text-brand-ink">{c.num}</div>
-            <div className="mt-1 text-[12px] text-brand-ink-dim">{c.lbl}</div>
+            <div className={`mt-1 text-[12px] ${c.destaque ? 'text-brand-ink' : 'text-brand-ink-dim'}`}>{c.lbl}</div>
           </div>
         ))}
       </div>
@@ -81,6 +106,18 @@ export default async function AnalyticsPage() {
       ) : (
         <>
           <div className="rounded-[14px] border-[1.5px] border-brand-line p-6">
+            <h2 className="mb-1 text-[15px] font-bold text-brand-navy">Sessões por dia</h2>
+            <p className="mb-1 text-[12.5px] text-brand-ink-dim">Tendência de sessões iniciadas.</p>
+            <Sparkline dados={porDia} />
+          </div>
+
+          <div className="mt-5 rounded-[14px] border-[1.5px] border-brand-line p-6">
+            <h2 className="mb-1 text-[15px] font-bold text-brand-navy">Funil de conversão</h2>
+            <p className="mb-5 text-[12.5px] text-brand-ink-dim">Do início da sessão até o clique no WhatsApp — % sempre relativo às sessões iniciadas.</p>
+            <Funnel etapas={funil} />
+          </div>
+
+          <div className="mt-5 rounded-[14px] border-[1.5px] border-brand-line p-6">
             <h2 className="mb-1 text-[15px] font-bold text-brand-navy">Perfis calculados</h2>
             <p className="mb-5 text-[12.5px] text-brand-ink-dim">Só sessões concluídas ({concluidas.length}) — a classificação só existe depois do teste graduado.</p>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
@@ -94,7 +131,7 @@ export default async function AnalyticsPage() {
             <p className="mb-5 text-[12.5px] text-brand-ink-dim">Todas as sessões que responderam cada pergunta, concluídas ou não.</p>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
               {PERGUNTAS_PERFIL.map(({ chave, titulo }) => (
-                <PieChart
+                <RankedBars
                   key={chave}
                   titulo={titulo}
                   dados={distribuicao(sessoes.map((s) => s.perfil[chave] as string | undefined))}
@@ -102,6 +139,10 @@ export default async function AnalyticsPage() {
                 />
               ))}
             </div>
+          </div>
+
+          <div className="mt-5 rounded-[14px] border-[1.5px] border-brand-line p-6">
+            <FlowCompare titulo="Comparativo por fluxo" dados={porFluxo} totalGraduado={totalGraduado} />
           </div>
 
           <div className="mt-5 rounded-[14px] border-[1.5px] border-brand-line p-6">

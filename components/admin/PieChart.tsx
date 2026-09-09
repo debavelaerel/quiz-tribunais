@@ -1,18 +1,13 @@
 import { paraFatias } from '@/lib/pieChart'
 import type { ItemDistribuicao } from '@/lib/analytics'
 
-// Paleta categórica pro painel administrativo — deliberadamente FORA da
-// regra de 3 cores do DESIGN.md (essa regra é da identidade do quiz que o
-// lead responde, não da ferramenta interna que o time usa). Com só azul e
-// dourado, gráficos de pizza com várias fatias pareciam monocromáticos e
-// difíceis de distinguir; oito fatias da mesma cor em tons diferentes é
-// pior pra achar "qual fatia é qual" do que oito cores realmente diferentes.
-//
-// Ordem e hexadecimais vêm da paleta categórica validada da skill de
-// dataviz (references/palette.md) — não escolhidos no olho: passa nos 4
-// checks de segurança (daltonismo, contraste, banda de luminosidade) nessa
-// ordem exata; trocar a ordem sem revalidar quebra essa garantia.
-const CORES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948']
+// Só as 2 cores da marca (DESIGN.md) — navy e dourado. Isso só funciona
+// porque este componente agora é reservado pra campos genuinamente
+// binários (Classe A/B, Curso 1/2): com só 2 fatias possíveis, cor carrega
+// identidade de verdade. Campo com mais opções (gargalo, cargo, edital...)
+// usa components/admin/RankedBars.tsx — uma cor só, identidade pelo
+// rótulo escrito, não pela cor. Ver app/admin/(painel)/analytics/page.tsx.
+const CORES = ['#203c7c', '#c89b18']
 
 type PieChartProps = {
   titulo: string
