@@ -7,11 +7,23 @@ type FunnelProps = {
   etapas: EtapaFunil[]
 }
 
-// Funil honesto: cada barra é uma etapa que a sessão realmente gravou (sem
-// tracking de visita anônima — ver comentário de funilConversao em
-// lib/analytics.ts). pct é sempre relativo à primeira etapa, não à
-// anterior. Só a última barra (o clique no WhatsApp, o que interessa pra
-// vendas) vem em dourado.
+// Largura mínima do topo de cada trapézio (%) — sem isso, uma etapa com
+// pct baixo (ex.: 11% de clique no WhatsApp) vira uma fatia fina demais
+// pra enxergar onde ela começa e termina.
+const LARGURA_MIN = 10
+
+// Afunilamento dentro da PRÓPRIA faixa (base = topo × este fator), não
+// entre uma faixa e a próxima. Essas sessões não vêm de um tracking de
+// visita anônima que só decresce (ver funilConversao em lib/analytics.ts)
+// — uma etapa às vezes tem MAIS sessões que a anterior (dado real: nem
+// toda sessão passa pelas etapas na mesma ordem). Afunilar faixa-a-faixa
+// pela etapa seguinte faria a forma se cruzar (viraria um X) toda vez que
+// isso acontecesse; afunilar cada faixa por si só sempre dá um trapézio
+// limpo, e ainda lê como funil.
+const FATOR_CONE = 0.82
+
+// Só a última faixa (clique no WhatsApp, o que interessa pra vendas) vem
+// em dourado.
 export default function Funnel({ titulo, etapas }: FunnelProps) {
   if (etapas.length === 0 || etapas[0].total === 0) {
     return (
@@ -25,21 +37,24 @@ export default function Funnel({ titulo, etapas }: FunnelProps) {
   return (
     <div>
       {titulo && <p className="text-[13.5px] font-bold text-brand-ink">{titulo}</p>}
-      <div className="mt-3 flex flex-col gap-2">
+      <div className="mt-3 flex flex-col gap-[3px]">
         {etapas.map((e, i) => {
           const ultima = i === etapas.length - 1
+          const topo = Math.max(e.pct, LARGURA_MIN)
+          const base = topo * FATOR_CONE
           return (
-            <div key={e.etapa} className="grid grid-cols-[minmax(120px,160px)_1fr_44px] items-center gap-2.5 text-[12.5px]">
+            <div key={e.etapa} className="grid grid-cols-[minmax(120px,160px)_1fr_56px] items-center gap-2.5 text-[12.5px]">
               <span className="text-right text-brand-ink-soft">{e.etapa}</span>
-              <div className="h-[26px] overflow-hidden rounded-lg bg-brand-tint">
-                <div
-                  className={`flex h-full items-center rounded-lg pl-2.5 text-[11.5px] font-semibold ${ultima ? 'bg-gradient-to-r from-brand-gold-deep to-brand-gold text-brand-ink' : 'bg-brand-ink text-white'}`}
-                  style={{ width: `${Math.max(e.pct, 8)}%` }}
-                >
-                  {e.total}
-                </div>
-              </div>
-              <span className="text-right font-semibold tabular-nums text-brand-ink">{e.pct}%</span>
+              <div
+                className={`h-9 ${ultima ? 'bg-gradient-to-r from-brand-gold-deep to-brand-gold' : 'bg-brand-ink'}`}
+                style={{
+                  clipPath: `polygon(${50 - topo / 2}% 0%, ${50 + topo / 2}% 0%, ${50 + base / 2}% 100%, ${50 - base / 2}% 100%)`,
+                }}
+              />
+              <span className="text-right leading-tight">
+                <span className="block font-semibold tabular-nums text-brand-ink">{e.total}</span>
+                <span className="block text-[11px] text-brand-ink-dim">{e.pct}%</span>
+              </span>
             </div>
           )
         })}
