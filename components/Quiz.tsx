@@ -717,24 +717,24 @@ export default function Quiz() {
           <path d="M121.7 141.505C122.743 141.798 126.239 146.408 127.567 147.592C138.533 157.372 153.49 159.425 167.41 155.905C170.66 155.083 173.491 153.872 176.693 152.967C174.867 154.848 173.368 156.043 171.515 158.217C161.315 169.631 156.693 183.069 160.691 198.17C161.08 199.64 163.626 205.306 163.453 206.226C161.675 205.078 159.416 202.243 157.62 200.747C142.596 188.23 126.78 185.845 109.389 195.307C110.592 193.132 111.986 191.849 113.647 190.04C117.225 186.143 119.962 182.772 122.1 177.889C127.563 165.407 126.855 153.985 121.7 141.505Z" fill="#203C7C" />
         </svg>
 
-        <main className="relative flex flex-1 items-start justify-center px-6 py-10">
+        <main className="relative flex flex-1 items-start justify-center px-6 py-4 sm:py-10">
           <div className="w-full max-w-md text-center">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca, sem necessidade do pipeline de otimização de imagem */}
-            <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-16 w-auto" />
-            <div className="mt-7">
+            <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-11 w-auto sm:h-16" />
+            <div className="mt-4 sm:mt-7">
               <Eyebrow>A janela é agora</Eyebrow>
             </div>
-            <h1 className="mt-3 text-[26px] font-bold leading-tight tracking-[-0.015em] text-brand-ink">
+            <h1 className="mt-2 text-[20px] leading-tight tracking-[-0.015em] font-bold text-brand-ink sm:mt-3 sm:text-[26px]">
               O segundo semestre de 2026 e o ano de 2027 vão ser dos concursos de tribunais.
             </h1>
-            <p className="mt-4 text-[17px] leading-relaxed text-brand-ink-soft">
+            <p className="mt-2 text-[13.5px] leading-snug text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
               TRT8 já com banca definida. TRF3, TRT4, TJ AM, TJ GO e a DPU na fila.{' '}
               <b className="text-brand-ink">É a maior sequência de editais de tribunal dos últimos anos.</b>
             </p>
-            <p className="mt-4 text-[17px] leading-relaxed text-brand-ink-soft">
+            <p className="mt-2 text-[13.5px] leading-snug text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
               Não dá pra desperdiçar essas oportunidades. Quem chega despreparado não perde só uma prova: perde o ciclo inteiro, porque o próximo edital do mesmo tribunal demora anos.
             </p>
-            <p className="mt-4 text-[17px] leading-relaxed text-brand-ink-soft">
+            <p className="mt-2 text-[13.5px] leading-snug text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
               E o que separa quem aproveita essa janela de quem assiste ela passar é saber em que momento da preparação está. <b className="text-brand-ink">Este diagnóstico revela o seu em menos de 3 minutos.</b>
             </p>
             {/* Retomando (F5 no meio do funil): `estado` já existe, pula direto pro
@@ -743,7 +743,7 @@ export default function Quiz() {
             <Button
               variant="gold"
               onClick={() => setTela(estado ? 'perfil' : fluxoFinal ? 'nome' : 'capa')}
-              className="mt-8"
+              className="mt-4 sm:mt-8"
             >
               Quero descobrir meu momento <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
