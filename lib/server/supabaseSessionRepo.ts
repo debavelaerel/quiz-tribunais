@@ -21,6 +21,7 @@ type LinhaBanco = {
   area_prioritaria: string | null
   perfil: QuizSession['perfil']
   perfil_calculado: QuizSession['perfilCalculado']
+  whatsapp_clicado_em: string | null
   started_at: string
   updated_at: string
   completed_at: string | null
@@ -46,6 +47,7 @@ function paraSessao(linha: LinhaBanco): QuizSession {
     areaPrioritaria: linha.area_prioritaria,
     perfil: linha.perfil,
     perfilCalculado: linha.perfil_calculado,
+    whatsappClicadoEm: linha.whatsapp_clicado_em,
     startedAt: linha.started_at,
     updatedAt: linha.updated_at,
     completedAt: linha.completed_at,
@@ -71,6 +73,7 @@ function paraLinhaPatch(patch: Partial<QuizSession>): Record<string, unknown> {
   if (patch.areaPrioritaria !== undefined) linha.area_prioritaria = patch.areaPrioritaria
   if (patch.perfil !== undefined) linha.perfil = patch.perfil
   if (patch.perfilCalculado !== undefined) linha.perfil_calculado = patch.perfilCalculado
+  if (patch.whatsappClicadoEm !== undefined) linha.whatsapp_clicado_em = patch.whatsappClicadoEm
   if (patch.startedAt !== undefined) linha.started_at = patch.startedAt
   if (patch.completedAt !== undefined) linha.completed_at = patch.completedAt
   return linha

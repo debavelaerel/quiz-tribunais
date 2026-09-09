@@ -67,7 +67,8 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
               <div className="flex justify-between border-b border-brand-line pb-2"><dt className="text-brand-ink-dim">WhatsApp</dt><dd className="font-semibold text-brand-ink">{sessao.whatsapp}</dd></div>
               <div className="flex justify-between border-b border-brand-line pb-2"><dt className="text-brand-ink-dim">E-mail</dt><dd className="font-semibold text-brand-ink">{sessao.email}</dd></div>
               <div className="flex justify-between border-b border-brand-line pb-2"><dt className="text-brand-ink-dim">Iniciado em</dt><dd className="font-semibold text-brand-ink">{fmtData(sessao.startedAt)}</dd></div>
-              <div className="flex justify-between"><dt className="text-brand-ink-dim">Concluído em</dt><dd className="font-semibold text-brand-ink">{fmtData(sessao.completedAt)}</dd></div>
+              <div className="flex justify-between border-b border-brand-line pb-2"><dt className="text-brand-ink-dim">Concluído em</dt><dd className="font-semibold text-brand-ink">{fmtData(sessao.completedAt)}</dd></div>
+              <div className="flex justify-between"><dt className="text-brand-ink-dim">Clicou no WhatsApp</dt><dd className="font-semibold text-brand-ink">{sessao.whatsappClicadoEm ? fmtData(sessao.whatsappClicadoEm) : 'Ainda não'}</dd></div>
             </dl>
           </div>
 

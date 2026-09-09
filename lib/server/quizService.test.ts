@@ -7,6 +7,7 @@ import {
   registrarPerfil,
   concluirSessao,
   buscarResultado,
+  registrarCliqueWhatsapp,
   SessaoInvalidaError,
   SessaoConcluidaError,
   SessaoIncompletaError,
@@ -199,5 +200,35 @@ describe('buscarResultado', () => {
     await concluirSessao(repo, 'tok-1')
     const sessao = await buscarResultado(repo, 'tok-1')
     expect(sessao?.status).toBe('concluido')
+  })
+})
+
+describe('registrarCliqueWhatsapp', () => {
+  it('lança SessaoInvalidaError quando o token não existe', async () => {
+    const repo = criarFakeSessionRepo()
+    await expect(registrarCliqueWhatsapp(repo, 'tok-inexistente')).rejects.toThrow(SessaoInvalidaError)
+  })
+
+  it('grava o horário do clique numa sessão concluída', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 2, escolhida: 'C' })
+    await registrarResposta(repo, 'tok-1', { num: 3, escolhida: 'B' })
+    await registrarResposta(repo, 'tok-1', { num: 4, escolhida: 'A' })
+    await concluirSessao(repo, 'tok-1')
+
+    expect(repo.linhas[0].whatsappClicadoEm).toBeNull()
+    await registrarCliqueWhatsapp(repo, 'tok-1')
+    expect(repo.linhas[0].whatsappClicadoEm).not.toBeNull()
+  })
+
+  it('mantém o horário do primeiro clique — não sobrescreve em cliques seguintes', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await registrarCliqueWhatsapp(repo, 'tok-1')
+    const primeiro = repo.linhas[0].whatsappClicadoEm
+    await registrarCliqueWhatsapp(repo, 'tok-1')
+    expect(repo.linhas[0].whatsappClicadoEm).toBe(primeiro)
   })
 })
