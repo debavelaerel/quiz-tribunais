@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Check, Play, X } from 'lucide-react'
+import { ArrowRight, Check, Play, RotateCcw, X } from 'lucide-react'
 import { QUESTIONS } from '@/lib/questions'
-import { carregarEstado, salvarEstado, criarNovoSessionToken, type EstadoQuiz } from '@/lib/storage'
+import { carregarEstado, salvarEstado, limparEstado, criarNovoSessionToken, type EstadoQuiz } from '@/lib/storage'
 import {
   CONFIG,
   PERFIL_SCREENS,
@@ -33,7 +33,7 @@ import Button from './Button'
 
 type Tela =
   | 'capa' | 'nome' | 'restaurando'
-  | 'intro' | 'perfil' | 'desqualificado'
+  | 'intro' | 'perfil' | 'desqualificado' | 'desqualificado_contato'
   | 'mirror' | 'video' | 'dinheiro' | 'conta'
   | 'quiz' | 'correcao' | 'leitura' | 'contato'
   | 'analisando' | 'resultado'
@@ -131,6 +131,32 @@ function AlertaErro({ mensagem }: { mensagem: string }) {
     </p>
   )
 }
+
+// Pílula pequena pra escolha de carreira jurídica na tela de desqualificação
+// — deliberadamente mais discreta que OptionButton (o cartão grande usado
+// nas 12 perguntas do perfil): aqui é uma oferta secundária, não a pergunta
+// principal da tela.
+function ChipCarreira({ selecionado, onClick, children }: { selecionado: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border-[1.5px] px-3.5 py-2 text-[13px] font-medium transition-colors ${
+        selecionado ? 'border-brand-gold-deep bg-[#FBF3D6] font-semibold text-brand-gold-text' : 'border-brand-line-strong bg-brand-card text-brand-ink-soft hover:border-brand-ink-dim'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+const CARREIRAS_JURIDICAS = [
+  { valor: 'juiz', rotulo: 'Juiz' },
+  { valor: 'promotor', rotulo: 'Promotor' },
+  { valor: 'defensor', rotulo: 'Defensor Público' },
+  { valor: 'procurador', rotulo: 'Procurador' },
+  { valor: 'outra', rotulo: 'Outra' },
+] as const
 
 // Mensagem específica de cada campo — mostrada só depois do blur (ver
 // `camposTocados`). Uma frase por campo, sem tentar diagnosticar a causa
@@ -265,6 +291,10 @@ export default function Quiz() {
   const [selecaoMulti, setSelecaoMulti] = useState<string[]>([])
   const [respostasTeste, setRespostasTeste] = useState<Record<number, string>>({})
   const [motivoDesqualificacao, setMotivoDesqualificacao] = useState<'outro' | 'juridica' | 'cargo_baixo' | null>(null)
+  // CTA da tela de desqualificação (ver lib/server/leadsDesqualificados.ts):
+  // carreira jurídica só é perguntada quando motivoDesqualificacao === 'juridica'.
+  const [carreiraJuridica, setCarreiraJuridica] = useState<string | null>(null)
+  const [contatoDesqualificadoEnviado, setContatoDesqualificadoEnviado] = useState(false)
 
   // Trava síncrona: `enviando` só vale a partir do próximo render, então um duplo
   // clique no mesmo tick passaria pelo `disabled` e chamaria setAtual duas vezes.
@@ -444,6 +474,79 @@ export default function Quiz() {
     }).catch(() => {})
   }
 
+  // Motivo 'outro'/'cargo_baixo' no fluxo padrão: contato já existe (deu na
+  // capa) e não tem produto alternativo pra oferecer, então marca o motivo
+  // direto na sessão que já existe, sem CTA nenhum na tela (ver
+  // components/Quiz.tsx, tela 'desqualificado', e ROTULOS_PERFIL em
+  // lib/adminLabels.ts). Motivo 'juridica' NUNCA usa isso — tem CTA próprio,
+  // que grava em leads_desqualificados (fluxo próprio, com ou sem sessão).
+  useEffect(() => {
+    if (tela !== 'desqualificado' || fluxoFinal) return
+    if (motivoDesqualificacao !== 'outro' && motivoDesqualificacao !== 'cargo_baixo') return
+    persistirPerfil('desqualificadoMotivo', motivoDesqualificacao)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tela])
+
+  // CTA da tela de desqualificação — grava em leads_desqualificados (tabela
+  // própria, independente de quiz_sessions: é interesse noutro produto, não
+  // deve contaminar o funil/analytics do Tribunais). Cobre os 3 casos que
+  // têm CTA de verdade: padrão+jurídica (chip só, contato já existe) e os
+  // dois casos do fluxo final (chip+campos, ou só campos).
+  async function enviarLeadDesqualificado() {
+    if (emVooRef.current || !motivoDesqualificacao) return
+    emVooRef.current = true
+    setEnviando(true)
+    setErro(null)
+    try {
+      const res = await fetch('/api/leads/desqualificado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fluxo: fluxoFinal ? 'final' : 'padrao',
+          motivo: motivoDesqualificacao,
+          carreira_juridica: motivoDesqualificacao === 'juridica' ? carreiraJuridica : undefined,
+          nome, whatsapp, email,
+        }),
+      })
+      if (!res.ok) {
+        setErro('Não foi possível enviar. Confira seus dados.')
+        return
+      }
+      setContatoDesqualificadoEnviado(true)
+    } catch {
+      setErro('Não foi possível enviar. Verifique sua conexão.')
+    } finally {
+      emVooRef.current = false
+      setEnviando(false)
+    }
+  }
+
+  // Botão "Refazer o diagnóstico" na tela de resultado — sem confirmação
+  // (decisão explícita: o link já é discreto o bastante pra não ser
+  // clicado sem querer). Não reseta a sessão concluída no servidor (ela
+  // continua lá, intacta) — só limpa o estado local e o cache pra começar
+  // um funil novo do zero, com um session_token novo quando a pessoa
+  // preencher o contato de novo.
+  function refazerQuiz() {
+    limparEstado()
+    setEstado(null)
+    setResultado(null)
+    setNome('')
+    setWhatsapp('')
+    setEmail('')
+    setRespostasPerfil({})
+    setRespostasTeste({})
+    setSelecaoMulti([])
+    setPassoPerfil(0)
+    setAtual(0)
+    setMotivoDesqualificacao(null)
+    setCarreiraJuridica(null)
+    setContatoDesqualificadoEnviado(false)
+    setCamposTocados({})
+    setErro(null)
+    setTela('intro')
+  }
+
   function avancarPerfil(proximasRespostas: RespostasPerfil) {
     const telaAtual = PERFIL_SCREENS[passoPerfil]
     if (telaAtual.type === 'single' && telaAtual.after) {
@@ -467,6 +570,19 @@ export default function Quiz() {
     // de novo, mesmo pra quem só queria confirmar a resposta que já deu.
     const proximaTela = PERFIL_SCREENS[proximoPasso]
     const jaEscolhido = proximaTela.type === 'multi' ? proximasRespostas[proximaTela.key] : undefined
+    setSelecaoMulti(Array.isArray(jaEscolhido) ? jaEscolhido : [])
+  }
+
+  // Link "‹ Voltar" abaixo das opções (só some na 1ª pergunta, que não tem
+  // pra onde voltar). Pré-marca a resposta que já existia pra essa pergunta
+  // — mesmo cuidado que avancarPerfil já tinha ao AVANÇAR pra uma tela
+  // multi já respondida antes (ver comentário acima).
+  function voltarPerfil() {
+    if (passoPerfil === 0) return
+    const passoAnterior = passoPerfil - 1
+    setPassoPerfil(passoAnterior)
+    const telaAnterior = PERFIL_SCREENS[passoAnterior]
+    const jaEscolhido = telaAnterior.type === 'multi' ? respostasPerfil[telaAnterior.key] : undefined
     setSelecaoMulti(Array.isArray(jaEscolhido) ? jaEscolhido : [])
   }
 
@@ -923,6 +1039,16 @@ export default function Quiz() {
                 Continuar
               </Button>
             )}
+
+            {passoPerfil > 0 && (
+              <button
+                type="button"
+                onClick={voltarPerfil}
+                className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold text-brand-ink-dim transition-colors hover:text-brand-ink"
+              >
+                ‹ Voltar
+              </button>
+            )}
           </div>
         </main>
       </div>
@@ -949,6 +1075,13 @@ export default function Quiz() {
       ]
     }
     const progressoDesqualificado = Math.round((passoPerfil / PASSOS_POS_INTRO) * 100)
+    const ehJuridica = motivoDesqualificacao === 'juridica'
+    // 'outro'/'cargo_baixo': não tem produto alternativo pra oferecer — só
+    // capta contato pra remarketing futuro (fluxo final) ou nem isso, já
+    // que o contato já existe (fluxo padrão, marcado em silêncio pelo efeito
+    // acima). Sem nada pra "saber mais" aqui, o link do Instagram não faz
+    // sentido nesse caso específico no fluxo final.
+    const semOfertaEspecifica = !ehJuridica
     return (
       <div className="flex min-h-screen flex-col">
         <Header progresso={progressoDesqualificado} />
@@ -959,15 +1092,131 @@ export default function Quiz() {
             {paragrafos.map((p, i) => (
               <p key={i} className="mt-4 text-[16.5px] leading-relaxed text-brand-ink-soft">{p}</p>
             ))}
-            <p className="mt-4 text-[16.5px] leading-relaxed text-brand-ink-soft">Me acompanha no Instagram, que lá eu falo de concursos todo dia, de graça.</p>
-            <a
-              href={CONFIG.instagram}
-              target="_blank"
-              rel="noopener"
-              className="mt-3 inline-flex items-center gap-1.5 font-semibold text-brand-ink"
-            >
-              @vdeconcursos <ArrowRight size={16} strokeWidth={2.5} />
-            </a>
+
+            {/* Fluxo padrão + carreira jurídica: contato já existe (deu na
+                capa) — só falta saber qual carreira, então é um toque só,
+                sem formulário nenhum. */}
+            {!fluxoFinal && ehJuridica && (
+              contatoDesqualificadoEnviado ? (
+                <p className="mt-6 rounded-2xl border-[1.5px] border-brand-line bg-brand-tint px-4 py-3.5 text-[14.5px] font-medium text-brand-ink">
+                  Prontinho! Assim que eu tiver o material certo pra sua carreira, te aviso.
+                </p>
+              ) : (
+                <div className="mt-6 rounded-2xl border-[1.5px] border-brand-line bg-brand-card p-4 text-left">
+                  <p className="text-[13.5px] font-bold text-brand-ink">Qual carreira jurídica é o seu foco?</p>
+                  <p className="mt-1 text-[12.5px] text-brand-ink-dim">Uso isso só pra te indicar o material certo do VDE Carreiras Jurídicas.</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {CARREIRAS_JURIDICAS.map((c) => (
+                      <ChipCarreira key={c.valor} selecionado={carreiraJuridica === c.valor} onClick={() => setCarreiraJuridica(c.valor)}>
+                        {c.rotulo}
+                      </ChipCarreira>
+                    ))}
+                  </div>
+                  {erro && <AlertaErro mensagem={erro} />}
+                  <Button variant="gold" onClick={enviarLeadDesqualificado} disabled={!carreiraJuridica || enviando} className="mt-4">
+                    Quero saber mais <ArrowRight size={16} strokeWidth={2.25} />
+                  </Button>
+                </div>
+              )
+            )}
+
+            {/* Fluxo final: contato ainda não existe em lugar nenhum (só o
+                nome foi dado). A oferta leva pra uma tela dedicada — mesmo
+                padrão de "uma pergunta por tela" do resto do quiz — em vez
+                de empilhar campos junto com o texto de recusa. */}
+            {fluxoFinal && (
+              <div className="mt-6 rounded-2xl border-[1.5px] border-dashed border-brand-line-strong bg-brand-tint px-4 py-3.5 text-center">
+                <p className="text-[13.5px] text-brand-ink-soft">
+                  {ehJuridica ? 'Quer indicação certa pra carreira jurídica?' : 'Quer ficar sabendo quando tiver conteúdo pro seu cargo?'}
+                </p>
+                <Button variant="gold" onClick={() => setTela('desqualificado_contato')} className="mt-3">
+                  {ehJuridica ? 'Quero saber mais' : 'Quero ser avisado'} <ArrowRight size={16} strokeWidth={2.25} />
+                </Button>
+              </div>
+            )}
+
+            {!(fluxoFinal && semOfertaEspecifica) && (
+              <>
+                <p className="mt-4 text-[16.5px] leading-relaxed text-brand-ink-soft">Me acompanha no Instagram, que lá eu falo de concursos todo dia, de graça.</p>
+                <a
+                  href={CONFIG.instagram}
+                  target="_blank"
+                  rel="noopener"
+                  className="mt-3 inline-flex items-center gap-1.5 font-semibold text-brand-ink"
+                >
+                  @vdeconcursos <ArrowRight size={16} strokeWidth={2.5} />
+                </a>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (tela === 'desqualificado_contato') {
+    const ehJuridica = motivoDesqualificacao === 'juridica'
+    const podeEnviar = whatsappValido(whatsapp) && emailValido(email) && (!ehJuridica || !!carreiraJuridica)
+
+    if (contatoDesqualificadoEnviado) {
+      return (
+        <div className="flex min-h-screen flex-col">
+          <Header />
+          <main className="flex flex-1 items-center justify-center px-6 py-10">
+            <div className="w-full max-w-md text-center">
+              <Eyebrow>Prontinho</Eyebrow>
+              <h1 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">
+                {ehJuridica ? 'Assim que eu tiver o material certo pra sua carreira, te aviso.' : 'Te aviso assim que tiver conteúdo pro seu cargo.'}
+              </h1>
+              <a href={CONFIG.instagram} target="_blank" rel="noopener" className="mt-5 inline-flex items-center gap-1.5 font-semibold text-brand-ink">
+                @vdeconcursos <ArrowRight size={16} strokeWidth={2.5} />
+              </a>
+            </div>
+          </main>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header onVoltar={() => setTela('desqualificado')} />
+        <main className="flex flex-1 items-start justify-center px-6 py-10">
+          <div className="w-full max-w-md text-center">
+            <Eyebrow>Antes de você ir</Eyebrow>
+            <h1 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">
+              {ehJuridica ? 'Qual carreira jurídica é o seu foco?' : 'Pra onde te aviso quando fizer sentido?'}
+            </h1>
+            {ehJuridica && (
+              <p className="mt-3 text-brand-ink-soft">Me diz qual é o seu foco e pra onde te mando o material.</p>
+            )}
+
+            {erro && <AlertaErro mensagem={erro} />}
+
+            <div className="mt-6 flex flex-col gap-3">
+              {ehJuridica && (
+                <div className="flex flex-wrap justify-center gap-2">
+                  {CARREIRAS_JURIDICAS.map((c) => (
+                    <ChipCarreira key={c.valor} selecionado={carreiraJuridica === c.valor} onClick={() => setCarreiraJuridica(c.valor)}>
+                      {c.rotulo}
+                    </ChipCarreira>
+                  ))}
+                </div>
+              )}
+              <CampoTexto
+                id="desq-whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
+                formatador={formatarWhatsapp} inputMode="tel"
+                tocado={camposTocados['desq-whatsapp']} onTocar={() => marcarTocado('desq-whatsapp')} erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
+              />
+              <CampoTexto
+                id="desq-email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail}
+                inputMode="email"
+                tocado={camposTocados['desq-email']} onTocar={() => marcarTocado('desq-email')} erro={!emailValido(email) ? MSG_EMAIL : undefined}
+              />
+            </div>
+
+            <Button variant="gold" onClick={enviarLeadDesqualificado} disabled={!podeEnviar || enviando} className="mt-5">
+              {ehJuridica ? 'Quero saber mais' : 'Quero ser avisado'} <ArrowRight size={16} strokeWidth={2.25} />
+            </Button>
           </div>
         </main>
       </div>
@@ -1431,6 +1680,14 @@ export default function Quiz() {
                 Falar com o time no WhatsApp
               </a>
               <p className="mt-2 text-center text-[12.5px] text-brand-ink-dim">Abre o WhatsApp com a sua mensagem já escrita. É só enviar.</p>
+
+              <button
+                type="button"
+                onClick={refazerQuiz}
+                className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full border-[1.5px] border-brand-line-strong py-3 text-[13px] font-semibold text-brand-ink-soft transition-colors hover:border-brand-ink-dim hover:text-brand-ink"
+              >
+                <RotateCcw size={14} strokeWidth={2.25} /> Refazer o diagnóstico
+              </button>
             </>
           )}
         </div>

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import Quiz from './Quiz'
-import { salvarEstado } from '@/lib/storage'
+import { salvarEstado, carregarEstado } from '@/lib/storage'
 
 const RESULTADO = {
   score_geral_pct: 100,
@@ -256,6 +256,31 @@ describe('Quiz', () => {
     })
   })
 
+  it('botão "‹ Voltar" retorna pra pergunta anterior do perfilamento (sem ele na 1ª pergunta)', async () => {
+    render(<Quiz />)
+    abrirCapa()
+    iniciarDaCapa()
+    await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
+    expect(screen.queryByText('‹ Voltar')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button')[0])
+    await waitFor(() => expect(screen.getByText(/Pergunta 2 de/)).toBeInTheDocument())
+    fireEvent.click(screen.getByText('‹ Voltar'))
+    await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
+  })
+
+  it('botão "Refazer o diagnóstico" limpa o cache e volta pra abertura, com o formulário vazio', async () => {
+    render(<Quiz />)
+    await chegarAoResultado()
+    fireEvent.click(screen.getByText('Refazer o diagnóstico'))
+
+    await waitFor(() => expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument())
+    expect(carregarEstado()).toBeNull()
+
+    abrirCapa()
+    expect(screen.getByPlaceholderText('Seu nome completo')).toHaveValue('')
+  })
+
   it('reexibe o resultado ao recarregar uma sessão já concluída', async () => {
     salvarEstado({ sessionToken: 'tok-1', nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com' })
     respostas.result = () => new Response(JSON.stringify(RESULTADO), { status: 200 })
@@ -355,6 +380,40 @@ describe('Quiz', () => {
       const chamadasPerfil = vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/perfil'))
       expect(chamadasPerfil.length).toBeGreaterThan(0)
       expect(chamadasPerfil.some(([, opts]) => String((opts as RequestInit)?.body).includes('"leitura"'))).toBe(true)
+    })
+
+    // CTA de desqualificação: no fluxo final, quem é desqualificado ainda não
+    // tem contato salvo em lugar nenhum (só deu o nome) — sem esse CTA, esse
+    // lead simplesmente some. Cobre o caso com carreira jurídica (2 telas:
+    // recusa com oferta -> tela dedicada com chip + campos).
+    it('CTA de desqualificação (fluxo final, carreira jurídica): escolhe carreira, envia contato e confirma', async () => {
+      window.history.pushState({}, '', '/?fluxo=final')
+      render(<Quiz />)
+      fireEvent.click(screen.getByText(/Quero descobrir meu momento/))
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria Silva' } })
+      fireEvent.click(screen.getByText('Iniciar diagnóstico'))
+      await waitFor(() => expect(screen.getByText(/Pergunta 1 de/)).toBeInTheDocument())
+
+      fireEvent.click(screen.getByText('Carreira jurídica'))
+      await waitFor(() => expect(screen.getByText(/o seu caso pede outro caminho/)).toBeInTheDocument())
+      expect(screen.getByText(/Quer indicação certa pra carreira jurídica/)).toBeInTheDocument()
+
+      fireEvent.click(screen.getByText('Quero saber mais'))
+      await waitFor(() => expect(screen.getByText('Qual carreira jurídica é o seu foco?')).toBeInTheDocument())
+
+      fireEvent.click(screen.getByText('Promotor'))
+      fireEvent.change(screen.getByLabelText('WhatsApp'), { target: { value: '11987654321' } })
+      fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'maria@x.com' } })
+      fireEvent.click(screen.getByText('Quero saber mais'))
+
+      await waitFor(() => expect(screen.getByText(/Assim que eu tiver o material certo pra sua carreira/)).toBeInTheDocument())
+
+      const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/leads/desqualificado'))
+      expect(chamada).toBeDefined()
+      expect(JSON.parse((chamada![1] as RequestInit).body as string)).toMatchObject({
+        fluxo: 'final', motivo: 'juridica', carreira_juridica: 'promotor',
+        nome: 'Maria Silva', whatsapp: '11987654321', email: 'maria@x.com',
+      })
     })
 
     // Regressão: antes, a sessão só nascia no servidor no clique de "Ver meu
