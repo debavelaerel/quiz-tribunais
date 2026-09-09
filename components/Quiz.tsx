@@ -620,7 +620,7 @@ export default function Quiz() {
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca */}
             <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-16 w-auto" />
             <h1 className="mt-7 text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
-              Descubra seu nível para carreiras de Tribunais
+              Para onde podemos enviar o resultado do diagnóstico?
             </h1>
             <p className="mt-3 text-brand-ink-soft">
               Responda a um diagnóstico rápido e veja onde focar seus estudos.
@@ -628,31 +628,33 @@ export default function Quiz() {
 
             {erro && <AlertaErro mensagem={erro} />}
 
-            <div className="mt-7 flex flex-col gap-2.5">
-              <CampoTexto
-                id="nome" rotulo="Nome" placeholder="Seu nome" value={nome} onChange={setNome}
-                tocado={camposTocados.nome} onTocar={() => marcarTocado('nome')} erro={!nomeValido(nome) ? MSG_NOME : undefined}
-              />
-              <CampoTexto
-                id="whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
-                formatador={formatarWhatsapp} inputMode="tel"
-                tocado={camposTocados.whatsapp} onTocar={() => marcarTocado('whatsapp')} erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
-              />
-              <CampoTexto
-                id="email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail}
-                inputMode="email"
-                tocado={camposTocados.email} onTocar={() => marcarTocado('email')} erro={!emailValido(email) ? MSG_EMAIL : undefined}
-              />
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); void iniciar() }}>
+              <div className="mt-7 flex flex-col gap-2.5">
+                <CampoTexto
+                  id="nome" rotulo="Nome completo" placeholder="Seu nome completo" value={nome} onChange={setNome}
+                  tocado={camposTocados.nome} onTocar={() => marcarTocado('nome')} erro={!nomeValido(nome) ? MSG_NOME : undefined}
+                />
+                <CampoTexto
+                  id="whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
+                  formatador={formatarWhatsapp} inputMode="tel"
+                  tocado={camposTocados.whatsapp} onTocar={() => marcarTocado('whatsapp')} erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
+                />
+                <CampoTexto
+                  id="email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail}
+                  inputMode="email"
+                  tocado={camposTocados.email} onTocar={() => marcarTocado('email')} erro={!emailValido(email) ? MSG_EMAIL : undefined}
+                />
+              </div>
 
-            <Button
-              variant="gold"
-              onClick={iniciar}
-              disabled={enviando || !nomeValido(nome) || !whatsappValido(whatsapp) || !emailValido(email)}
-              className="mt-5"
-            >
-              Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
-            </Button>
+              <Button
+                type="submit"
+                variant="gold"
+                disabled={enviando || !nomeValido(nome) || !whatsappValido(whatsapp) || !emailValido(email)}
+                className="mt-5"
+              >
+                Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
+              </Button>
+            </form>
           </div>
         </main>
       </div>
@@ -668,28 +670,30 @@ export default function Quiz() {
           <div className="w-full max-w-md text-center">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca */}
             <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-16 w-auto" />
-            <h1 className="mt-7 text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
+            <div className="mt-7">
+              <Eyebrow>Antes de começar</Eyebrow>
+            </div>
+            <h1 className="mt-3 text-[26px] font-bold leading-tight tracking-[-0.01em] text-brand-ink">
               Como podemos te chamar?
             </h1>
-            <p className="mt-3 text-brand-ink-soft">
-              Só isso — o resto a gente pergunta ao longo do caminho.
-            </p>
 
-            <div className="mt-7">
-              <CampoTexto
-                id="nome-completo" rotulo="Nome completo" placeholder="Seu nome completo" value={nome} onChange={setNome}
-                tocado={camposTocados['nome-completo']} onTocar={() => marcarTocado('nome-completo')} erro={!nomeValido(nome) ? MSG_NOME : undefined}
-              />
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); setTela('perfil') }}>
+              <div className="mt-7">
+                <CampoTexto
+                  id="nome-completo" rotulo="Nome completo" placeholder="Seu nome completo" value={nome} onChange={setNome}
+                  tocado={camposTocados['nome-completo']} onTocar={() => marcarTocado('nome-completo')} erro={!nomeValido(nome) ? MSG_NOME : undefined}
+                />
+              </div>
 
-            <Button
-              variant="gold"
-              onClick={() => setTela('perfil')}
-              disabled={!nomeValido(nome)}
-              className="mt-5"
-            >
-              Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
-            </Button>
+              <Button
+                type="submit"
+                variant="gold"
+                disabled={!nomeValido(nome)}
+                className="mt-5"
+              >
+                Iniciar diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
+              </Button>
+            </form>
           </div>
         </main>
       </div>
@@ -1082,31 +1086,33 @@ export default function Quiz() {
 
             {erro && <AlertaErro mensagem={erro} />}
 
-            <div className="mt-6 flex flex-col gap-2.5">
-              <CampoTexto
-                id="contato-whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
-                formatador={formatarWhatsapp} inputMode="tel"
-                tocado={camposTocados['contato-whatsapp']}
-                onTocar={() => { marcarTocado('contato-whatsapp'); void tentarSalvamentoAntecipado() }}
-                erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
-              />
-              <CampoTexto
-                id="contato-email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail}
-                inputMode="email"
-                tocado={camposTocados['contato-email']}
-                onTocar={() => { marcarTocado('contato-email'); void tentarSalvamentoAntecipado() }}
-                erro={!emailValido(email) ? MSG_EMAIL : undefined}
-              />
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); void enviarContato() }}>
+              <div className="mt-6 flex flex-col gap-2.5">
+                <CampoTexto
+                  id="contato-whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
+                  formatador={formatarWhatsapp} inputMode="tel"
+                  tocado={camposTocados['contato-whatsapp']}
+                  onTocar={() => { marcarTocado('contato-whatsapp'); void tentarSalvamentoAntecipado() }}
+                  erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
+                />
+                <CampoTexto
+                  id="contato-email" rotulo="E-mail" placeholder="Seu melhor e-mail" value={email} onChange={setEmail}
+                  inputMode="email"
+                  tocado={camposTocados['contato-email']}
+                  onTocar={() => { marcarTocado('contato-email'); void tentarSalvamentoAntecipado() }}
+                  erro={!emailValido(email) ? MSG_EMAIL : undefined}
+                />
+              </div>
 
-            <Button
-              variant="gold"
-              onClick={enviarContato}
-              disabled={enviando || !whatsappValido(whatsapp) || !emailValido(email)}
-              className="mt-5"
-            >
-              Ver meu diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
-            </Button>
+              <Button
+                type="submit"
+                variant="gold"
+                disabled={enviando || !whatsappValido(whatsapp) || !emailValido(email)}
+                className="mt-5"
+              >
+                Ver meu diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
+              </Button>
+            </form>
           </div>
         </main>
       </div>

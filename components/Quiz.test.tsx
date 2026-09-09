@@ -55,7 +55,7 @@ function abrirCapa() {
 
 // Preenche a capa e clica em "Iniciar diagnóstico".
 function iniciarDaCapa() {
-  fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria Silva' } })
+  fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria Silva' } })
   fireEvent.change(screen.getByPlaceholderText('(85) 99682-6067'), { target: { value: '11987654321' } })
   fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
   fireEvent.click(screen.getByText('Iniciar diagnóstico'))
@@ -116,26 +116,26 @@ describe('Quiz', () => {
   it('mostra a tela de abertura (hero), sem formulário, igual ao funil de referência', () => {
     render(<Quiz />)
     expect(screen.getByText(/Quero descobrir meu momento/)).toBeInTheDocument()
-    expect(screen.queryByPlaceholderText('Seu nome')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Seu nome completo')).not.toBeInTheDocument()
   })
 
   it('mostra a capa com o formulário de identificação só depois do CTA da abertura', () => {
     render(<Quiz />)
     abrirCapa()
-    expect(screen.getByPlaceholderText('Seu nome')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Seu nome completo')).toBeInTheDocument()
   })
 
   it('não mostra mensagem de erro do campo antes de sair dele (blur)', () => {
     render(<Quiz />)
     abrirCapa()
-    fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria' } })
+    fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria' } })
     expect(screen.queryByText('Informe nome e sobrenome.')).not.toBeInTheDocument()
   })
 
   it('mostra a mensagem específica de cada campo depois do blur, some quando corrige', () => {
     render(<Quiz />)
     abrirCapa()
-    const campoNome = screen.getByPlaceholderText('Seu nome')
+    const campoNome = screen.getByPlaceholderText('Seu nome completo')
     fireEvent.change(campoNome, { target: { value: 'Maria' } })
     fireEvent.blur(campoNome)
     expect(screen.getByText('Informe nome e sobrenome.')).toBeInTheDocument()
@@ -160,7 +160,7 @@ describe('Quiz', () => {
   it('exibe o WhatsApp com máscara (85) 99682-6067, mas guarda só os dígitos', async () => {
     render(<Quiz />)
     abrirCapa()
-    fireEvent.change(screen.getByPlaceholderText('Seu nome'), { target: { value: 'Maria Silva' } })
+    fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), { target: { value: 'Maria Silva' } })
     fireEvent.change(screen.getByPlaceholderText('(85) 99682-6067'), { target: { value: '85996826067' } })
     fireEvent.change(screen.getByPlaceholderText('Seu melhor e-mail'), { target: { value: 'maria@x.com' } })
     expect(screen.getByPlaceholderText('(85) 99682-6067')).toHaveValue('(85) 99682-6067')
@@ -274,7 +274,7 @@ describe('Quiz', () => {
 
     render(<Quiz />)
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
-    expect(screen.getByPlaceholderText('Seu nome')).toHaveValue('Maria')
+    expect(screen.getByPlaceholderText('Seu nome completo')).toHaveValue('Maria')
   })
 
   describe('fluxo com contato no final (?fluxo=final)', () => {
