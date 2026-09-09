@@ -36,7 +36,7 @@ type Tela =
   | 'intro' | 'perfil' | 'desqualificado'
   | 'mirror' | 'video' | 'dinheiro' | 'conta'
   | 'quiz' | 'correcao' | 'leitura' | 'contato'
-  | 'resultado'
+  | 'analisando' | 'resultado'
 
 type Resultado = {
   score_geral_pct: number
@@ -63,6 +63,16 @@ const TOTAL = QUESTIONS.length
 // nunca é exibida, então o denominador fica levemente conservador — efeito
 // puramente cosmético na barra, sem impacto funcional.
 const PASSOS_POS_INTRO = PERFIL_SCREENS.length + 4 /* mirror, video, dinheiro, conta */ + TOTAL + 2 /* correcao, leitura */ + 1 /* contato */
+
+// Tela 'analisando': interstício entre terminar de responder e ver o
+// resultado — cobre o tempo real do /api/quiz/finish em voo, com uma
+// duração mínima (evita "flash" se a resposta do servidor for rápida
+// demais pra sequer registrar a animação).
+const MIN_DURACAO_ANALISANDO = 2200
+const FRASES_ANALISANDO = ['Lendo suas respostas…', 'Calculando sua pontuação…', 'Montando seu relatório…']
+function aguardarNoMinimo(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 function tokenDaResposta(json: RespostaStart): string | null {
   return typeof json.session_token === 'string' && json.session_token !== '' ? json.session_token : null
@@ -191,6 +201,11 @@ export default function Quiz() {
   const [enviando, setEnviando] = useState(false)
   const [restaurando, setRestaurando] = useState(false)
   const [resultado, setResultado] = useState<Resultado | null>(null)
+  // Tela 'analisando' (ver concluir/enviarContato): frase e porcentagem são
+  // só decorativas (não medem progresso real do /finish, que é uma chamada
+  // única sem etapas) — reiniciam sempre que a tela é mostrada de novo.
+  const [fraseAnalisando, setFraseAnalisando] = useState(0)
+  const [pctAnalisando, setPctAnalisando] = useState(0)
 
   // Duas versões do funil, escolhidas por query string (ex.: ?fluxo=final),
   // pra comparar lado a lado sem duplicar o app: 'inicio' (padrão) pede nome
@@ -204,6 +219,31 @@ export default function Quiz() {
     if (typeof window === 'undefined') return
     setFluxoFinal(new URLSearchParams(window.location.search).get('fluxo') === 'final')
   }, [])
+
+  // Anima a tela 'analisando' enquanto ela estiver visível — troca de frase
+  // e contagem de porcentagem são só decoração (a chamada real ao /finish
+  // não tem etapas pra medir de verdade). Reinicia do zero toda vez que a
+  // tela reaparece; para tudo (sem timer solto) assim que ela sai de cena.
+  useEffect(() => {
+    if (tela !== 'analisando') return
+    setFraseAnalisando(0)
+    setPctAnalisando(0)
+    const intervaloFrase = setInterval(() => {
+      setFraseAnalisando((f) => (f + 1) % FRASES_ANALISANDO.length)
+    }, 1900)
+    const inicio = Date.now()
+    let quadro: number
+    const tick = () => {
+      const t = ((Date.now() - inicio) % 3600) / 3600
+      setPctAnalisando(t < 0.7 ? Math.round((t / 0.7) * 99) : 99)
+      quadro = requestAnimationFrame(tick)
+    }
+    quadro = requestAnimationFrame(tick)
+    return () => {
+      clearInterval(intervaloFrase)
+      cancelAnimationFrame(quadro)
+    }
+  }, [tela])
 
   const [passoPerfil, setPassoPerfil] = useState(0)
   const [respostasPerfil, setRespostasPerfil] = useState<RespostasPerfil>({})
@@ -419,7 +459,7 @@ export default function Quiz() {
       // perfil. Concluir antes (como era) fazia esse /api/quiz/perfil daqui
       // morrer com "sessão já concluída" (409), silenciado pelo .catch() de
       // persistirPerfil: a coluna `perfil.leitura` nunca era salva.
-      void concluir(estado.sessionToken, 'resultado')
+      void concluir(estado.sessionToken, 'resultado', 'leitura')
       return
     }
     // Sem sessão ainda (fluxo com contato no final): pede WhatsApp/e-mail
@@ -477,14 +517,21 @@ export default function Quiz() {
 
   // Chamada só depois da leitura (responderLeitura) — sessão já tem todas as
   // respostas graduadas e todas as chaves de perfil gravadas nesse ponto.
-  async function concluir(sessionToken: string, proximaTela: Tela) {
-    const res = await fetch('/api/quiz/finish', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_token: sessionToken }),
-    })
+  // Mostra 'analisando' enquanto o /finish está em voo — `telaSeErro` é pra
+  // onde volta se falhar (precisa ser uma tela com AlertaErro visível).
+  async function concluir(sessionToken: string, proximaTela: Tela, telaSeErro: Tela) {
+    setTela('analisando')
+    const [res] = await Promise.all([
+      fetch('/api/quiz/finish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: sessionToken }),
+      }),
+      aguardarNoMinimo(MIN_DURACAO_ANALISANDO),
+    ])
     if (!res.ok) {
       setErro('Não foi possível concluir o diagnóstico. Tente novamente.')
+      setTela(telaSeErro)
       return
     }
     setResultado(await res.json())
@@ -572,19 +619,25 @@ export default function Quiz() {
         setErro('Não foi possível concluir. Confira seus dados.')
         return
       }
-      const resFinish = await fetch('/api/quiz/finish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_token: sessionToken }),
-      })
+      setTela('analisando')
+      const [resFinish] = await Promise.all([
+        fetch('/api/quiz/finish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_token: sessionToken }),
+        }),
+        aguardarNoMinimo(MIN_DURACAO_ANALISANDO),
+      ])
       if (!resFinish.ok) {
         setErro('Não foi possível concluir o diagnóstico. Tente novamente.')
+        setTela('contato')
         return
       }
       setResultado(await resFinish.json())
       setTela('resultado')
     } catch {
       setErro('Não foi possível concluir. Verifique sua conexão.')
+      setTela('contato')
     } finally {
       emVooRef.current = false
       setEnviando(false)
@@ -717,24 +770,24 @@ export default function Quiz() {
           <path d="M121.7 141.505C122.743 141.798 126.239 146.408 127.567 147.592C138.533 157.372 153.49 159.425 167.41 155.905C170.66 155.083 173.491 153.872 176.693 152.967C174.867 154.848 173.368 156.043 171.515 158.217C161.315 169.631 156.693 183.069 160.691 198.17C161.08 199.64 163.626 205.306 163.453 206.226C161.675 205.078 159.416 202.243 157.62 200.747C142.596 188.23 126.78 185.845 109.389 195.307C110.592 193.132 111.986 191.849 113.647 190.04C117.225 186.143 119.962 182.772 122.1 177.889C127.563 165.407 126.855 153.985 121.7 141.505Z" fill="#203C7C" />
         </svg>
 
-        <main className="relative flex flex-1 items-start justify-center px-6 py-4 sm:py-10">
+        <main className="relative flex flex-1 items-start justify-center px-6 py-3 sm:py-10">
           <div className="w-full max-w-md text-center">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca, sem necessidade do pipeline de otimização de imagem */}
-            <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-11 w-auto sm:h-16" />
-            <div className="mt-4 sm:mt-7">
+            <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-9 w-auto sm:h-16" />
+            <div className="mt-3.5 sm:mt-7">
               <Eyebrow>A janela é agora</Eyebrow>
             </div>
-            <h1 className="mt-2 text-[20px] leading-tight tracking-[-0.015em] font-bold text-brand-ink sm:mt-3 sm:text-[26px]">
+            <h1 className="mt-2.5 text-[19px] leading-snug tracking-[-0.01em] font-bold text-brand-ink sm:mt-3 sm:text-[26px] sm:leading-tight sm:tracking-[-0.015em]">
               O segundo semestre de 2026 e o ano de 2027 vão ser dos concursos de tribunais.
             </h1>
-            <p className="mt-2 text-[13.5px] leading-snug text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
+            <p className="mt-3 text-[13.5px] leading-normal text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
               TRT8 já com banca definida. TRF3, TRT4, TJ AM, TJ GO e a DPU na fila.{' '}
               <b className="text-brand-ink">É a maior sequência de editais de tribunal dos últimos anos.</b>
             </p>
-            <p className="mt-2 text-[13.5px] leading-snug text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
+            <p className="mt-3 text-[13.5px] leading-normal text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
               Não dá pra desperdiçar essas oportunidades. Quem chega despreparado não perde só uma prova: perde o ciclo inteiro, porque o próximo edital do mesmo tribunal demora anos.
             </p>
-            <p className="mt-2 text-[13.5px] leading-snug text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
+            <p className="mt-3 text-[13.5px] leading-normal text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
               E o que separa quem aproveita essa janela de quem assiste ela passar é saber em que momento da preparação está. <b className="text-brand-ink">Este diagnóstico revela o seu em menos de 3 minutos.</b>
             </p>
             {/* Retomando (F5 no meio do funil): `estado` já existe, pula direto pro
@@ -1119,6 +1172,35 @@ export default function Quiz() {
     )
   }
 
+  if (tela === 'analisando') {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <main className="flex flex-1 items-center justify-center px-6 py-8">
+          <div className="w-full max-w-md text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca */}
+            <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-11 w-auto" />
+            <div className="relative mx-auto mt-10 h-32 w-32">
+              <svg viewBox="0 0 128 128" className="h-full w-full -rotate-90">
+                <defs>
+                  <linearGradient id="analiseGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stopColor="#F9E08A" />
+                    <stop offset="1" stopColor="#C89B18" />
+                  </linearGradient>
+                </defs>
+                <circle cx="64" cy="64" r="55" fill="none" stroke="#ECE9F5" strokeWidth="8" />
+                <circle cx="64" cy="64" r="55" fill="none" stroke="url(#analiseGrad)" strokeWidth="8" strokeLinecap="round" className="diag-ring" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-2xl font-bold tabular-nums text-brand-ink">
+                {pctAnalisando}%
+              </div>
+            </div>
+            <p className="mt-6 text-[14.5px] font-medium text-brand-ink-soft">{FRASES_ANALISANDO[fraseAnalisando]}</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   // resultado
   const diagnostico = respostasPerfil.momento ? DIAG[respostasPerfil.momento] : undefined
   const perfilCalculado = resultado ? calcularPerfil(respostasPerfil, resultado.acertos) : null
@@ -1144,58 +1226,96 @@ export default function Quiz() {
         <div className="w-full max-w-md">
           <Eyebrow>Raio-X da Base</Eyebrow>
           <h2 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">
-            {primeiroNome ? `${primeiroNome}, o` : 'O'} que eu enxerguei no seu caso.
+            {primeiroNome ? `${primeiroNome}, aqui` : 'Aqui'} está o seu plano.
           </h2>
 
           {resultado && (
             <>
-              <div className="mt-6 flex flex-col gap-2">
-                <LinhaFicha label="Onde você está" valor={respostasPerfil.momento ? L.momento[respostasPerfil.momento] : ''} />
-                <LinhaFicha label="Alvo" valor={`${cargo} · ${alvoLabel}`} />
-                <LinhaFicha label="Curso indicado" valor={perfilCalculado?.curso ?? ''} />
-                <LinhaFicha label="Nível no teste" valor={`${nivel} · ${resultado.acertos} de ${resultado.total}`} />
-                <LinhaFicha label="Ritmo" valor={perfilCalculado?.ritmo ?? ''} />
+              {/* Ficha: nível em destaque (cartão) + os outros 4 fatos numa
+                  grade 2×2 — mais rápido de escanear que 5 linhas empilhadas. */}
+              <div className="mt-6 flex items-center justify-between gap-3 rounded-[14px] bg-gradient-to-br from-brand-navy to-brand-navy-2 px-5 py-4 text-white">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-white/75">Nível no teste</p>
+                  <p className="mt-1 text-[17px] font-bold">{nivel}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[28px] font-bold leading-none tabular-nums">
+                    {resultado.acertos}<span className="text-[16px] font-normal text-white/70">/{resultado.total}</span>
+                  </p>
+                  <p className="mt-1 text-[12px] text-white/70">questões certas</p>
+                </div>
+              </div>
+              <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+                <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
+                  <p className="text-[11px] text-brand-ink-dim">Onde você está</p>
+                  <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{respostasPerfil.momento ? L.momento[respostasPerfil.momento] : ''}</p>
+                </div>
+                <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
+                  <p className="text-[11px] text-brand-ink-dim">Alvo</p>
+                  <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{cargo} · {alvoLabel}</p>
+                </div>
+                <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
+                  <p className="text-[11px] text-brand-ink-dim">Curso indicado</p>
+                  <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{perfilCalculado?.curso ?? ''}</p>
+                </div>
+                <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
+                  <p className="text-[11px] text-brand-ink-dim">Ritmo</p>
+                  <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{perfilCalculado?.ritmo ?? ''}</p>
+                </div>
               </div>
 
-              <h3 className="mt-8 font-bold text-brand-navy">O que eu li do seu caso</h3>
+              {/* Plano de ação primeiro — é a parte mais acionável do raio-X,
+                  por isso vem antes da explicação (que fica em "Por que essa
+                  ordem", abaixo). Cartão com borda dourada pra separar
+                  visualmente de "isso eu li do seu caso". */}
+              {diagnostico && (
+                <div className="mt-6 rounded-[14px] bg-gradient-to-br from-brand-gold to-brand-gold-deep p-[3px]">
+                  <div className="rounded-[12px] bg-brand-card px-4 py-4">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-brand-gold-text">
+                      {primeiroNome ? `${primeiroNome}, comece` : 'Comece'} por aqui
+                    </p>
+                    <p className="mt-2 text-[13.5px] leading-relaxed text-brand-ink-soft">
+                      <b className="text-brand-ink">Ação imediata:</b> {diagnostico.prescricao}
+                    </p>
+                    {respostasPerfil.leitura === 'completa' && (
+                      <div className="mt-3 flex flex-col gap-2">
+                        {diagnostico.ordem.map((item, i) => (
+                          <div key={i} className="flex items-start gap-2.5 rounded-[12px] border-[1.5px] border-brand-line px-3 py-2.5">
+                            <span className="mt-0.5 flex h-[22px] w-[22px] flex-none items-center justify-center rounded-full bg-brand-ink text-[11.5px] font-bold text-white">
+                              {i + 1}
+                            </span>
+                            <span className="text-[13px] leading-snug text-brand-ink-soft">{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {diagnostico && (
                 <>
-                  <p className="mt-2"><b className="text-brand-ink">{diagnostico.titulo}</b></p>
+                  <h3 className="mt-7 font-bold text-brand-navy">Por que essa ordem</h3>
                   {diagnostico.texto.map((t, i) => (
                     <p key={i} className="mt-2 text-brand-ink-soft">{t}</p>
                   ))}
-                  <div className="mt-3 rounded-[14px] border-[1.5px] border-brand-line border-l-4 border-l-brand-gold-deep bg-brand-card px-4 py-3.5">
-                    <p><b>Começa por aqui:</b> {diagnostico.prescricao}</p>
-                  </div>
-                  {respostasPerfil.leitura === 'completa' && (
-                    <>
-                      <h3 className="mt-6 font-bold text-brand-navy">A ordem que eu seguiria</h3>
-                      <ol className="mt-2 list-decimal pl-5 text-brand-ink-soft">
-                        {diagnostico.ordem.map((item, i) => (
-                          <li key={i} className="mt-1">{item}</li>
-                        ))}
-                      </ol>
-                    </>
-                  )}
                 </>
               )}
 
               {frases.map((f, i) => f && (
-                <p key={i} className="mt-4 text-brand-ink-soft">
+                <div key={i} className="mt-3 rounded-[14px] bg-brand-tint px-4 py-3 text-[13px] leading-relaxed text-brand-ink-soft">
                   {f.negrito && <b className="text-brand-ink">{f.negrito} </b>}
                   {f.texto}
-                </p>
+                </div>
               ))}
 
               <h3 className="mt-8 inline-block rounded-lg bg-brand-tint px-2.5 py-1 font-bold text-brand-navy">Onde isso vira um plano</h3>
               <p className="mt-4 text-brand-ink-soft">
-                Este raio-X leu o seu caso por cima, com o que dá pra ler em doze perguntas e quatro questões.
+                Este raio-X leu o seu caso por cima, com o que dá pra ler em doze perguntas e quatro questões. O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>, que cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação: o que priorizar agora, o que vem depois e o que pode esperar.
               </p>
               <p className="mt-4 text-brand-ink-soft">
-                O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>. É ele quem abre o seu caso em detalhe, cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação: o que priorizar agora, o que vem depois e o que pode esperar.
+                Não custa nada. Só que a agenda é curta — cada consultor abre poucos horários por semana. Clica aqui embaixo e vê o que sobrou pra esta semana.
               </p>
-              <p className="mt-4 text-brand-ink-soft">Não custa nada. Só que a agenda é curta: cada consultor abre poucos horários por semana.</p>
-              <p className="mt-4 text-brand-ink-soft">Clica aqui embaixo e vê o que sobrou pra esta semana.</p>
 
               <a
                 href={link}
