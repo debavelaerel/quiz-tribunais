@@ -1,4 +1,4 @@
-// Conteúdo do funil "Raio-X da Base" (VDE Tribunais) — perguntas de
+// Conteúdo do funil "Diagnóstico da Base" (VDE Tribunais) — perguntas de
 // perfilamento, editais em andamento, rótulos e diagnósticos por momento.
 // Adaptado do funil de referência (mesmo texto, mesma lógica de ramificação),
 // só reestruturado como dados tipados para o motor de telas do Quiz.tsx.
@@ -6,7 +6,7 @@
 import type { RespostasPerfil } from './perfil'
 
 export const CONFIG = {
-  quizName: 'Raio-X da Base',
+  quizName: 'Diagnóstico da Base',
   // Placeholder — trocar pelo número real do time de consultores antes de publicar de verdade.
   whatsapp: '5500000000000',
   videoSrc: '',

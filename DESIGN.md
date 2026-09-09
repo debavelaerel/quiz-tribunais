@@ -1,4 +1,4 @@
-# DESIGN.md — Quiz Raio-X da Base (VDE Tribunais)
+# DESIGN.md — Quiz Diagnóstico da Base (VDE Tribunais)
 
 <!-- meta
 source: código do projeto (não há Figma — o código é a fonte da verdade)

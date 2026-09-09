@@ -1071,7 +1071,7 @@ export default function Quiz() {
       const alvoTxt = respostasPerfil.cargo === 'escrevente' ? 'escrevente' : 'técnico de nível médio'
       paragrafos = [
         `O VDE Tribunais é calibrado pro nível de analista e oficial de justiça, então ele aprofunda as matérias jurídicas mais do que a prova de ${alvoTxt} pede.`,
-        'Prefiro te dizer isso agora. Se em algum momento o seu alvo virar analista, o raio-X continua aqui.',
+        'Prefiro te dizer isso agora. Se em algum momento o seu alvo virar analista, o diagnóstico continua aqui.',
       ]
     }
     const progressoDesqualificado = Math.round((passoPerfil / PASSOS_POS_INTRO) * 100)
@@ -1562,7 +1562,7 @@ export default function Quiz() {
       <Header progresso={100} />
       <main className="flex flex-1 items-start justify-center px-6 py-8">
         <div className="w-full max-w-md">
-          <Eyebrow>Raio-X da Base</Eyebrow>
+          <Eyebrow>Diagnóstico da Base</Eyebrow>
           <h2 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">
             {primeiroNome ? `${primeiroNome}, aqui` : 'Aqui'} está o seu plano.
           </h2>
@@ -1602,7 +1602,7 @@ export default function Quiz() {
                 </div>
               </div>
 
-              {/* Plano de ação primeiro — é a parte mais acionável do raio-X,
+              {/* Plano de ação primeiro — é a parte mais acionável do diagnóstico,
                   por isso vem antes da explicação (que fica em "Por que essa
                   ordem", abaixo). Cartão com borda dourada pra separar
                   visualmente de "isso eu li do seu caso". */}
@@ -1649,7 +1649,7 @@ export default function Quiz() {
 
               <h3 className="mt-8 inline-block rounded-lg bg-brand-tint px-2.5 py-1 font-bold text-brand-navy">Onde isso vira um plano</h3>
               <p className="mt-4 text-brand-ink-soft">
-                Este raio-X leu o seu caso por cima, com o que dá pra ler em doze perguntas e quatro questões. O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>, que cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação: o que priorizar agora, o que vem depois e o que pode esperar.
+                Este diagnóstico leu o seu caso por cima, com o que dá pra ler em doze perguntas e quatro questões. O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>, que cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação: o que priorizar agora, o que vem depois e o que pode esperar.
               </p>
               <p className="mt-4 text-brand-ink-soft">
                 Não custa nada. Só que a agenda é curta — cada consultor abre poucos horários por semana. Clica aqui embaixo e vê o que sobrou pra esta semana.

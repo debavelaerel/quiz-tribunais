@@ -1,4 +1,4 @@
-// Cálculo de perfil do funil "Raio-X da Base" — puro, sem I/O.
+// Cálculo de perfil do funil "Diagnóstico da Base" — puro, sem I/O.
 // Não é a nota do teste graduado (isso é lib/scoring.ts) — é a classificação
 // de qualificação comercial (classe A/B, curso indicado, ritmo de estudo)
 // a partir das respostas de perfilamento, não graduadas.
