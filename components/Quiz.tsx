@@ -918,7 +918,8 @@ export default function Quiz() {
     const cargo = labelCargo(respostasPerfil)
     const alvoLongo = respostasPerfil.alvo ? L.alvoLongo[respostasPerfil.alvo] : ''
     const escolhidos = editaisEscolhidos(respostasPerfil)
-    const edFrase = escolhidos[0] ? `O ${escolhidos[0].label} já está na fila (${escolhidos[0].sub}), então o seu tempo tem dono. ` : ''
+    const provaNaMira = escolhidos[0]
+    const edFrase = provaNaMira ? `O ${provaNaMira.label} já está na fila (${provaNaMira.sub}), então o seu tempo tem dono. ` : ''
     const progresso = Math.round((PERFIL_SCREENS.length / PASSOS_POS_INTRO) * 100)
     return (
       <div className="flex min-h-screen flex-col">
@@ -930,14 +931,42 @@ export default function Quiz() {
           <div className="w-full max-w-md">
             <Eyebrow>Ficha fechada</Eyebrow>
             <h1 className="mt-3 text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Anotei tudo{primeiroNome ? `, ${primeiroNome}` : ''}. A sua ficha ficou assim:</h1>
-            <div className="mt-6 flex flex-col gap-2">
-              <LinhaFicha label="Seu alvo" valor={`${cargo} · ${alvoLongo}`} />
-              <LinhaFicha label="Gargalo" valor={respostasPerfil.dor ? L.dorCurta[respostasPerfil.dor] : ''} />
-              <LinhaFicha label="Momento" valor={respostasPerfil.momento ? L.momento[respostasPerfil.momento] : ''} />
-              <LinhaFicha label="Tempo disponível" valor={respostasPerfil.horas ? L.horas[respostasPerfil.horas] : ''} />
-              {escolhidos[0] && <LinhaFicha label="Prova na mira" valor={escolhidos[0].label} />}
+
+            {/* Prova na mira em destaque (cartão hero) — é o fato que decide o
+                parágrafo de urgência logo abaixo, mesmo padrão já usado no
+                resultado (nível no teste). Os outros 4 fatos, sem essa
+                ligação direta com o texto, ficam numa grade 2×2 mais neutra. */}
+            {provaNaMira && (
+              <div className="mt-6 rounded-[14px] bg-gradient-to-br from-brand-navy to-brand-navy-2 px-5 py-4 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/75">Prova na mira</p>
+                <p className="mt-1 text-[17px] font-bold">{provaNaMira.label}</p>
+                <p className="mt-1 text-[12px] text-white/70">{provaNaMira.sub}</p>
+              </div>
+            )}
+            <div className={`grid grid-cols-2 gap-2.5 ${provaNaMira ? 'mt-2.5' : 'mt-6'}`}>
+              <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
+                <p className="text-[11px] text-brand-ink-dim">Seu alvo</p>
+                <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{cargo} · {alvoLongo}</p>
+              </div>
+              <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
+                <p className="text-[11px] text-brand-ink-dim">Gargalo</p>
+                <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{respostasPerfil.dor ? L.dorCurta[respostasPerfil.dor] : ''}</p>
+              </div>
+              <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
+                <p className="text-[11px] text-brand-ink-dim">Momento</p>
+                <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{respostasPerfil.momento ? L.momento[respostasPerfil.momento] : ''}</p>
+              </div>
+              <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
+                <p className="text-[11px] text-brand-ink-dim">Tempo disponível</p>
+                <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{respostasPerfil.horas ? L.horas[respostasPerfil.horas] : ''}</p>
+              </div>
             </div>
-            <p className="mt-6 text-brand-ink-soft">{edFrase}Se estiver errado, volta e corrige. Se estiver certo, eu consigo te dizer com precisão o que atacar primeiro.</p>
+
+            <div className="mt-4 rounded-[14px] border-[1.5px] border-brand-line border-l-4 border-l-brand-gold-deep bg-brand-card px-4 py-3.5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-brand-gold-text">O que isso muda pra você</p>
+              <p className="mt-1.5 text-brand-ink-soft">{edFrase}Se estiver errado, volta e corrige. Se estiver certo, eu consigo te dizer com precisão o que atacar primeiro.</p>
+            </div>
+
             <Button variant="gold" onClick={() => setTela('video')} className="mt-6">
               Está certo, pode seguir
             </Button>
@@ -1334,17 +1363,6 @@ export default function Quiz() {
           )}
         </div>
       </main>
-    </div>
-  )
-}
-
-// Linha "rótulo à esquerda, valor à direita" reaproveitada nas telas
-// ficha/mirror e resultado — mesmo padrão do `.kv` do funil de referência.
-function LinhaFicha({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div className="flex justify-between gap-3 rounded-[14px] border-[1.5px] border-brand-line bg-brand-card px-4 py-3 text-[15px]">
-      <span className="text-brand-ink-dim">{label}</span>
-      <span className="text-right font-semibold text-brand-ink">{valor}</span>
     </div>
   )
 }

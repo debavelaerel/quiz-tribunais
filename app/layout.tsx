@@ -16,7 +16,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={poppins.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <footer className="px-6 py-4 text-center text-[12px] text-brand-ink-dim">
+          Vicio de Uma Estudante © 2026 – Todos os direitos reservados.
+        </footer>
+      </body>
     </html>
   )
 }
