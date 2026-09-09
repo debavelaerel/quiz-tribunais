@@ -245,6 +245,17 @@ describe('Quiz', () => {
     expect(idxLeitura).toBeLessThan(idxFinish)
   })
 
+  it('registra o clique no CTA de WhatsApp (sinal de intenção pro lead scoring)', async () => {
+    render(<Quiz />)
+    await chegarAoResultado()
+    fireEvent.click(screen.getByText('Falar com o time no WhatsApp'))
+    await waitFor(() => {
+      const chamada = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/whatsapp'))
+      expect(chamada).toBeTruthy()
+      expect(JSON.parse((chamada![1] as RequestInit).body as string)).toEqual({ session_token: 'tok-1' })
+    })
+  })
+
   it('reexibe o resultado ao recarregar uma sessão já concluída', async () => {
     salvarEstado({ sessionToken: 'tok-1', nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com' })
     respostas.result = () => new Response(JSON.stringify(RESULTADO), { status: 200 })

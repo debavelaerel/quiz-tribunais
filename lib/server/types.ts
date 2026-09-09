@@ -24,6 +24,10 @@ export type QuizSession = {
   // editais escolhidos, etc.) — não graduadas, distintas de `respostas`/`areas`.
   perfil: RespostasPerfil
   perfilCalculado: PerfilCalculado | null
+  // Horário do primeiro clique no CTA "Falar com o time no WhatsApp" na tela
+  // de resultado — sinal de intenção de compra, não de diagnóstico. Só o
+  // primeiro clique é gravado (ver registrarCliqueWhatsapp em quizService.ts).
+  whatsappClicadoEm: string | null
   startedAt: string
   updatedAt: string
   completedAt: string | null

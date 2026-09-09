@@ -58,6 +58,7 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
     areaPrioritaria: null,
     perfil: {},
     perfilCalculado: null,
+    whatsappClicadoEm: null,
     startedAt: agora,
     updatedAt: agora,
     completedAt: null,
@@ -112,4 +113,16 @@ export async function buscarResultado(repo: SessionRepo, sessionToken: string): 
   const sessao = await repo.buscarPorToken(sessionToken)
   if (!sessao || sessao.status !== 'concluido') return null
   return sessao
+}
+
+// Sinal de intenção de compra (clicou no CTA de WhatsApp na tela de
+// resultado) — não é um passo do funil, por isso não usa SessaoConcluidaError:
+// funciona mesmo com a sessão já concluída (é justamente o caso normal).
+// Só grava o PRIMEIRO clique — cliques repetidos (reabriu a tela, clicou de
+// novo) não empurram o horário pra frente.
+export async function registrarCliqueWhatsapp(repo: SessionRepo, sessionToken: string): Promise<void> {
+  const sessao = await repo.buscarPorToken(sessionToken)
+  if (!sessao) throw new SessaoInvalidaError('sessão não encontrada')
+  if (sessao.whatsappClicadoEm) return
+  await repo.atualizar(sessao.id, { whatsappClicadoEm: new Date().toISOString() })
 }

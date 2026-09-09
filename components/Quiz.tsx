@@ -1350,6 +1350,18 @@ export default function Quiz() {
                 href={link}
                 target="_blank"
                 rel="noopener"
+                onClick={() => {
+                  // Sinal de intenção de compra pro lead scoring comercial —
+                  // silencioso de propósito (fire-and-forget): nunca pode
+                  // atrasar ou travar a abertura do WhatsApp.
+                  if (estado?.sessionToken) {
+                    void fetch('/api/quiz/whatsapp', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ session_token: estado.sessionToken }),
+                    }).catch(() => {})
+                  }
+                }}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-brand-gold to-brand-gold-deep px-6 py-4 text-[15.5px] font-semibold text-brand-navy shadow-[0_10px_24px_rgba(200,155,24,0.28)] transition-transform hover:-translate-y-0.5"
               >
                 {/* Ícone de marca (WhatsApp) — fora do set genérico do lucide, mantido como SVG inline. */}

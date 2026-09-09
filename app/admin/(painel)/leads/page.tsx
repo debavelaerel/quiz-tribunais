@@ -109,14 +109,14 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <table className="w-full min-w-[720px] border-collapse text-[13.5px]">
           <thead>
             <tr className="bg-[#fafafe]">
-              {['Nome', 'Fluxo', 'Status', 'Teste', 'Classe', 'Iniciado em'].map((h) => (
+              {['Nome', 'Fluxo', 'Status', 'Teste', 'Classe', 'WhatsApp', 'Iniciado em'].map((h) => (
                 <th key={h} className="border-b-[1.5px] border-brand-line px-4 py-3 text-left text-[12px] font-semibold text-brand-ink-dim">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {sessoes.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-brand-ink-dim">Nenhum lead encontrado com esses filtros.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-brand-ink-dim">Nenhum lead encontrado com esses filtros.</td></tr>
             )}
             {sessoes.map((s) => (
               <tr key={s.sessionToken} className="border-b border-brand-line last:border-none hover:bg-brand-tint">
@@ -130,6 +130,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
                 <td className="px-4 py-3">{pillStatus(s.status)}</td>
                 <td className="px-4 py-3 text-brand-ink">{s.acertos !== null ? `${s.acertos} / ${s.total}` : '—'}</td>
                 <td className="px-4 py-3 text-brand-ink">{s.perfilCalculado?.classe ?? '—'}</td>
+                <td className="px-4 py-3">{s.whatsappClicadoEm ? <Pill tom="green">clicou</Pill> : <Pill tom="gray">não clicou</Pill>}</td>
                 <td className="px-4 py-3 text-brand-ink-dim">{fmtData(s.startedAt)}</td>
               </tr>
             ))}
