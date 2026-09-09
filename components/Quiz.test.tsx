@@ -105,7 +105,7 @@ async function chegarAoResultado() {
     await waitFor(() => {})
   }
   await waitFor(() => expect(screen.getByText(/Maria, você acertou/)).toBeInTheDocument())
-  fireEvent.click(screen.getByText(/Fechar meu raio-X/))
+  fireEvent.click(screen.getByText(/Fechar meu diagnóstico/))
   await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
   expect(screen.getByText(/Maria, quer que eu inclua no seu resultado/)).toBeInTheDocument()
   fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
@@ -327,7 +327,7 @@ describe('Quiz', () => {
       expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/answer'))).toBe(false)
 
       await waitFor(() => expect(screen.getByText(/Maria, você acertou/)).toBeInTheDocument())
-      fireEvent.click(screen.getByText(/Fechar meu raio-X/))
+      fireEvent.click(screen.getByText(/Fechar meu diagnóstico/))
       await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
       fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
 
@@ -384,7 +384,7 @@ describe('Quiz', () => {
         await waitFor(() => {})
       }
       await waitFor(() => expect(screen.getByText(/Maria, você acertou/)).toBeInTheDocument())
-      fireEvent.click(screen.getByText(/Fechar meu raio-X/))
+      fireEvent.click(screen.getByText(/Fechar meu diagnóstico/))
       await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
       fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
       await waitFor(() => expect(screen.getByLabelText('WhatsApp')).toBeInTheDocument())

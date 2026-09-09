@@ -837,11 +837,8 @@ export default function Quiz() {
           <div className="w-full max-w-md text-center">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático da marca, sem necessidade do pipeline de otimização de imagem */}
             <img src="/brand/versao01-color0.svg" alt="VDE Concursos — Tribunais" width={1163} height={393} className="mx-auto h-9 w-auto sm:h-16" />
-            <div className="mt-3.5 sm:mt-7">
-              <Eyebrow>A janela é agora</Eyebrow>
-            </div>
-            <h1 className="mt-2.5 text-[19px] leading-snug tracking-[-0.01em] font-bold text-brand-ink sm:mt-3 sm:text-[26px] sm:leading-tight sm:tracking-[-0.015em]">
-              O segundo semestre de 2026 e o ano de 2027 vão ser dos concursos de tribunais.
+            <h1 className="mt-3.5 text-[19px] leading-snug tracking-[-0.01em] font-bold text-brand-ink sm:mt-7 sm:text-[26px] sm:leading-tight sm:tracking-[-0.015em]">
+              Os próximos 12 meses vão ser dos concursos de tribunais.
             </h1>
             <p className="mt-3 text-[13.5px] leading-normal text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
               TRT8 já com banca definida. TRF3, TRT4, TJ AM, TJ GO e a DPU na fila.{' '}
@@ -1188,7 +1185,7 @@ export default function Quiz() {
               Sozinho, esse número vale pouco. Cruzado com o seu tempo de estudo, o seu ritmo e o seu histórico de provas, ele fecha a leitura.
             </p>
             <Button variant="gold" onClick={() => setTela('leitura')} className="mt-6">
-              Fechar meu raio-X <ArrowRight size={17} strokeWidth={2.25} />
+              Fechar meu diagnóstico <ArrowRight size={17} strokeWidth={2.25} />
             </Button>
           </div>
         </main>
