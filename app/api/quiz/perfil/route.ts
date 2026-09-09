@@ -14,7 +14,7 @@ export const runtime = 'nodejs'
 // `perfil`, em vez de aceitar qualquer chave que o cliente mandar.
 const CHAVES_PERFIL: (keyof RespostasPerfil)[] = [
   'alvo', 'cargo', 'formacao', 'tempo', 'provas', 'metodo', 'vde', 'horas',
-  'edital', 'editais', 'dor', 'momento', 'dinheiro', 'leitura',
+  'edital', 'editais', 'dor', 'momento', 'dinheiro', 'leitura', 'desqualificadoMotivo',
 ]
 const CHAVES_MULTI: (keyof RespostasPerfil)[] = ['editais']
 

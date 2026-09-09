@@ -45,6 +45,15 @@ describe('POST /api/quiz/perfil', () => {
     expect(repo.linhas[0].perfil).toEqual({ editais: ['trt8', 'trt4'] })
   })
 
+  it('registra desqualificadoMotivo (marcação silenciosa da tela desqualificado, fluxo padrão)', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    const res = await handler(fazerRequisicao({ session_token: TOKEN, chave: 'desqualificadoMotivo', valor: 'cargo_baixo' }))
+    expect(res.status).toBe(200)
+    expect(repo.linhas[0].perfil).toEqual({ desqualificadoMotivo: 'cargo_baixo' })
+  })
+
   it('recusa uma chave fora da allowlist', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessaoDeTeste(repo)

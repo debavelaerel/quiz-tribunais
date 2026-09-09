@@ -87,6 +87,12 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
                   <div className="mt-0.5 font-semibold text-brand-ink">{editais.map((e) => rotuloPerfil('editais', e)).join(', ')}</div>
                 </div>
               )}
+              {sessao.perfil.desqualificadoMotivo && (
+                <div className="col-span-2">
+                  <div className="text-[11px] uppercase tracking-wide text-brand-ink-dim">desqualificado</div>
+                  <div className="mt-0.5 font-semibold text-brand-red">{rotuloPerfil('desqualificadoMotivo', sessao.perfil.desqualificadoMotivo)}</div>
+                </div>
+              )}
               {sessao.perfilCalculado && (
                 <>
                   <div className="col-span-2">

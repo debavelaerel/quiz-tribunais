@@ -62,6 +62,13 @@ const DINHEIRO: Record<string, string> = {
 
 const LEITURA: Record<string, string> = { completa: 'Quis a leitura completa', basica: 'Só o diagnóstico básico' }
 
+// Só existe pro fluxo padrão (marcação silenciosa — ver lib/perfil.ts). O
+// motivo 'juridica' nunca aparece aqui: tem CTA próprio, gravado em
+// leads_desqualificados, não em quiz_sessions.perfil.
+const DESQUALIFICADO_MOTIVO: Record<string, string> = {
+  outro: 'Concurso fora de tribunais', cargo_baixo: 'Mira cargo abaixo do nível (escrevente/técnico)',
+}
+
 // Um dicionário por chave de RespostasPerfil — usado tanto pro detalhe do
 // lead quanto pra passar como prop `rotulos` do PieChart.
 export const ROTULOS_PERFIL: Record<string, Record<string, string>> = {
@@ -79,6 +86,7 @@ export const ROTULOS_PERFIL: Record<string, Record<string, string>> = {
   momento: L.momento,
   dinheiro: DINHEIRO,
   leitura: LEITURA,
+  desqualificadoMotivo: DESQUALIFICADO_MOTIVO,
 }
 
 export function rotuloPerfil(chave: string, valor: string | undefined | null): string {
