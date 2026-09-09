@@ -54,6 +54,7 @@ type RespostaStart = {
   session_token?: unknown
   retomando?: unknown
   respostas_salvas?: unknown
+  ja_concluida?: unknown
 }
 
 const TOTAL = QUESTIONS.length
@@ -76,6 +77,12 @@ function aguardarNoMinimo(ms: number): Promise<void> {
 
 function tokenDaResposta(json: RespostaStart): string | null {
   return typeof json.session_token === 'string' && json.session_token !== '' ? json.session_token : null
+}
+
+// A sessão que o /start resolveu (por email/whatsapp) já estava concluída
+// ANTES desta visita — ver comentário de `sessaoJaConcluida` no componente.
+function jaConcluidaNaResposta(json: RespostaStart): boolean {
+  return json.ja_concluida === true
 }
 
 // Retoma na primeira pergunta ainda não respondida. Quando a sessão foi resetada
@@ -201,6 +208,14 @@ export default function Quiz() {
   const [enviando, setEnviando] = useState(false)
   const [restaurando, setRestaurando] = useState(false)
   const [resultado, setResultado] = useState<Resultado | null>(null)
+  // true quando o /start do fluxo final (ver criarOuAtualizarSessaoFinal)
+  // resolveu pra uma sessão (por email/whatsapp) que já tinha sido concluída
+  // ANTES desta visita. Ref, não state: enviarContato lê isso logo depois de
+  // chamar criarOuAtualizarSessaoFinal na MESMA execução — um state setado
+  // ali ainda não teria sido committado a tempo de um `if` synchronous logo
+  // em seguida (closure velha). Também sobrevive entre chamadas separadas
+  // (salvamento antecipado x clique final), que é o outro caso que importa.
+  const sessaoJaConcluidaRef = useRef(false)
   // Tela 'analisando' (ver concluir/enviarContato): frase e porcentagem são
   // só decorativas (não medem progresso real do /finish, que é uma chamada
   // única sem etapas) — reiniciam sempre que a tela é mostrada de novo.
@@ -352,6 +367,30 @@ export default function Quiz() {
     }
   }, [])
 
+  // Mostra o resultado de uma sessão que já tinha sido concluída ANTES desta
+  // visita (mesmo email/whatsapp de um diagnóstico anterior — ver
+  // jaConcluidaNaResposta). Sem isso, a pessoa respondia tudo de novo (ou,
+  // no fluxo final, nem chegava a ver o formulário de contato de novo) só
+  // pra esbarrar num "não foi possível concluir"/"não foi possível
+  // registrar sua resposta" quando o servidor corretamente recusava mexer
+  // numa sessão fechada. Devolve false se nem isso deu certo — quem chama
+  // decide o que fazer (ver usos abaixo).
+  async function mostrarResultadoExistente(sessionToken: string, novoEstado: EstadoQuiz): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/quiz/result?session_token=${encodeURIComponent(sessionToken)}`)
+      if (!res.ok) return false
+      const json: Resultado = await res.json()
+      salvarEstado(novoEstado)
+      setEstado(novoEstado)
+      setResultado(json)
+      setRespostasPerfil(json.perfil ?? {})
+      setTela('resultado')
+      return true
+    } catch {
+      return false
+    }
+  }
+
   // Só é alcançável quando NÃO há sessão em cache (ver efeito acima), então sempre
   // gera um token novo: reaproveitar o token de outra pessoa no mesmo navegador
   // colidiria com a unique constraint de `session_token`.
@@ -377,6 +416,11 @@ export default function Quiz() {
         return
       }
       const novoEstado: EstadoQuiz = { sessionToken: token, nome, whatsapp, email }
+      if (jaConcluidaNaResposta(json)) {
+        if (await mostrarResultadoExistente(token, novoEstado)) return
+        // Não deu pra recuperar o resultado antigo agora — não trava a
+        // pessoa por causa disso, segue pro perfilamento normalmente.
+      }
       salvarEstado(novoEstado)
       setEstado(novoEstado)
       setTela('perfil')
@@ -557,6 +601,18 @@ export default function Quiz() {
     const sessionToken = tokenDaResposta(jsonStart)
     if (!sessionToken) return null
 
+    sessaoJaConcluidaRef.current = jaConcluidaNaResposta(jsonStart)
+    const novoEstado: EstadoQuiz = { sessionToken, nome, whatsapp, email }
+    if (sessaoJaConcluidaRef.current) {
+      // Sessão já concluída antes (mesmo WhatsApp/e-mail de um diagnóstico
+      // anterior): regravar perfil/respostas aqui só ia esbarrar em 409
+      // (sessão já concluída) a cada chamada — quem chamou (enviarContato)
+      // decide mostrar o resultado já existente em vez de tentar de novo.
+      salvarEstado(novoEstado)
+      setEstado(novoEstado)
+      return sessionToken
+    }
+
     // Perfilamento acumulado localmente durante o funil inteiro — grava
     // agora, aguardando cada chamada (ao contrário do fire-and-forget de
     // persistirPerfil): aqui a perda compromete a sessão, porque pode ser a
@@ -581,7 +637,6 @@ export default function Quiz() {
       if (!resAnswer.ok) return null
     }
 
-    const novoEstado: EstadoQuiz = { sessionToken, nome, whatsapp, email }
     salvarEstado(novoEstado)
     setEstado(novoEstado)
     return sessionToken
@@ -617,6 +672,14 @@ export default function Quiz() {
       const sessionToken = estado?.sessionToken ?? (await criarOuAtualizarSessaoFinal())
       if (!sessionToken) {
         setErro('Não foi possível concluir. Confira seus dados.')
+        return
+      }
+      if (sessaoJaConcluidaRef.current) {
+        // Mesmo WhatsApp/e-mail de um diagnóstico anterior já concluído —
+        // tentar /finish aqui só ia devolver 409 (sessão já concluída).
+        // Mostra o resultado de antes em vez de um erro sem explicação.
+        if (await mostrarResultadoExistente(sessionToken, { sessionToken, nome, whatsapp, email })) return
+        setErro('Você já concluiu esse diagnóstico com esse WhatsApp/e-mail antes. Tente de novo em instantes.')
         return
       }
       setTela('analisando')

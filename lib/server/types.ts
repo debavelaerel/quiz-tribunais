@@ -48,4 +48,10 @@ export type IniciarSessaoResultado = {
   sessionToken: string
   retomando: boolean
   respostasSalvas: RespostaResumo[]
+  // A sessão retomada (por email/whatsapp) já estava concluída antes desta
+  // chamada — sinaliza pro chamador não tentar regravar perfil/respostas
+  // nem concluir de novo (o backend recusa mexer numa sessão fechada); ele
+  // deve mostrar o resultado já existente em vez disso. Sempre false quando
+  // a sessão é nova ou estava em_andamento.
+  jaConcluida: boolean
 }

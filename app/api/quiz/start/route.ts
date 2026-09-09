@@ -51,6 +51,7 @@ export function criarHandlerStart(repo: SessionRepo) {
         session_token: resultado.sessionToken,
         retomando: resultado.retomando,
         respostas_salvas: resultado.respostasSalvas,
+        ja_concluida: resultado.jaConcluida,
       }, { status: 200 })
     } catch (e) {
       console.error('[quiz/start] erro inesperado', e)

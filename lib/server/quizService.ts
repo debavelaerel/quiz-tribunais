@@ -36,7 +36,16 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
       whatsapp: input.whatsapp,
       whatsappNormalizado,
     })
-    return { sessionToken: atualizada.sessionToken, retomando: true, respostasSalvas: atualizada.respostas }
+    return {
+      sessionToken: atualizada.sessionToken,
+      retomando: true,
+      respostasSalvas: atualizada.respostas,
+      // `existente.status` (de ANTES do atualizar acima) — atualizar só troca
+      // token/nome/contato, nunca o status, mas ler do valor pré-atualização
+      // deixa isso explícito em vez de depender de `atualizada` não mudar algo
+      // que hoje não muda.
+      jaConcluida: existente.status === 'concluido',
+    }
   }
 
   const agora = new Date().toISOString()
@@ -63,7 +72,7 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
     updatedAt: agora,
     completedAt: null,
   })
-  return { sessionToken: criada.sessionToken, retomando: false, respostasSalvas: [] }
+  return { sessionToken: criada.sessionToken, retomando: false, respostasSalvas: [], jaConcluida: false }
 }
 
 export async function registrarResposta(repo: SessionRepo, sessionToken: string, entrada: RespostaEntrada): Promise<void> {
