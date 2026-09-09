@@ -109,7 +109,9 @@ async function chegarAoResultado() {
   await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
   expect(screen.getByText(/Maria, quer que eu inclua no seu resultado/)).toBeInTheDocument()
   fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
-  await waitFor(() => expect(screen.getByText(/o que eu enxerguei no seu caso/)).toBeInTheDocument())
+  // timeout maior: passa pela tela 'analisando', que segura por
+  // MIN_DURACAO_ANALISANDO (2200ms) antes de revelar o resultado.
+  await waitFor(() => expect(screen.getByText(/aqui está o seu plano/)).toBeInTheDocument(), { timeout: 3000 })
 }
 
 describe('Quiz', () => {
@@ -223,7 +225,7 @@ describe('Quiz', () => {
   it('percorre a correção e a tela de resultado, com CTA de WhatsApp', async () => {
     render(<Quiz />)
     await chegarAoResultado()
-    expect(screen.getByText(/o que eu enxerguei no seu caso/)).toBeInTheDocument()
+    expect(screen.getByText(/aqui está o seu plano/)).toBeInTheDocument()
     expect(screen.getByText(/Nível no teste/)).toBeInTheDocument()
     expect(screen.getByText(/intermediário|avançado|inicial/)).toBeInTheDocument()
     const cta = screen.getByText('Falar com o time no WhatsApp')
@@ -248,7 +250,7 @@ describe('Quiz', () => {
     respostas.result = () => new Response(JSON.stringify(RESULTADO), { status: 200 })
 
     render(<Quiz />)
-    await waitFor(() => expect(screen.getByText(/Maria, o que eu enxerguei no seu caso/)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Maria, aqui está o seu plano/)).toBeInTheDocument())
     expect(screen.getByText('Falar com o time no WhatsApp')).toBeInTheDocument()
     expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/start'))).toBe(false)
   })
@@ -324,7 +326,7 @@ describe('Quiz', () => {
       fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'maria@x.com' } })
       fireEvent.click(screen.getByText('Ver meu diagnóstico'))
 
-      await waitFor(() => expect(screen.getByText(/Maria, o que eu enxerguei no seu caso/)).toBeInTheDocument())
+      await waitFor(() => expect(screen.getByText(/Maria, aqui está o seu plano/)).toBeInTheDocument(), { timeout: 3000 })
 
       const chamadaStart = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes('/api/quiz/start'))
       expect(JSON.parse((chamadaStart![1] as RequestInit).body as string)).toMatchObject({
@@ -391,7 +393,7 @@ describe('Quiz', () => {
       expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/finish'))).toBe(false)
 
       fireEvent.click(botao)
-      await waitFor(() => expect(screen.getByText(/Maria, o que eu enxerguei no seu caso/)).toBeInTheDocument())
+      await waitFor(() => expect(screen.getByText(/Maria, aqui está o seu plano/)).toBeInTheDocument(), { timeout: 3000 })
 
       // O clique final não repete start/perfil/respostas — só conclui.
       expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/start'))).toHaveLength(1)
