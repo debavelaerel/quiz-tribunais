@@ -1362,10 +1362,10 @@ export default function Quiz() {
                     }).catch(() => {})
                   }
                 }}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-brand-gold to-brand-gold-deep px-6 py-4 text-[15.5px] font-semibold text-brand-navy shadow-[0_10px_24px_rgba(200,155,24,0.28)] transition-transform hover:-translate-y-0.5"
+                className="mt-6 flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-br from-brand-gold to-brand-gold-deep px-4 py-3.5 text-[13.5px] font-semibold text-brand-navy shadow-[0_10px_24px_rgba(200,155,24,0.28)] transition-transform hover:-translate-y-0.5 sm:gap-2 sm:px-6 sm:py-4 sm:text-[15.5px]"
               >
                 {/* Ícone de marca (WhatsApp) — fora do set genérico do lucide, mantido como SVG inline. */}
-                <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width={17} height={17} className="flex-none sm:h-5 sm:w-5" fill="currentColor" aria-hidden="true">
                   <path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6l-.9-2.1c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.3-.6-.4zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.2-1.4c1.4.8 3.1 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 15 3.7 13.5 3.7 12c0-4.6 3.7-8.3 8.3-8.3s8.3 3.7 8.3 8.3-3.7 8.2-8.3 8.2z" />
                 </svg>
                 Falar com o time no WhatsApp
