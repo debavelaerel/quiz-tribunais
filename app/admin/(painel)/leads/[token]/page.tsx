@@ -7,6 +7,7 @@ import { rotuloPerfil } from '@/lib/adminLabels'
 import { nivelTeste } from '@/lib/perfil'
 import { labelCargo, waLink } from '@/lib/quizContent'
 import { isUuid } from '@/lib/server/uuid'
+import AreaColumns from '@/components/admin/AreaColumns'
 
 export const runtime = 'nodejs'
 
@@ -113,6 +114,14 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
               <h3 className="mb-3 text-[14.5px] font-bold text-brand-navy">
                 Teste graduado — {sessao.acertos ?? 0} de {sessao.total ?? sessao.respostas.length} acertos
               </h3>
+              {/* Mesmo dado do radar que o lead vê no resultado (ver
+                  components/AreaRadar.tsx), aqui em número exato — pra decidir
+                  a abordagem na ligação, não só ter uma primeira impressão. */}
+              {Object.keys(sessao.areas).length > 0 && (
+                <div className="mb-4">
+                  <AreaColumns areas={sessao.areas} />
+                </div>
+              )}
               {sessao.respostas.map((r) => (
                 <div key={r.num} className="flex items-start gap-3 border-b border-brand-line py-2.5 text-[13.5px] last:border-none">
                   <span className={`flex h-6 w-6 flex-none items-center justify-center rounded-full text-white ${r.acertou ? 'bg-brand-green' : 'bg-brand-red'}`}>
