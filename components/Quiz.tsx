@@ -30,6 +30,8 @@ import { formatarWhatsapp } from '@/lib/mascara'
 import Header from './Header'
 import OptionButton from './OptionButton'
 import Button from './Button'
+import NivelGauge from './NivelGauge'
+import AreaRadar from './AreaRadar'
 
 type Tela =
   | 'capa' | 'nome' | 'restaurando'
@@ -1569,19 +1571,10 @@ export default function Quiz() {
 
           {resultado && (
             <>
-              {/* Ficha: nível em destaque (cartão) + os outros 4 fatos numa
+              {/* Ficha: termômetro de nível (cartão) + os outros 4 fatos numa
                   grade 2×2 — mais rápido de escanear que 5 linhas empilhadas. */}
-              <div className="mt-6 flex items-center justify-between gap-3 rounded-[14px] bg-gradient-to-br from-brand-navy to-brand-navy-2 px-5 py-4 text-white">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-white/75">Nível no teste</p>
-                  <p className="mt-1 text-[17px] font-bold">{nivel}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[28px] font-bold leading-none tabular-nums">
-                    {resultado.acertos}<span className="text-[16px] font-normal text-white/70">/{resultado.total}</span>
-                  </p>
-                  <p className="mt-1 text-[12px] text-white/70">questões certas</p>
-                </div>
+              <div className="mt-6">
+                <NivelGauge nivel={nivel} acertos={resultado.acertos} total={resultado.total} />
               </div>
               <div className="mt-2.5 grid grid-cols-2 gap-2.5">
                 <div className="rounded-[14px] border-[1.5px] border-brand-line px-3.5 py-2.5">
@@ -1600,6 +1593,13 @@ export default function Quiz() {
                   <p className="text-[11px] text-brand-ink-dim">Ritmo</p>
                   <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-brand-ink">{perfilCalculado?.ritmo ?? ''}</p>
                 </div>
+              </div>
+
+              {/* Radar por área — mesmo dado de resultado.areas, formato em vez
+                  de número exato (esse fica na ficha do lead, no admin). */}
+              <div className="mt-5 flex flex-col items-center rounded-[14px] border-[1.5px] border-brand-line px-4 py-4">
+                <p className="self-start text-[11px] font-semibold uppercase tracking-wide text-brand-ink-dim">Desempenho por área</p>
+                <AreaRadar areas={resultado.areas} areaPrioritaria={resultado.area_prioritaria} />
               </div>
 
               {/* Plano de ação primeiro — é a parte mais acionável do diagnóstico,
