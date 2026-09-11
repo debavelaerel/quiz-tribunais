@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Check, Play, RotateCcw, X } from 'lucide-react'
+import { ArrowRight, Check, RotateCcw, X } from 'lucide-react'
 import { QUESTIONS } from '@/lib/questions'
 import { carregarEstado, salvarEstado, limparEstado, criarNovoSessionToken, type EstadoQuiz } from '@/lib/storage'
 import {
@@ -732,25 +732,28 @@ export default function Quiz() {
     }
 
     // Perfilamento acumulado localmente durante o funil inteiro — grava
-    // agora, aguardando cada chamada (ao contrário do fire-and-forget de
+    // agora, aguardando a chamada (ao contrário do fire-and-forget de
     // persistirPerfil): aqui a perda compromete a sessão, porque pode ser a
-    // única chance de gravar esses dados nesse fluxo.
-    for (const [chave, valor] of Object.entries(respostasPerfil)) {
+    // única chance de gravar esses dados nesse fluxo. Uma chamada em lote
+    // (não uma por chave, até 14 sequenciais) — era a causa da lentidão
+    // sentida bem aqui, no clique de contato do fluxo final.
+    if (Object.keys(respostasPerfil).length > 0) {
       const resPerfil = await fetch('/api/quiz/perfil', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_token: sessionToken, chave, valor }),
+        body: JSON.stringify({ session_token: sessionToken, respostas: respostasPerfil }),
       })
       if (!resPerfil.ok) return null
     }
 
-    for (const questao of QUESTIONS) {
-      const escolhida = respostasTeste[questao.num]
-      if (!escolhida) continue
+    const respostasParaEnviar = QUESTIONS
+      .map((questao) => ({ num: questao.num, escolhida: respostasTeste[questao.num] }))
+      .filter((r): r is { num: number; escolhida: string } => !!r.escolhida)
+    if (respostasParaEnviar.length > 0) {
       const resAnswer = await fetch('/api/quiz/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_token: sessionToken, num: questao.num, escolhida }),
+        body: JSON.stringify({ session_token: sessionToken, respostas: respostasParaEnviar }),
       })
       if (!resAnswer.ok) return null
     }
@@ -1295,17 +1298,15 @@ export default function Quiz() {
         <main className="flex flex-1 items-start justify-center px-6 py-8">
           <div className="w-full max-w-md text-center">
             <h2 className="text-xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Para tudo. Isso aqui vale os seus próximos 40 segundos.</h2>
-            <div className="mx-auto mt-6 flex aspect-[9/16] max-w-64 flex-col items-center justify-center gap-3.5 rounded-[22px] bg-gradient-to-b from-brand-navy-2 to-brand-navy px-7 text-center shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full border-[1.5px] border-white/35 bg-white/10">
-                <Play size={22} strokeWidth={2} className="ml-0.5 fill-brand-gold text-brand-gold" />
-              </span>
-              <p className="text-[14px] font-semibold text-brand-gold">Vídeo da Ana Clara</p>
-              {/* Placeholder até o vídeo real entrar (roteiro em roteiro-video.md,
-                  link em CONFIG.videoSrc) — texto abaixo é o que o usuário vê
-                  enquanto isso, sem instrução de configuração exposta. */}
-              <p className="text-[13px] leading-relaxed text-white/80">
-                Vídeo em produção — em breve aqui.
-              </p>
+            <p className="mt-4 text-[13px] font-semibold text-brand-gold-text">Vídeo da Ana Clara</p>
+            <div className="mx-auto mt-2 aspect-[9/16] max-w-64 overflow-hidden rounded-[22px] bg-brand-navy shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
+              <iframe
+                src={CONFIG.videoSrc}
+                title="Vídeo da Ana Clara"
+                className="h-full w-full border-0"
+                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+                allowFullScreen
+              />
             </div>
             <Button variant="gold" onClick={() => setTela('dinheiro')} className="mt-6">
               Entendi, continuar <ArrowRight size={17} strokeWidth={2.25} />

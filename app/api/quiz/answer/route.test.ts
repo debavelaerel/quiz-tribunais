@@ -51,4 +51,42 @@ describe('POST /api/quiz/answer', () => {
     const res = await handler(fazerRequisicao({ session_token: 123, num: '1', escolhida: 'B' }))
     expect(res.status).toBe(422)
   })
+
+  it('lote (respostas): registra várias respostas numa chamada só', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerAnswer(repo)
+    const res = await handler(fazerRequisicao({
+      session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+      respostas: [{ num: 1, escolhida: 'C' }, { num: 2, escolhida: 'C' }, { num: 3, escolhida: 'B' }, { num: 4, escolhida: 'A' }],
+    }))
+    expect(res.status).toBe(200)
+    expect(repo.linhas[0].respostas).toHaveLength(4)
+  })
+
+  it('lote: 422 se algum item tiver tipo errado', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerAnswer(repo)
+    const res = await handler(fazerRequisicao({
+      session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+      respostas: [{ num: 1, escolhida: 'C' }, { num: '2', escolhida: 'C' }],
+    }))
+    expect(res.status).toBe(422)
+  })
+
+  it('lote: 422 se respostas não for um array', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerAnswer(repo)
+    const res = await handler(fazerRequisicao({ session_token: 'aaaaaaaa-1111-1111-1111-111111111111', respostas: 'nope' }))
+    expect(res.status).toBe(422)
+  })
+
+  it('lote: 404 pra session_token inexistente', async () => {
+    const repo = criarFakeSessionRepo()
+    const handler = criarHandlerAnswer(repo)
+    const res = await handler(fazerRequisicao({ session_token: 'bbbbbbbb-2222-2222-2222-222222222222', respostas: [{ num: 1, escolhida: 'B' }] }))
+    expect(res.status).toBe(404)
+  })
 })

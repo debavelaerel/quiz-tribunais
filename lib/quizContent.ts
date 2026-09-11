@@ -9,7 +9,8 @@ export const CONFIG = {
   quizName: 'Diagnóstico da Base',
   // Placeholder — trocar pelo número real do time de consultores antes de publicar de verdade.
   whatsapp: '5500000000000',
-  videoSrc: '',
+  // Embed do Panda Video — vídeo da Ana Clara na tela 'video' do funil.
+  videoSrc: 'https://player-vz-246ae85e-308.tv.pandavideo.com.br/embed/?v=ceeffaff-3a26-4b53-ae04-2e52a05106e4',
   editaisAtualizadosEm: '3 de setembro de 2026',
   instagram: 'https://www.instagram.com/vdeconcursos/',
 }

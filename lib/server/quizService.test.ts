@@ -4,6 +4,7 @@ import { criarFakeSessionRepo } from './testHelpers/fakeSessionRepo'
 import {
   iniciarSessao,
   registrarResposta,
+  registrarRespostasLote,
   registrarPerfil,
   concluirSessao,
   buscarResultado,
@@ -126,6 +127,61 @@ describe('registrarResposta', () => {
     await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'B' })
     expect(repo.linhas[0].respostas).toHaveLength(1)
     expect(repo.linhas[0].respostas[0].escolhida).toBe('B')
+  })
+})
+
+describe('registrarRespostasLote', () => {
+  // Existe só pelo fluxo final (?fluxo=final): a pessoa responde tudo em
+  // memória e só no clique de contato o app tenta gravar de uma vez —
+  // registrarResposta em loop virava até 4 chamadas sequenciais (mais até
+  // 14 de perfil) só pra fechar a sessão, cada uma com sua própria ida e
+  // volta ao banco. Grava tudo numa única leitura + escrita.
+  it('grava várias respostas de uma vez, numa única leitura+escrita', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await registrarRespostasLote(repo, 'tok-1', [
+      { num: 1, escolhida: 'C' },
+      { num: 2, escolhida: 'C' },
+      { num: 3, escolhida: 'B' },
+      { num: 4, escolhida: 'A' },
+    ])
+    expect(repo.linhas[0].respostas).toHaveLength(4)
+    expect(repo.linhas[0].respostas.map((r) => r.escolhida)).toEqual(['C', 'C', 'B', 'A'])
+  })
+
+  it('faz upsert por num dentro do próprio lote — a última resposta pra um num vence', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await registrarRespostasLote(repo, 'tok-1', [
+      { num: 1, escolhida: 'A' },
+      { num: 1, escolhida: 'B' },
+    ])
+    expect(repo.linhas[0].respostas).toHaveLength(1)
+    expect(repo.linhas[0].respostas[0].escolhida).toBe('B')
+  })
+
+  it('faz upsert sobre respostas já existentes na sessão', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await registrarResposta(repo, 'tok-1', { num: 1, escolhida: 'A' })
+    await registrarRespostasLote(repo, 'tok-1', [{ num: 1, escolhida: 'C' }, { num: 2, escolhida: 'C' }])
+    expect(repo.linhas[0].respostas).toHaveLength(2)
+    expect(repo.linhas[0].respostas.find((r) => r.num === 1)?.escolhida).toBe('C')
+  })
+
+  it('lança SessaoInvalidaError para token inexistente', async () => {
+    const repo = criarFakeSessionRepo()
+    await expect(registrarRespostasLote(repo, 'nao-existe', [{ num: 1, escolhida: 'A' }])).rejects.toThrow(SessaoInvalidaError)
+  })
+
+  it('lança SessaoConcluidaError para sessão já concluída', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })
+    await registrarRespostasLote(repo, 'tok-1', [
+      { num: 1, escolhida: 'C' }, { num: 2, escolhida: 'C' }, { num: 3, escolhida: 'B' }, { num: 4, escolhida: 'A' },
+    ])
+    await concluirSessao(repo, 'tok-1')
+    await expect(registrarRespostasLote(repo, 'tok-1', [{ num: 1, escolhida: 'A' }])).rejects.toThrow(SessaoConcluidaError)
   })
 })
 

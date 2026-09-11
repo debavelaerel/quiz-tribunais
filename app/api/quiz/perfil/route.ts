@@ -31,26 +31,52 @@ export function criarHandlerPerfil(repo: SessionRepo) {
       return NextResponse.json({ erro: 'json inválido' }, { status: 400 })
     }
 
-    const { session_token: sessionToken, chave, valor } = (corpo ?? {}) as Record<string, unknown>
+    const { session_token: sessionToken, chave, valor, respostas } = (corpo ?? {}) as Record<string, unknown>
     if (typeof sessionToken !== 'string') {
       return NextResponse.json({ erro: 'corpo inválido' }, { status: 422 })
     }
     if (!isUuid(sessionToken)) {
       return NextResponse.json({ erro: 'session_token inválido' }, { status: 422 })
     }
-    if (typeof chave !== 'string' || !CHAVES_PERFIL.includes(chave as keyof RespostasPerfil)) {
-      return NextResponse.json({ erro: 'chave de perfil inválida' }, { status: 422 })
-    }
-    const ehMulti = CHAVES_MULTI.includes(chave as keyof RespostasPerfil)
-    const valorValido = ehMulti
-      ? Array.isArray(valor) && valor.every((v) => typeof v === 'string')
-      : typeof valor === 'string'
-    if (!valorValido) {
-      return NextResponse.json({ erro: 'valor inválido para essa chave' }, { status: 422 })
+
+    let entrada: Partial<RespostasPerfil>
+    // Lote (`respostas`, um objeto {chave: valor}) — usado só pelo fluxo
+    // final (?fluxo=final) pra fechar a sessão com 1 chamada em vez de até
+    // 14 sequenciais (ver criarOuAtualizarSessaoFinal em components/Quiz.tsx).
+    // Formato de 1 chave só (`chave`/`valor`) continua igual, pro
+    // persistirPerfil do fluxo padrão (uma chamada por tela, ao vivo).
+    if (respostas !== undefined) {
+      if (typeof respostas !== 'object' || respostas === null || Array.isArray(respostas)) {
+        return NextResponse.json({ erro: 'respostas inválido' }, { status: 422 })
+      }
+      const pares = Object.entries(respostas as Record<string, unknown>)
+      for (const [k, v] of pares) {
+        if (!CHAVES_PERFIL.includes(k as keyof RespostasPerfil)) {
+          return NextResponse.json({ erro: `chave de perfil inválida: ${k}` }, { status: 422 })
+        }
+        const ehMultiK = CHAVES_MULTI.includes(k as keyof RespostasPerfil)
+        const validoK = ehMultiK ? Array.isArray(v) && v.every((x) => typeof x === 'string') : typeof v === 'string'
+        if (!validoK) {
+          return NextResponse.json({ erro: `valor inválido pra chave ${k}` }, { status: 422 })
+        }
+      }
+      entrada = respostas as Partial<RespostasPerfil>
+    } else {
+      if (typeof chave !== 'string' || !CHAVES_PERFIL.includes(chave as keyof RespostasPerfil)) {
+        return NextResponse.json({ erro: 'chave de perfil inválida' }, { status: 422 })
+      }
+      const ehMulti = CHAVES_MULTI.includes(chave as keyof RespostasPerfil)
+      const valorValido = ehMulti
+        ? Array.isArray(valor) && valor.every((v) => typeof v === 'string')
+        : typeof valor === 'string'
+      if (!valorValido) {
+        return NextResponse.json({ erro: 'valor inválido para essa chave' }, { status: 422 })
+      }
+      entrada = { [chave]: valor } as Partial<RespostasPerfil>
     }
 
     try {
-      await registrarPerfil(repo, sessionToken, { [chave]: valor } as Partial<RespostasPerfil>)
+      await registrarPerfil(repo, sessionToken, entrada)
     } catch (e) {
       if (e instanceof SessaoInvalidaError) return NextResponse.json({ erro: 'sessão não encontrada' }, { status: 404 })
       if (e instanceof SessaoConcluidaError) return NextResponse.json({ erro: 'sessão já concluída' }, { status: 409 })

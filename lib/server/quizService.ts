@@ -87,6 +87,28 @@ export async function registrarResposta(repo: SessionRepo, sessionToken: string,
   await repo.atualizar(sessao.id, { respostas, areas })
 }
 
+// Mesma regra de registrarResposta (upsert por num), só que pra várias
+// respostas de uma vez — uma leitura + uma escrita, não uma por resposta.
+// Existe só pro fluxo final (?fluxo=final — ver componentes/Quiz.tsx): a
+// pessoa responde tudo em memória e só no clique de contato o app grava
+// junto com o perfilamento e a sessão; sem isso, fechar a sessão nesse
+// fluxo virava até 4 chamadas /answer sequenciais (uma ida e volta ao
+// banco cada), sentido como lentidão real na tela final.
+export async function registrarRespostasLote(repo: SessionRepo, sessionToken: string, entradas: RespostaEntrada[]): Promise<void> {
+  const sessao = await repo.buscarPorToken(sessionToken)
+  if (!sessao) throw new SessaoInvalidaError('sessão não encontrada')
+  if (sessao.status === 'concluido') throw new SessaoConcluidaError('sessão já concluída')
+
+  let respostas = sessao.respostas
+  for (const entrada of entradas) {
+    const resumo = montarRespostaResumo(entrada)
+    respostas = respostas.filter((r) => r.num !== resumo.num)
+    respostas.push(resumo)
+  }
+  const areas = calcularAreas(respostas)
+  await repo.atualizar(sessao.id, { respostas, areas })
+}
+
 // Mescla (não substitui) respostas de perfilamento na sessão — cada tela do
 // funil manda só a chave que acabou de responder. Não são graduadas: ao
 // contrário de registrarResposta, não passam por lib/scoring.ts.
