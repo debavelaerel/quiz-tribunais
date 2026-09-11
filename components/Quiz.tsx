@@ -1293,13 +1293,23 @@ export default function Quiz() {
   if (tela === 'video') {
     const progresso = Math.round(((PERFIL_SCREENS.length + 1) / PASSOS_POS_INTRO) * 100)
     return (
-      <div className="flex min-h-screen flex-col">
+      // min-h-svh (não min-h-screen): "primeira dobra" precisa ser a área
+      // realmente visível no mobile, sem contar a barra do navegador que o
+      // 100vh tradicional ignora.
+      <div className="flex min-h-svh flex-col">
         <Header progresso={progresso} />
-        <main className="flex flex-1 items-start justify-center px-6 py-8">
-          <div className="w-full max-w-md text-center">
-            <h2 className="text-xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">Para tudo. Isso aqui vale os seus próximos 40 segundos.</h2>
-            <p className="mt-4 text-[13px] font-semibold text-brand-gold-text">Vídeo da Ana Clara</p>
-            <div className="mx-auto mt-2 aspect-[9/16] max-w-64 overflow-hidden rounded-[22px] bg-brand-navy shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
+        {/* justify-between espalha os 3 elementos pela dobra inteira (título
+            no topo, vídeo ocupando o meio — o protagonista —, botão embaixo)
+            em vez de agrupá-los compactos no centro. */}
+        <main className="flex flex-1 flex-col items-center justify-between gap-3 px-6 py-5">
+          <h2 className="max-w-md text-center text-[19px] font-bold leading-snug tracking-[-0.01em] text-brand-ink sm:text-xl">
+            Para tudo. Isso aqui vale os seus próximos 40 segundos.
+          </h2>
+
+          {/* min-h-0 é o que permite o filho h-full abaixo respeitar a altura
+              que sobrou entre título e botão, em vez de estourar o flex. */}
+          <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">
+            <div className="aspect-[9/16] h-full max-h-[62svh] w-auto overflow-hidden rounded-[22px] bg-brand-navy shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
               <iframe
                 src={CONFIG.videoSrc}
                 title="Vídeo da Ana Clara"
@@ -1308,10 +1318,11 @@ export default function Quiz() {
                 allowFullScreen
               />
             </div>
-            <Button variant="gold" onClick={() => setTela('dinheiro')} className="mt-6">
-              Entendi, continuar <ArrowRight size={17} strokeWidth={2.25} />
-            </Button>
           </div>
+
+          <Button variant="gold" onClick={() => setTela('dinheiro')} className="w-full max-w-xs">
+            Entendi, continuar <ArrowRight size={17} strokeWidth={2.25} />
+          </Button>
         </main>
       </div>
     )
