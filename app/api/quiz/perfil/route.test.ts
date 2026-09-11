@@ -54,6 +54,43 @@ describe('POST /api/quiz/perfil', () => {
     expect(repo.linhas[0].perfil).toEqual({ desqualificadoMotivo: 'cargo_baixo' })
   })
 
+  it('registra várias respostas de perfil de uma vez (lote), numa chamada só', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    const res = await handler(fazerRequisicao({
+      session_token: TOKEN,
+      respostas: { alvo: 'trt', cargo: 'analista', editais: ['trt8', 'trt4'] },
+    }))
+    expect(res.status).toBe(200)
+    expect(repo.linhas[0].perfil).toEqual({ alvo: 'trt', cargo: 'analista', editais: ['trt8', 'trt4'] })
+  })
+
+  it('lote: recusa se alguma chave estiver fora da allowlist (nada é gravado)', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    const res = await handler(fazerRequisicao({ session_token: TOKEN, respostas: { alvo: 'trt', admin: 'x' } }))
+    expect(res.status).toBe(422)
+    expect(repo.linhas[0].perfil).toEqual({})
+  })
+
+  it('lote: recusa valor string pra uma chave multi (editais) dentro do lote', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    const res = await handler(fazerRequisicao({ session_token: TOKEN, respostas: { editais: 'trt8' } }))
+    expect(res.status).toBe(422)
+  })
+
+  it('lote vazio ({}) é aceito e não grava nada', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    const res = await handler(fazerRequisicao({ session_token: TOKEN, respostas: {} }))
+    expect(res.status).toBe(200)
+  })
+
   it('recusa uma chave fora da allowlist', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessaoDeTeste(repo)

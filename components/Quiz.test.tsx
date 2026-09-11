@@ -370,7 +370,12 @@ describe('Quiz', () => {
         whatsapp: '11987654321',
         email: 'maria@x.com',
       })
-      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))).toHaveLength(4)
+      // As 4 respostas graduadas vão numa única chamada em lote (não uma por
+      // questão) — evita as até 18 requisições sequenciais que deixavam o
+      // clique de contato do fluxo final lento.
+      const chamadasAnswer = vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))
+      expect(chamadasAnswer).toHaveLength(1)
+      expect(JSON.parse((chamadasAnswer[0][1] as RequestInit).body as string).respostas).toHaveLength(4)
       expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/finish'))).toBe(true)
 
       // Regressão: o perfilamento inteiro (respondido em memória o funil todo)
@@ -457,9 +462,11 @@ describe('Quiz', () => {
       await waitFor(() => expect(botao).not.toBeDisabled())
 
       // Antes de qualquer clique: sessão criada e as 4 respostas graduadas já
-      // replicadas pro servidor.
+      // replicadas pro servidor, numa única chamada em lote.
+      const chamadasAnswerAntecipado = vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))
       expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/start'))).toHaveLength(1)
-      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))).toHaveLength(4)
+      expect(chamadasAnswerAntecipado).toHaveLength(1)
+      expect(JSON.parse((chamadasAnswerAntecipado[0][1] as RequestInit).body as string).respostas).toHaveLength(4)
       expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes('/api/quiz/finish'))).toBe(false)
 
       fireEvent.click(botao)
@@ -467,7 +474,7 @@ describe('Quiz', () => {
 
       // O clique final não repete start/perfil/respostas — só conclui.
       expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/start'))).toHaveLength(1)
-      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))).toHaveLength(4)
+      expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/answer'))).toHaveLength(1)
       expect(vi.mocked(fetch).mock.calls.filter(([u]) => String(u).includes('/api/quiz/finish'))).toHaveLength(1)
     })
   })
