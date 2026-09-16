@@ -6,6 +6,9 @@ import { gerarPdfLaudo } from '@/lib/server/pdf'
 import { isUuid } from '@/lib/server/uuid'
 
 export const runtime = 'nodejs'
+// Cold start do Chromium (@sparticuz/chromium) + render do laudo pode chegar
+// perto do timeout padrão das funções serverless da Vercel.
+export const maxDuration = 60
 
 // `nome` só passa por nomeValido() (só exige 2+ palavras) — aspas, barras
 // invertidas ou outros caracteres arbitrários chegam aqui sem filtro e
@@ -13,7 +16,7 @@ export const runtime = 'nodejs'
 // a só [a-z0-9-] pra deixar o header sempre seguro de montar.
 function nomeParaArquivo(nome: string): string {
   const limpo = nome
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
@@ -29,7 +32,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   if (!sessao || sessao.status !== 'concluido') return NextResponse.json({ erro: 'não encontrado' }, { status: 404 })
 
   const nivel = sessao.acertos !== null ? nivelTeste(sessao.acertos) : ''
-  const pdf = await gerarPdfLaudo(sessao, nivel)
+
+  let pdf: Buffer
+  try {
+    pdf = await gerarPdfLaudo(sessao, nivel)
+  } catch (e) {
+    console.error('[admin/leads/pdf] erro inesperado ao gerar o PDF', e)
+    return NextResponse.json({ erro: 'falha ao gerar o PDF' }, { status: 500 })
+  }
 
   return new Response(new Uint8Array(pdf), {
     status: 200,

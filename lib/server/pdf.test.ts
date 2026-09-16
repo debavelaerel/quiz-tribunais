@@ -58,4 +58,33 @@ describe('montarHtmlLaudo', () => {
     expect(html).toContain('errou · marcou A, gabarito C')
     expect(html).toContain('errou · marcou D, gabarito A')
   })
+
+  it('mostra "não respondeu" (em vez de "marcou " com valor vazio) quando escolhida é string vazia', () => {
+    const sessao = sessaoDeExemplo()
+    sessao.respostas[1] = { ...sessao.respostas[1], escolhida: '' }
+    const html = montarHtmlLaudo(sessao, 'inicial')
+    expect(html).toContain('errou · não respondeu, gabarito C')
+    expect(html).not.toContain('marcou ,')
+  })
+
+  it('mostra a fonte de cada questão (banca · prova · cargo)', () => {
+    const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
+    expect(html).toContain('class="fonte"')
+    expect(html).toContain('FGV · TJ RR 2024 · Analista Judiciário')
+    expect(html).toContain('FCC · TRF4 2019 · Oficial de Justiça Avaliador Federal')
+  })
+
+  it('fecha o laudo com a seção "o próximo passo", com a fala já usada no CTA do quiz', () => {
+    const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
+    expect(html).toContain('O próximo passo')
+    expect(html).toContain('consultor do meu time')
+    expect(html).toContain('Não custa nada')
+  })
+
+  it('embute a Poppins como @font-face em base64, pra não depender de rede no page.setContent', () => {
+    const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
+    expect(html).toContain("@font-face")
+    expect(html).toContain("font-family: 'Poppins'")
+    expect(html).toContain('data:font/woff2;base64,')
+  })
 })

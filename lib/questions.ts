@@ -15,6 +15,7 @@ export type Question = {
   options: Option[]
   correct: string
   comment: string[]
+  src: string
 }
 
 export const EVENTO = 'diagnostico-tribunais-comercial'
@@ -28,4 +29,5 @@ export const QUESTIONS: Question[] = TESTE.map((q, i) => ({
   options: q.opts.map((texto, j) => ({ letter: LETRAS[j], text: texto })),
   correct: q.ans,
   comment: [q.note],
+  src: q.src,
 }))
