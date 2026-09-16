@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { bate, selecionarBlocos } from './blocos'
+import { bate, selecionarBlocos, EDITAIS_BASE } from './blocos'
 import { QUESTIONS } from './questions'
 import casosDeTesteRaw from './data/casos-de-teste.json'
+import diagnosisJson from '../reference/raio-x-da-base/diagnosis.json'
 import type { RespostasPerfil } from './perfil'
 import type { RespostaResumo } from './scoring'
 
@@ -142,4 +143,29 @@ describe('selecionarBlocos — os 8 casos de aceite do pacote raio-x-da-base', (
     ])
     expect(blocos.map((b) => b.id)).not.toContain('mira')
   })
+})
+
+describe('EDITAIS_BASE — allowlist do fix "alvo any" (round anterior)', () => {
+  // Regressão pro Critical daquele round: `EDITAIS_BASE` existe pra não deixar
+  // `selecionarBlocos` indexar `lib/quizContent.ts`'s `EDITAIS` direto (que tem
+  // um `any` sintético, só de UI, inexistente na referência Python). Se um dia
+  // alguém adicionar uma chave nova em `EDITAIS` (ou fizer `EDITAIS.any`
+  // crescer) sem atualizar `EDITAIS_BASE` do mesmo jeito, esse teste falha —
+  // em vez de o bug só reaparecer silenciosamente num caso de fuzz futuro.
+  const editaisRef = (diagnosisJson as { editais: Record<string, { id: string }[]> }).editais
+
+  it('tem exatamente as chaves tj/trf/trt/fe — nem a mais (como "any"), nem a menos', () => {
+    expect(Object.keys(EDITAIS_BASE).sort()).toEqual(['fe', 'tj', 'trf', 'trt'])
+  })
+
+  it('as chaves batem com as do campo "editais" de reference/raio-x-da-base/diagnosis.json', () => {
+    expect(Object.keys(EDITAIS_BASE).sort()).toEqual(Object.keys(editaisRef).sort())
+  })
+
+  it.each(Object.keys(EDITAIS_BASE) as (keyof typeof EDITAIS_BASE)[])(
+    'os ids de EDITAIS_BASE.%s batem, na mesma ordem, com os do pacote de referência',
+    (chave) => {
+      expect(EDITAIS_BASE[chave].map((e) => e.id)).toEqual(editaisRef[chave].map((e) => e.id))
+    },
+  )
 })

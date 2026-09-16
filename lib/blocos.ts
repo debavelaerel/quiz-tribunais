@@ -123,7 +123,7 @@ function resolveParagrafo(p: Paragrafo, bateFn: (r: Regra | undefined) => boolea
 // EDITAIS.get("trt", [])`), incluindo blocos que a referência nunca
 // selecionaria pra esse lead (ex.: "mira", quando o único edital marcado é
 // de um tribunal fora da lista `trt`).
-const EDITAIS_BASE = { tj: EDITAIS.tj, trf: EDITAIS.trf, trt: EDITAIS.trt, fe: EDITAIS.fe } as const
+export const EDITAIS_BASE = { tj: EDITAIS.tj, trf: EDITAIS.trf, trt: EDITAIS.trt, fe: EDITAIS.fe } as const
 
 // Nota de fidelidade: esse é o único lookup do arquivo que precisa do
 // cuidado `?.length` acima em vez de `??` — porque é o único ponto em que
