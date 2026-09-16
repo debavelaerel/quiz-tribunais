@@ -1,5 +1,6 @@
 import type { RespostaResumo, AreaResumo } from '../scoring'
 import type { RespostasPerfil, PerfilCalculado } from '../perfil'
+import type { BlocoEscolhido } from '../blocos'
 
 export type QuizSession = {
   id: number
@@ -24,6 +25,9 @@ export type QuizSession = {
   // editais escolhidos, etc.) — não graduadas, distintas de `respostas`/`areas`.
   perfil: RespostasPerfil
   perfilCalculado: PerfilCalculado | null
+  // Blocos de texto condicionais ("ponto a ponto") — null até a sessão
+  // concluir. Ver lib/blocos.ts, selecionarBlocos().
+  blocos: BlocoEscolhido[] | null
   // Horário do primeiro clique no CTA "Falar com o time no WhatsApp" na tela
   // de resultado — sinal de intenção de compra, não de diagnóstico. Só o
   // primeiro clique é gravado (ver registrarCliqueWhatsapp em quizService.ts).

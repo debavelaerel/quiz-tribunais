@@ -235,6 +235,23 @@ describe('concluirSessao', () => {
     expect(sessao.perfilCalculado).toEqual({ classe: 'A', pontos: 9, curso: 'Curso 1 · Analista de TRT (168 temas)', cursoCod: 'C1-TRT', ritmo: 'base em menos de 6 meses' })
   })
 
+  it('calcula e grava os blocos escolhidos', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessao(repo, { nome: 'Ana', whatsapp: '11987654321', email: 'ana@x.com', sessionToken: 'tok-blocos', evento: EVENTO })
+    await registrarPerfil(repo, 'tok-blocos', {
+      alvo: 'trt', cargo: 'analista', formacao: 'direito', tempo: 't2', provas: 'p1',
+      metodo: 'video', vde: 'as_vezes', horas: 'h2', edital: 'sem', dor: 'base',
+      momento: 'zero', dinheiro: '150', leitura: 'basica', editais: [],
+    })
+    await registrarRespostasLote(repo, 'tok-blocos', [
+      { num: 1, escolhida: 'C' }, { num: 2, escolhida: 'A' }, { num: 3, escolhida: 'A' }, { num: 4, escolhida: 'A' },
+    ])
+
+    const sessao = await concluirSessao(repo, 'tok-blocos')
+    expect(sessao.blocos).not.toBeNull()
+    expect(sessao.blocos!.length).toBeGreaterThan(0)
+  })
+
   it('lança SessaoConcluidaError numa segunda chamada de finish', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessao(repo, { nome: 'Maria', whatsapp: '11987654321', email: 'maria@x.com', sessionToken: 'tok-1', evento: EVENTO })

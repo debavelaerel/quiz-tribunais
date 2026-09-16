@@ -24,6 +24,7 @@ function sessaoBase(i: number): Omit<QuizSession, 'id'> {
     areaPrioritaria: null,
     perfil: {},
     perfilCalculado: null,
+    blocos: null,
     whatsappClicadoEm: null,
     startedAt: new Date(2026, 0, 1, 0, i).toISOString(),
     updatedAt: new Date().toISOString(),
