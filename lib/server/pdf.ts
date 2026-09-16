@@ -1,6 +1,7 @@
 import { chromium } from 'playwright'
 import type { QuizSession } from './types'
 import { DIAG, L } from '../quizContent'
+import { QUESTIONS } from '../questions'
 
 const CSS = `
   @page { size: A4; margin: 18mm 15mm; }
@@ -17,6 +18,11 @@ const CSS = `
   .resumo span:first-child { display: block; color: #7C86A6; font-size: 10.5px; }
   .blk { background: #FFFFFF; border: 1.5px solid #E7E7EA; border-radius: 14px; padding: 13px 16px; margin: 0 0 9px; break-inside: avoid; }
   .box { background: #FFFFFF; border: 1.5px solid #E7E7EA; border-left: 4px solid #C89B18; border-radius: 12px; padding: 12px 15px; margin: 12px 0; }
+  .cab { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 4px; }
+  .cab b { font-size: 13px; }
+  .cab .r { font-size: 11px; font-weight: 600; white-space: nowrap; padding: 3px 9px; border-radius: 999px; }
+  .cab .ok { color: #2FB367; background: rgba(47,179,103,.12); }
+  .cab .no { color: #E03131; background: rgba(224,49,49,.12); }
   ol { list-style: none; margin: 0; padding: 0; counter-reset: passo; }
   ol li { counter-increment: passo; position: relative; padding: 10px 14px 10px 42px; margin-bottom: 7px;
     background: #FFFFFF; border: 1.5px solid #E7E7EA; border-radius: 12px; font-size: 12.5px; color: #5B6478; }
@@ -64,6 +70,23 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
           ${b.paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('')}
         </div>
       `).join('')}
+    ` : ''}
+
+    ${sessao.respostas.length > 0 ? `
+      <h2>As quatro questões, comentadas</h2>
+      ${sessao.respostas.map((r) => {
+        const q = QUESTIONS.find((qq) => qq.num === r.num)
+        const veredito = r.acertou ? 'acertou' : `errou · marcou ${r.escolhida}, gabarito ${r.gabarito}`
+        return `
+          <div class="blk">
+            <div class="cab">
+              <b>${escapeHtml(r.area)}</b>
+              <span class="r ${r.acertou ? 'ok' : 'no'}">${escapeHtml(veredito)}</span>
+            </div>
+            ${q ? `<p>${escapeHtml(q.comment.join(' '))}</p>` : ''}
+          </div>
+        `
+      }).join('')}
     ` : ''}
   </body></html>`
 }

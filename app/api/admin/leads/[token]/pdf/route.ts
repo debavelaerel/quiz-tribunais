@@ -7,6 +7,19 @@ import { isUuid } from '@/lib/server/uuid'
 
 export const runtime = 'nodejs'
 
+// `nome` só passa por nomeValido() (só exige 2+ palavras) — aspas, barras
+// invertidas ou outros caracteres arbitrários chegam aqui sem filtro e
+// quebrariam o parâmetro entre aspas do header Content-Disposition. Reduz
+// a só [a-z0-9-] pra deixar o header sempre seguro de montar.
+function nomeParaArquivo(nome: string): string {
+  const limpo = nome
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return limpo || 'lead'
+}
+
 export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }): Promise<Response> {
   const { token } = await params
   if (!isUuid(token)) return NextResponse.json({ erro: 'não encontrado' }, { status: 404 })
@@ -22,7 +35,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="laudo-${sessao.nome.replace(/\s+/g, '-').toLowerCase()}.pdf"`,
+      'Content-Disposition': `attachment; filename="laudo-${nomeParaArquivo(sessao.nome)}.pdf"`,
     },
   })
 }

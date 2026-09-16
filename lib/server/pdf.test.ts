@@ -43,4 +43,19 @@ describe('montarHtmlLaudo', () => {
     expect(comPlano).toContain('A ordem que eu seguiria')
     expect(semPlano).not.toContain('A ordem que eu seguiria')
   })
+
+  it('inclui as quatro questões comentadas, com área e veredito certo/errado de cada uma', () => {
+    const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
+    expect(html).toContain('As quatro questões, comentadas')
+    // As 4 áreas da fixture (2 acertos, 2 erros)
+    expect(html).toContain('Língua Portuguesa')
+    expect(html).toContain('Direito Constitucional')
+    expect(html).toContain('Direito Processual Civil')
+    expect(html).toContain('Raciocínio Lógico')
+    // 2 acertos (span "ok") e 2 erros (span "no"), batendo com acertos:2/total:4 da fixture
+    expect((html.match(/class="r ok"/g) ?? []).length).toBe(2)
+    expect((html.match(/class="r no"/g) ?? []).length).toBe(2)
+    expect(html).toContain('errou · marcou A, gabarito C')
+    expect(html).toContain('errou · marcou D, gabarito A')
+  })
 })
