@@ -50,6 +50,7 @@ type Resultado = {
   // resultado de uma sessão concluída (F5, outro navegador) não tinha como
   // montar a ficha, já que respostasPerfil só existe em memória.
   perfil?: RespostasPerfil
+  blocos: { id: string; group: string; title: string; paragraphs: string[] }[] | null
 }
 // Fronteira JSON de POST /api/quiz/start (snake_case, igual a /finish e /result).
 type RespostaStart = {
@@ -1652,6 +1653,40 @@ export default function Quiz() {
                 </>
               )}
 
+              {resultado.blocos && resultado.blocos.length > 0 && (
+                <div className="mt-7">
+                  <h3 className="font-bold text-brand-navy">Resposta por resposta</h3>
+                  <p className="mt-2 text-brand-ink-soft">Isso aqui é o que você me contou, ponto a ponto.</p>
+
+                  <div className="mt-3 rounded-[16px] border-[1.5px] border-brand-line px-4 py-4">
+                    <h4 className="pl-3 text-[14.5px] font-semibold text-brand-ink" style={{ borderLeft: '3px solid #203C7C' }}>
+                      {resultado.blocos[0].title}
+                    </h4>
+                    {resultado.blocos[0].paragraphs.map((p, i) => (
+                      <p key={i} className="mt-2 text-[13px] leading-relaxed text-brand-ink-soft">{p}</p>
+                    ))}
+                  </div>
+
+                  {resultado.blocos.length > 1 && (
+                    <div className="relative mt-2.5">
+                      <div className="flex select-none flex-col gap-2.5" style={{ filter: 'blur(5px)' }}>
+                        {resultado.blocos.slice(1).map((b) => (
+                          <div key={b.id} className="rounded-[16px] border-[1.5px] border-brand-line px-4 py-4">
+                            <h4 className="pl-3 text-[14.5px] font-semibold text-brand-ink" style={{ borderLeft: '3px solid #203C7C' }}>
+                              {b.title}
+                            </h4>
+                            {b.paragraphs.map((p, i) => (
+                              <p key={i} className="mt-2 text-[13px] leading-relaxed text-brand-ink-soft">{p}</p>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-white" style={{ backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0), #FFFFFF 82%)' }} />
+                    </div>
+                  )}
+                </div>
+              )}
+
               {frases.map((f, i) => f && (
                 <div key={i} className="mt-3 rounded-[14px] bg-brand-tint px-4 py-3 text-[13px] leading-relaxed text-brand-ink-soft">
                   {f.negrito && <b className="text-brand-ink">{f.negrito} </b>}
@@ -1661,7 +1696,7 @@ export default function Quiz() {
 
               <h3 className="mt-8 inline-block rounded-lg bg-brand-tint px-2.5 py-1 font-bold text-brand-navy">Onde isso vira um plano</h3>
               <p className="mt-4 text-brand-ink-soft">
-                Este diagnóstico leu o seu caso por cima, com o que dá pra ler em doze perguntas e quatro questões. O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>, que cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação: o que priorizar agora, o que vem depois e o que pode esperar.
+                Este diagnóstico leu o seu caso por cima, com o que dá pra ler em doze perguntas e quatro questões. O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>, que cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação — e te manda, pelo WhatsApp, o seu laudo completo em PDF, com todos os pontos acima destravados.
               </p>
               <p className="mt-4 text-brand-ink-soft">
                 Não custa nada. Só que a agenda é curta — cada consultor abre poucos horários por semana. Clica aqui embaixo e vê o que sobrou pra esta semana.
