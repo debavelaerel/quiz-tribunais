@@ -1,0 +1,17 @@
+# Build do serviço Python (services/laudo-pdf/Dockerfile) roda com a raiz
+# do repo como contexto (precisa de reference/raio-x-da-base/ e
+# public/brand/, fora do próprio diretório do serviço) — sem isso, o upload
+# do build carrega node_modules, .worktrees, .claude etc. junto (~2.9GB no
+# total, contra ~2MB do que o Dockerfile de fato usa).
+node_modules/
+.next/
+.git/
+.worktrees/
+.claude/
+.playwright-mcp/
+services/*/.venv/
+services/*/__pycache__/
+services/*/pdfs-teste-python/
+pdfs-teste-8-casos/
+*.png
+*.pdf

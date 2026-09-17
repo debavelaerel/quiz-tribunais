@@ -2,21 +2,19 @@ import { NextResponse } from 'next/server'
 import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import { nivelTeste } from '@/lib/perfil'
-import { gerarPdfLaudo } from '@/lib/server/pdf'
+import { gerarLaudoPdf, validarSessaoParaLaudo, LaudoIndisponivel } from '@/lib/server/laudoService'
 import { isUuid } from '@/lib/server/uuid'
 
 export const runtime = 'nodejs'
-// Cold start do Chromium (@sparticuz/chromium) + render do laudo pode chegar
-// perto do timeout padrão das funções serverless da Vercel.
+// O serviço de PDF em Python (services/laudo-pdf) é quem faz o trabalho
+// pesado (Chromium) agora — essa rota só valida, chama por HTTP e repassa
+// o PDF. maxDuration segue generoso porque o timeout do fetch pro serviço
+// (55s, ver lib/server/laudoService.ts) precisa caber dentro dele.
 export const maxDuration = 60
 
-// `nome` só passa por nomeValido() (só exige 2+ palavras) — aspas, barras
-// invertidas ou outros caracteres arbitrários chegam aqui sem filtro e
-// quebrariam o parâmetro entre aspas do header Content-Disposition. Reduz
-// a só [a-z0-9-] pra deixar o header sempre seguro de montar.
 function nomeParaArquivo(nome: string): string {
   const limpo = nome
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
@@ -31,14 +29,26 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   const sessao = await repo.buscarPorToken(token)
   if (!sessao || sessao.status !== 'concluido') return NextResponse.json({ erro: 'não encontrado' }, { status: 404 })
 
+  // Pela interface normal do quiz uma sessão concluída sempre tem o perfil
+  // completo (cada pergunta trava o avanço até responder) — isso é só rede
+  // de segurança pro caminho teórico de uma chamada direta à API bypassando
+  // a UI. Confere aqui, com mensagem específica, em vez de deixar o 422
+  // genérico do serviço em Python chegar até o admin sem contexto.
+  const problemas = validarSessaoParaLaudo(sessao)
+  if (problemas.length > 0) {
+    console.error('[admin/leads/pdf] sessão incompleta pra gerar laudo', { token, problemas })
+    return NextResponse.json({ erro: 'sessão incompleta', detalhes: problemas }, { status: 422 })
+  }
+
   const nivel = sessao.acertos !== null ? nivelTeste(sessao.acertos) : ''
 
   let pdf: Buffer
   try {
-    pdf = await gerarPdfLaudo(sessao, nivel)
+    pdf = await gerarLaudoPdf(sessao, nivel)
   } catch (e) {
+    const status = e instanceof LaudoIndisponivel ? 503 : 500
     console.error('[admin/leads/pdf] erro inesperado ao gerar o PDF', e)
-    return NextResponse.json({ erro: 'falha ao gerar o PDF' }, { status: 500 })
+    return NextResponse.json({ erro: 'falha ao gerar o PDF' }, { status })
   }
 
   return new Response(new Uint8Array(pdf), {
