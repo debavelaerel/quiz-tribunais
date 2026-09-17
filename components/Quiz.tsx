@@ -1696,10 +1696,10 @@ export default function Quiz() {
 
               <h3 className="mt-8 inline-block rounded-lg bg-brand-tint px-2.5 py-1 font-bold text-brand-navy">Onde isso vira um plano</h3>
               <p className="mt-4 text-brand-ink-soft">
-                Este diagnóstico leu o seu caso por cima, com o que dá pra ler em doze perguntas e quatro questões. O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>, que cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação — e te manda, pelo WhatsApp, o seu laudo completo em PDF, com todos os pontos acima destravados.
+                Este diagnóstico leu o seu caso por cima. O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>, que cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação e te manda, pelo WhatsApp, o seu laudo completo em PDF, com todos os pontos acima destravados.
               </p>
               <p className="mt-4 text-brand-ink-soft">
-                Não custa nada. Só que a agenda é curta — cada consultor abre poucos horários por semana. Clica aqui embaixo e vê o que sobrou pra esta semana.
+                Não custa nada. Só que a agenda é curta e cada consultor abre poucos horários por semana. Clica aqui embaixo pra reservar sua vaga e destravar o seu diagnóstico.
               </p>
 
               <a
