@@ -74,10 +74,10 @@ describe('montarHtmlLaudo', () => {
     expect(html).toContain('FCC · TRF4 2019 · Oficial de Justiça Avaliador Federal')
   })
 
-  it('fecha o laudo com a seção "o próximo passo", com a fala já usada no CTA do quiz', () => {
+  it('fecha o laudo com a seção "o próximo passo", com o mesmo texto do report.py de referência', () => {
     const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
     expect(html).toContain('O próximo passo')
-    expect(html).toContain('consultor do meu time')
+    expect(html).toContain('a conversa com o meu time')
     expect(html).toContain('Não custa nada')
   })
 
@@ -119,6 +119,6 @@ describe('montarHtmlLaudo', () => {
     const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
     expect(html).toContain('class="selo"')
     expect(html).toContain('href="https://wa.me/')
-    expect(html).toContain('Falar com o time no WhatsApp')
+    expect(html).toContain('Responder no WhatsApp e marcar o meu horário')
   })
 })

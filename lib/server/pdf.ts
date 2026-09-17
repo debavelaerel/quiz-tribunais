@@ -208,9 +208,14 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
     resumoHtml += `<div class="wide"><span>Ritmo no seu tempo de estudo</span><span>${escapeHtml(sessao.perfilCalculado.ritmo)}</span></div>`
   }
 
+  // Índice, etiqueta (eyebrow) e título (h2) de cada seção usam textos
+  // ligeiramente diferentes entre si — mesma variação de report.py (ex.:
+  // índice "Ponto a ponto das suas respostas", etiqueta "Resposta por
+  // resposta", título "Ponto a ponto do que você me contou"), não é
+  // inconsistência.
   const secoesIndice = ['A leitura do seu caso']
   if (mostrarPlano) secoesIndice.push('A ordem que eu seguiria')
-  secoesIndice.push('Resposta por resposta', 'As quatro questões, comentadas', 'A sua ficha completa', 'O próximo passo')
+  secoesIndice.push('Ponto a ponto das suas respostas', 'As quatro questões, comentadas', 'A sua ficha completa', 'O próximo passo')
   const indiceHtml = secoesIndice.map((s) => `<li>${escapeHtml(s)}</li>`).join('')
 
   const fichaLinhas: Array<[string, string]> = []
@@ -268,7 +273,7 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
     ${mostrarPlano ? `
       <section class="sec">
         <span class="eyebrow">O que vem primeiro</span>
-        <h2>A ordem que eu seguiria</h2>
+        <h2>A ordem que eu seguiria no seu lugar</h2>
         <ol>${momento!.ordem.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ol>
       </section>
     ` : ''}
@@ -314,7 +319,7 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
     ${fichaLinhas.length > 0 ? `
       <section class="sec">
         <span class="eyebrow">Para conferir</span>
-        <h2>A sua ficha completa</h2>
+        <h2>Suas respostas</h2>
         <div class="ficha">${fichaHtml}</div>
       </section>
     ` : ''}
@@ -322,13 +327,14 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
     <div class="fim">
       <span class="eyebrow">O próximo passo</span>
       <h2>Isto diz onde você está. Agora falta o plano.</h2>
-      <p>Um raio-x aponta o problema e não resolve ele sozinho — quem vira isso em plano de ação
-      é uma conversa de uns 20 minutos com um consultor do meu time, que cruza o que você
-      respondeu com o edital do seu alvo e monta o seu cronograma.</p>
-      <p><b>Não custa nada.</b> Só que a agenda é curta — cada consultor abre poucos horários por
-      semana. Se ainda não marcou o seu horário, é só responder a mesma conversa do WhatsApp em
-      que você recebeu este PDF.</p>
-      ${linkWhats ? `<a class="selo" href="${linkWhats}">Falar com o time no WhatsApp</a>` : ''}
+      <p>Um raio-X aponta o problema e não resolve ele sozinho. O que a conversa com o meu time
+      faz é pegar este diagnóstico e virar plano de ação dentro do VDE Tribunais: qual dos dois
+      cursos atende o seu alvo, o cronograma que cabe no seu tempo real de estudo, quais
+      disciplinas entram primeiro e em que ordem, e o que fica pra depois.</p>
+      <p>Se ainda não marcou o seu horário, é só responder a mesma conversa do WhatsApp em que
+      você recebeu este arquivo. <b>Não custa nada</b>, e cada consultor abre poucos horários por
+      semana.</p>
+      ${linkWhats ? `<a class="selo" href="${linkWhats}">Responder no WhatsApp e marcar o meu horário</a>` : ''}
     </div>
 
     <footer>
@@ -349,7 +355,29 @@ export async function gerarPdfLaudo(sessao: QuizSession, nivel: string): Promise
   try {
     const page = await browser.newPage()
     await page.setContent(html, { waitUntil: 'networkidle' })
-    const pdf = await page.pdf({ format: 'A4', printBackground: true })
+    // Rodapé com numeração de página em toda página — mesmo comportamento do
+    // PDF de referência (reference/raio-x-da-base/exemplos/*.pdf têm
+    // "Raio-X da Base · VDE Tribunais" + número em todas as páginas). Não dá
+    // pra fazer isso só com CSS: header/footer de PDF do Chromium são um
+    // recurso à parte de page.pdf(), renderizado fora do documento — por
+    // isso o template abaixo não herda a Poppins embutida no <style> do
+    // corpo (usa a fonte de sistema, tamanho pequeno o bastante pra não
+    // chamar atenção). O <footer> no corpo do HTML continua existindo à
+    // parte — é o fechamento único, com o identificador da sessão.
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      displayHeaderFooter: true,
+      headerTemplate: '<span></span>',
+      footerTemplate: `
+        <div style="width:100%;font-size:8.5px;font-family:system-ui,-apple-system,sans-serif;
+          color:#7C86A6;padding:0 15mm;display:flex;justify-content:space-between;">
+          <span>Diagnóstico da Base · VDE Tribunais</span>
+          <span class="pageNumber"></span>
+        </div>
+      `,
+      margin: { top: '18mm', bottom: '14mm', left: '15mm', right: '15mm' },
+    })
     return pdf
   } finally {
     await browser.close()
