@@ -87,4 +87,38 @@ describe('montarHtmlLaudo', () => {
     expect(html).toContain("font-family: 'Poppins'")
     expect(html).toContain('data:font/woff2;base64,')
   })
+
+  it('capa: resumo traz Alvo e Tempo disponível, além dos campos que já existiam', () => {
+    const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
+    expect(html).toContain('<span>Alvo</span>')
+    expect(html).toContain('analista judiciário · TJ')
+    expect(html).toContain('<span>Tempo disponível</span>')
+    expect(html).toContain('1 a 2 horas por dia')
+  })
+
+  it('capa: traz o índice das seções, incluindo "A ordem que eu seguiria" só quando ela aparece', () => {
+    const comPlano = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
+    expect(comPlano).toContain('Neste raio-X')
+    expect((comPlano.match(/A ordem que eu seguiria/g) ?? []).length).toBe(2) // índice + seção
+
+    const semPlano = montarHtmlLaudo({ ...sessaoDeExemplo(), perfil: { ...sessaoDeExemplo().perfil, leitura: 'basica' } }, 'inicial')
+    expect(semPlano).not.toContain('A ordem que eu seguiria')
+  })
+
+  it('traz a ficha completa com as respostas legíveis do perfil, incluindo os editais escolhidos', () => {
+    const sessao = { ...sessaoDeExemplo(), perfil: { ...sessaoDeExemplo().perfil, editais: ['tjgo'] } }
+    const html = montarHtmlLaudo(sessao, 'inicial')
+    expect(html).toContain('A sua ficha completa')
+    expect(html).toContain('<span>Concurso alvo</span><span>Tribunal de Justiça (TJ)</span>')
+    expect(html).toContain('<span>Formação</span><span>Cursando Direito</span>')
+    expect(html).toContain('<span>Concursos escolhidos</span><span>TJ GO</span>')
+    expect(html).toContain('<span>Ganho a mais se aprovado</span><span>Uns R$ 8 mil a mais por mês</span>')
+  })
+
+  it('fecha com um botão real pro WhatsApp, com a mesma mensagem/ref que a tela de resultado usa', () => {
+    const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
+    expect(html).toContain('class="selo"')
+    expect(html).toContain('href="https://wa.me/')
+    expect(html).toContain('Falar com o time no WhatsApp')
+  })
 })
