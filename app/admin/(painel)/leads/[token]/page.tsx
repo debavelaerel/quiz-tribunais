@@ -42,6 +42,15 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
         voltar pra lista de leads
       </Link>
 
+      {sessao.status === 'concluido' && (
+        <a
+          href={`/api/admin/leads/${token}/pdf`}
+          className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-brand-ink px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-navy-2"
+        >
+          Baixar PDF do laudo
+        </a>
+      )}
+
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-[23px] font-bold tracking-[-0.01em] text-brand-ink">{sessao.nome}</h1>
@@ -142,6 +151,24 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
           <p className="text-[13px] text-brand-ink-dim">Alvo · {labelCargo(sessao.perfil)} em {rotuloPerfil('alvo', sessao.perfil.alvo)}</p>
         </div>
       </div>
+
+      {sessao.blocos && sessao.blocos.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-[15px] font-bold text-brand-ink">Ponto a ponto ({sessao.blocos.length} blocos)</h2>
+          <div className="mt-3 flex flex-col gap-2.5">
+            {sessao.blocos.map((b) => (
+              <div key={b.id} className="rounded-[14px] border-[1.5px] border-brand-line px-4 py-3.5">
+                <h3 className="pl-3 text-[13.5px] font-semibold text-brand-ink" style={{ borderLeft: '3px solid #203C7C' }}>
+                  {b.title}
+                </h3>
+                {b.paragraphs.map((p, i) => (
+                  <p key={i} className="mt-1.5 text-[12.5px] leading-relaxed text-brand-ink-soft">{p}</p>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

@@ -1,0 +1,252 @@
+{
+  "_leia": "Oito leads reais de exemplo, com o resultado que a implementação tem que produzir. Use como teste de aceite: leia o codigo, rode o seu motor, compare com 'esperado'. Juntos eles acionam os 46 textos, os 5 diagnosticos e as duas respostas da ultima tela.",
+  "gerado_em": "2026-09-16",
+  "casos": [
+    {
+      "id": "01-iniciante-do-zero",
+      "resumo": "Começando agora, sem método e sem prova feita",
+      "entrada": {
+        "nome": "Camila Nogueira",
+        "codigo": "RX1.tj.analista.cursando_direito.t0.p0.nenhum.nunca.h1.sem.improviso.zero.96.completa.AAAB.tjam"
+      },
+      "esperado": {
+        "diagnostico": "zero",
+        "mostra_plano_de_acao": true,
+        "curso": "C2-TJTRF",
+        "ritmo": "base em 12 meses, no ritmo de 2h por dia",
+        "acertos": 0,
+        "nivel": "inicial",
+        "pontos": 7,
+        "classe": "A",
+        "blocos": [
+          "mira",
+          "iniciante",
+          "h1",
+          "nenhum",
+          "d_improviso",
+          "n01",
+          "naojur2",
+          "proc",
+          "pub",
+          "cursando_dir",
+          "v_nunca"
+        ]
+      },
+      "pdf": "exemplos/01-iniciante-do-zero.pdf"
+    },
+    {
+      "id": "02-veterano-no-corte",
+      "resumo": "Para perto do corte prova atrás de prova, e marcou três editais",
+      "entrada": {
+        "nome": "Rafael Andrade",
+        "codigo": "RX1.trt.analista.direito.t4.p3.pdf.insta.h2.previsto.banca.plato.156.completa.CCAA.trt8-trt4-trt23"
+      },
+      "esperado": {
+        "diagnostico": "plato",
+        "mostra_plano_de_acao": true,
+        "curso": "C1-TRT",
+        "ritmo": "base entre 8 e 12 meses",
+        "acertos": 3,
+        "nivel": "avançado",
+        "pontos": 9,
+        "classe": "A",
+        "blocos": [
+          "mira",
+          "perto",
+          "h2",
+          "pdf",
+          "d_banca",
+          "n34",
+          "proc",
+          "multi",
+          "v_insta"
+        ]
+      },
+      "pdf": "exemplos/02-veterano-no-corte.pdf"
+    },
+    {
+      "id": "03-reta-final-tecnico",
+      "resumo": "Prova em menos de 3 meses, mira técnico tendo curso superior",
+      "entrada": {
+        "nome": "Juliana Peixoto",
+        "codigo": "RX1.tj.tecnico.direito.t3.p1.retafinal.exaluno.h0.reta.tempo.improviso.60.basica.ACAA.tjgo"
+      },
+      "esperado": {
+        "diagnostico": "improviso",
+        "mostra_plano_de_acao": false,
+        "curso": "C2-TJTRF",
+        "ritmo": "abaixo do cronograma mínimo; com 2h por dia, base em 12 meses",
+        "acertos": 2,
+        "nivel": "intermediário",
+        "pontos": 2,
+        "classe": "B",
+        "blocos": [
+          "mira",
+          "longe",
+          "h0",
+          "retafinal",
+          "d_tempo",
+          "n2",
+          "port",
+          "proc",
+          "reta",
+          "tec_sup",
+          "v_ex"
+        ]
+      },
+      "pdf": "exemplos/03-reta-final-tecnico.pdf"
+    },
+    {
+      "id": "04-servidor-em-ascensao",
+      "resumo": "Já é servidor e quer subir para oficial de justiça",
+      "entrada": {
+        "nome": "Marcos Vinícius Leal",
+        "codigo": "RX1.trf.oficial.direito.t5.p4.questoes.aluno.h3.previsto.fixar.servidor.120.completa.CABB.trf3"
+      },
+      "esperado": {
+        "diagnostico": "servidor",
+        "mostra_plano_de_acao": true,
+        "curso": "C2-TJTRF",
+        "ritmo": "base entre 6 e 8 meses",
+        "acertos": 2,
+        "nivel": "intermediário",
+        "pontos": 8,
+        "classe": "A",
+        "blocos": [
+          "mira",
+          "servidor",
+          "h3",
+          "questoes",
+          "d_fixar",
+          "n2",
+          "rlm",
+          "pub",
+          "oficial",
+          "v_aluno"
+        ]
+      },
+      "pdf": "exemplos/04-servidor-em-ascensao.pdf"
+    },
+    {
+      "id": "05-qualquer-tribunal",
+      "resumo": "Quer o que abrir primeiro, formada em outra área, muito tempo por dia",
+      "entrada": {
+        "nome": "Letícia Barros",
+        "codigo": "RX1.any.any.outra.t2.p2.video.insta.h4.nao.base.sembase.192.basica.ACBB.qualquer"
+      },
+      "esperado": {
+        "diagnostico": "sembase",
+        "mostra_plano_de_acao": false,
+        "curso": "C2-TJTRF",
+        "ritmo": "base em 6 meses",
+        "acertos": 2,
+        "nivel": "intermediário",
+        "pontos": 6,
+        "classe": "B",
+        "blocos": [
+          "longe",
+          "h4",
+          "video",
+          "d_base",
+          "n2",
+          "naojur2",
+          "alvo_any",
+          "outra_area",
+          "v_insta"
+        ]
+      },
+      "pdf": "exemplos/05-qualquer-tribunal.pdf"
+    },
+    {
+      "id": "06-funcoes-essenciais",
+      "resumo": "Defensoria na mira, nunca fez prova, não sabe a diferença entre os cargos",
+      "entrada": {
+        "nome": "Bianca Sales",
+        "codigo": "RX1.fe.unsure.cursando_outra.t4.p0.mentoria.nunca.h1.previsto.emocional.sembase.96.completa.CCBA.dpu"
+      },
+      "esperado": {
+        "diagnostico": "sembase",
+        "mostra_plano_de_acao": true,
+        "curso": "C2-TJTRF",
+        "ritmo": "base em 12 meses, no ritmo de 2h por dia",
+        "acertos": 4,
+        "nivel": "avançado",
+        "pontos": 5,
+        "classe": "B",
+        "blocos": [
+          "mira",
+          "nuncaprova",
+          "h1",
+          "mentoria",
+          "d_emocional",
+          "n34",
+          "alvo_fe",
+          "unsure",
+          "v_nunca"
+        ]
+      },
+      "pdf": "exemplos/06-funcoes-essenciais.pdf"
+    },
+    {
+      "id": "07-medo-das-nao-juridicas",
+      "resumo": "Começou há pouco e tem medo de Português, RLM e Informática",
+      "entrada": {
+        "nome": "Thiago Correia",
+        "codigo": "RX1.trt.analista.direito.t1.p1.video.insta.h2.nao.naojur.zero.120.completa.CAAB.trt4"
+      },
+      "esperado": {
+        "diagnostico": "zero",
+        "mostra_plano_de_acao": true,
+        "curso": "C1-TRT",
+        "ritmo": "base entre 8 e 12 meses",
+        "acertos": 1,
+        "nivel": "inicial",
+        "pontos": 7,
+        "classe": "A",
+        "blocos": [
+          "mira",
+          "iniciante",
+          "h2",
+          "video",
+          "d_naojur",
+          "n01",
+          "rlm",
+          "proc",
+          "pub",
+          "v_insta"
+        ]
+      },
+      "pdf": "exemplos/07-medo-das-nao-juridicas.pdf"
+    },
+    {
+      "id": "08-todas-as-dores",
+      "resumo": "Cinco anos de estudo, várias provas longe do corte, marcou todas as dores",
+      "entrada": {
+        "nome": "Patrícia Menezes",
+        "codigo": "RX1.tj.analista.direito.t5.p2.pdf.exaluno.h3.sem.todas.sembase.156.basica.CCAA.tjam-tjgo-tjto"
+      },
+      "esperado": {
+        "diagnostico": "sembase",
+        "mostra_plano_de_acao": false,
+        "curso": "C2-TJTRF",
+        "ritmo": "base entre 6 e 8 meses",
+        "acertos": 3,
+        "nivel": "avançado",
+        "pontos": 9,
+        "classe": "A",
+        "blocos": [
+          "mira",
+          "longe",
+          "h3",
+          "pdf",
+          "d_todas",
+          "n34",
+          "proc",
+          "multi",
+          "v_ex"
+        ]
+      },
+      "pdf": "exemplos/08-todas-as-dores.pdf"
+    }
+  ]
+}

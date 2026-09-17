@@ -39,6 +39,7 @@ export function criarHandlerFinish(repo: SessionRepo) {
         total: sessao.total,
         area_prioritaria: sessao.areaPrioritaria,
         areas: sessao.areas,
+        blocos: sessao.blocos,
       }, { status: 200 })
     } catch (e) {
       if (e instanceof SessaoInvalidaError) return NextResponse.json({ erro: 'sessão não encontrada' }, { status: 404 })

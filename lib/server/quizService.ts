@@ -3,6 +3,7 @@ import type { IniciarSessaoInput, IniciarSessaoResultado, QuizSession } from './
 import { normalizeEmail, normalizeWhatsapp } from '../normalize'
 import { montarRespostaResumo, calcularAreas, calcularResultado, respostasCobremTodasPerguntas, type RespostaEntrada } from '../scoring'
 import { calcularPerfil, type RespostasPerfil } from '../perfil'
+import { selecionarBlocos } from '../blocos'
 
 export class SessaoInvalidaError extends Error {}
 export class SessaoConcluidaError extends Error {}
@@ -67,6 +68,7 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
     areaPrioritaria: null,
     perfil: {},
     perfilCalculado: null,
+    blocos: null,
     whatsappClicadoEm: null,
     startedAt: agora,
     updatedAt: agora,
@@ -128,6 +130,7 @@ export async function concluirSessao(repo: SessionRepo, sessionToken: string): P
 
   const resultado = calcularResultado(sessao.respostas)
   const perfilCalculado = calcularPerfil(sessao.perfil, resultado.acertos)
+  const blocos = selecionarBlocos(sessao.perfil, sessao.respostas)
   return repo.atualizar(sessao.id, {
     status: 'concluido',
     areas: resultado.areas,
@@ -136,6 +139,7 @@ export async function concluirSessao(repo: SessionRepo, sessionToken: string): P
     total: resultado.total,
     areaPrioritaria: resultado.areaPrioritaria,
     perfilCalculado,
+    blocos,
     completedAt: new Date().toISOString(),
   })
 }
