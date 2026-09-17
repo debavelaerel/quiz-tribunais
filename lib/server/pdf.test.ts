@@ -115,10 +115,13 @@ describe('montarHtmlLaudo', () => {
     expect(html).toContain('<span>Ganho a mais se aprovado</span><span>Uns R$ 8 mil a mais por mês</span>')
   })
 
-  it('fecha com um botão real pro WhatsApp, com a mesma mensagem/ref que a tela de resultado usa', () => {
+  it('CONFIG.whatsapp ainda é o placeholder (ver lib/quizContent.ts) — o botão final fica sem link, não um <a> morto', () => {
+    // Mesmo fallback de report.py: número começando com "5500000" vira texto
+    // estilizado, não link. Quando CONFIG.whatsapp virar o número real do
+    // time, este teste passa a falhar — é o sinal de trocar a asserção pra
+    // exigir `<a class="selo" href="https://wa.me/...">`.
     const html = montarHtmlLaudo(sessaoDeExemplo(), 'inicial')
-    expect(html).toContain('class="selo"')
-    expect(html).toContain('href="https://wa.me/')
-    expect(html).toContain('Responder no WhatsApp e marcar o meu horário')
+    expect(html).toContain('<span class="selo">Responder no WhatsApp e marcar o meu horário</span>')
+    expect(html).not.toContain('<a class="selo"')
   })
 })

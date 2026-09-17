@@ -4,7 +4,7 @@ import chromium from '@sparticuz/chromium'
 import { chromium as playwrightChromium } from 'playwright-core'
 import type { QuizSession } from './types'
 import type { RespostasPerfil } from '../perfil'
-import { DIAG, L, PERFIL_SCREENS, TELA_DINHEIRO, labelCargo, editaisEscolhidos, waLink } from '../quizContent'
+import { CONFIG, DIAG, L, PERFIL_SCREENS, TELA_DINHEIRO, labelCargo, editaisEscolhidos, waLink } from '../quizContent'
 import { QUESTIONS } from '../questions'
 
 // Poppins embutida como @font-face em base64: `page.setContent` não faz
@@ -189,6 +189,7 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
   const perfil = sessao.perfil
   const momento = perfil.momento ? DIAG[perfil.momento] : undefined
   const primeiroNome = sessao.nome.split(' ')[0]
+  const saudacao = primeiroNome ? `Oi, ${primeiroNome}.` : 'Oi.'
   const blocos = sessao.blocos ?? []
   const mostrarPlano = perfil.leitura === 'completa' && momento
   const acertos = sessao.acertos ?? 0
@@ -236,6 +237,15 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
   const linkWhats = sessao.perfilCalculado
     ? waLink(sessao.nome, perfil, sessao.perfilCalculado.classe, sessao.perfilCalculado.cursoCod, nivel, acertos, total)
     : null
+  // Mesmo fallback de report.py: enquanto CONFIG.whatsapp for o placeholder
+  // ("5500000...", ainda não trocado pelo número real do time — ver o
+  // comentário em lib/quizContent.ts), o botão aparece só como texto
+  // estilizado, sem link, em vez de virar um <a href> morto.
+  const numeroConfigurado = Boolean(CONFIG.whatsapp) && !CONFIG.whatsapp.startsWith('5500000')
+  const convite = 'Responder no WhatsApp e marcar o meu horário'
+  const seloHtml = linkWhats && numeroConfigurado
+    ? `<a class="selo" href="${linkWhats}">${convite}</a>`
+    : `<span class="selo">${convite}</span>`
 
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><style>${CSS}</style></head><body>
 
@@ -244,7 +254,7 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
 
       <div class="painel">
         <span class="eyebrow">Diagnóstico da Base</span>
-        <h1>${escapeHtml(primeiroNome)}, este é o seu raio-x completo.</h1>
+        <h1>${escapeHtml(saudacao)} Este é o seu raio-X completo.</h1>
         <p class="abertura">Ele sai das doze perguntas e das quatro questões que você respondeu.
         Eu leio o seu caso na mesma ordem em que eu leria pessoalmente: onde você está hoje, o
         que está te segurando, e o que eu faria primeiro se o problema fosse meu.</p>
@@ -334,7 +344,7 @@ export function montarHtmlLaudo(sessao: QuizSession, nivel: string): string {
       <p>Se ainda não marcou o seu horário, é só responder a mesma conversa do WhatsApp em que
       você recebeu este arquivo. <b>Não custa nada</b>, e cada consultor abre poucos horários por
       semana.</p>
-      ${linkWhats ? `<a class="selo" href="${linkWhats}">Responder no WhatsApp e marcar o meu horário</a>` : ''}
+      ${seloHtml}
     </div>
 
     <footer>
