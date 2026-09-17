@@ -34,20 +34,18 @@ export type PerfilCalculado = {
   ritmo: string
 }
 
-const RITMOS_TRT: Record<string, string> = {
-  h0: 'abaixo do ritmo mínimo; com 1h30 a base fecha em ~8 meses',
-  h1: 'base em ~8 meses',
-  h2: 'base em ~6 meses',
-  h3: 'base em menos de 6 meses',
-  h4: 'base em menos de 6 meses',
-}
-
-const RITMOS_TJTRF: Record<string, string> = {
-  h0: 'abaixo do ritmo mínimo; com 1h30 a base fecha em ~12 meses',
-  h1: 'base em ~12 meses',
-  h2: 'base em ~8 meses',
-  h3: 'base em ~6 meses',
-  h4: 'base em ~6 meses',
+// Igual a RITMOS em reference/raio-x-da-base/diagnosis/profile.py — mesmo
+// texto pros dois cursos (não diferencia por quantidade de temas). Antes
+// este arquivo tinha RITMOS_TRT/RITMOS_TJTRF, mais granular (o TRT tem 168
+// temas contra 231 do TJ/TRF, então o mesmo tanto de horas por dia de fato
+// rende ritmos diferentes) — mais preciso, mas divergia do texto do pacote
+// de referência, que é tratado como copy aprovada e não deve ser reescrita.
+const RITMOS: Record<string, string> = {
+  h0: 'abaixo do cronograma mínimo; com 2h por dia, base em 12 meses',
+  h1: 'base em 12 meses, no ritmo de 2h por dia',
+  h2: 'base entre 8 e 12 meses',
+  h3: 'base entre 6 e 8 meses',
+  h4: 'base em 6 meses',
 }
 
 export function calcularPerfil(r: RespostasPerfil, acertosTeste: number): PerfilCalculado {
@@ -71,8 +69,7 @@ export function calcularPerfil(r: RespostasPerfil, acertosTeste: number): Perfil
   const curso1 = r.alvo === 'trt'
   const curso = curso1 ? 'Curso 1 · Analista de TRT (168 temas)' : 'Curso 2 · Analista de TJ e TRF (231 temas)'
   const cursoCod: 'C1-TRT' | 'C2-TJTRF' = curso1 ? 'C1-TRT' : 'C2-TJTRF'
-  const ritmos = curso1 ? RITMOS_TRT : RITMOS_TJTRF
-  const ritmo = (r.horas && ritmos[r.horas]) || ''
+  const ritmo = (r.horas && RITMOS[r.horas]) || ''
 
   // acertosTeste não entra na pontuação (o teste é diagnóstico, não classificatório
   // no funil original) — mantido como parâmetro explícito para deixar isso claro

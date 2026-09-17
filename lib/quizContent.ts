@@ -158,11 +158,11 @@ export const DIAG: Record<string, Diagnostico> = {
     titulo: 'Você está no melhor momento pra fazer a coisa certa desde o início.',
     texto: [
       'Quem começa sem base pula de videoaula em videoaula e, daqui a dois anos, responde este mesmo quiz marcando "estudo há um tempo e fico perdido". Eu vejo isso todo dia.',
-      'O que decide o seu caso é ordem. Um tronco comum bem construído, Português, Constitucional e Administrativo, vem antes de qualquer matéria específica, porque é esse tronco que cai em todo tribunal do país.',
+      'O que decide o seu caso é ordem. Uma base comum bem construída, Português, Constitucional e Administrativo, vem antes de qualquer matéria específica, porque é essa base que cai em todo tribunal do país.',
     ],
     prescricao: 'escolher um ritmo de cronograma que caiba no seu dia real, começar por Língua Portuguesa e Direito Constitucional, e resolver questões de FGV e FCC desde a primeira semana, mesmo errando.',
     ordem: [
-      'Tronco comum: Português, Constitucional e Administrativo, nessa ordem.',
+      'Base comum: Português, Constitucional e Administrativo, nessa ordem.',
       'Questões da banca desde a primeira semana, com caderno de erros.',
       'Só depois as específicas do seu tribunal.',
       'Revisão programada, não revisão quando der.',
@@ -174,12 +174,12 @@ export const DIAG: Record<string, Diagnostico> = {
       'Horas investidas e a sensação de que nada fixa. Falta sequência, e esforço sozinho não compra sequência. A cada edital você recomeça, porque nenhum alicerce sobreviveu do concurso anterior.',
       'Fonte nova só adia. O que resolve é fechar um único caminho e medir o seu avanço por questão resolvida em cada matéria, com número na mão.',
     ],
-    prescricao: 'parar de acumular fontes, fechar um único cronograma de tronco comum e medir o progresso por questões acertadas por matéria, semana a semana.',
+    prescricao: 'parar de acumular fontes, fechar um único cronograma de formação de base e medir o progresso por questões acertadas por matéria, semana a semana.',
     ordem: [
       'Escolher uma fonte por matéria e abandonar as outras.',
-      'Fechar o tronco comum em sequência, sem pular.',
+      'Fechar a base comum em sequência, sem pular.',
       'Questões comentadas da FGV e da FCC como termômetro semanal.',
-      'Específicas do seu tribunal só com o tronco fechado.',
+      'Específicas do seu tribunal só com a base fechada.',
     ],
   },
   plato: {
@@ -200,12 +200,12 @@ export const DIAG: Record<string, Diagnostico> = {
     titulo: 'Você estuda no modo edital.',
     texto: [
       'Sai o concurso, corre, faz a prova, para. O curso de reta final é ótimo pra quem já tem base, e péssimo pra quem ainda está construindo. Enquanto o ciclo não quebrar, cada edital vai te encontrar no mesmo lugar.',
-      'A boa notícia: tribunal abre o ano inteiro. São 27 TJs, 6 TRFs e 24 TRTs em rodízio, e o tronco de matérias é o mesmo. Quem constrói a base uma vez aproveita em todos.',
+      'A boa notícia: tribunal abre o ano inteiro. São 27 TJs, 6 TRFs e 24 TRTs em rodízio, e a base de matérias é a mesma. Quem constrói essa base uma vez aproveita em todos.',
     ],
-    prescricao: 'estudar agora, sem edital publicado, o tronco comum que cai em todo tribunal, pra que o próximo edital te encontre revisando, e não começando.',
+    prescricao: 'estudar agora, sem edital publicado, a base comum que cai em todo tribunal, pra que o próximo edital te encontre revisando, e não começando.',
     ordem: [
       'Cronograma de base independente de edital, com data de fim.',
-      'Tronco comum primeiro: Português, Constitucional, Administrativo.',
+      'Base comum primeiro: Português, Constitucional, Administrativo.',
       'Questões da banca como rotina, não como véspera.',
       'Quando o edital sair, só ajustar as específicas e revisar.',
     ],
@@ -218,7 +218,7 @@ export const DIAG: Record<string, Diagnostico> = {
     ],
     prescricao: 'manter as matérias que já sustentam a sua nota com revisão leve e montar um cronograma focado nas específicas de analista, resolvendo questões de analista desde a primeira semana.',
     ordem: [
-      'Diagnóstico do que já está sólido do tronco comum.',
+      'Diagnóstico do que já está sólido da base comum.',
       'Específicas de analista em sequência: Civil, Processo Civil, Penal, Processo Penal.',
       'Questões de analista da banca, não de técnico.',
       'Revisão leve das matérias já dominadas.',
@@ -459,9 +459,18 @@ export function fraseVde(r: RespostasPerfil): FraseComNegrito | null {
   return null
 }
 
-export function waLink(nome: string, r: RespostasPerfil, classe: string, cursoCod: string, nivel: string, acertos: number, total: number): string {
+// Separado de waLink() pra o serviço de PDF em Python (services/laudo-pdf)
+// poder montar o mesmo link sem duplicar a lógica da mensagem — manda o
+// texto puro (não codificado) + CONFIG.whatsapp, e o serviço monta a URL do
+// jeito dele (ver brand.cta_whatsapp_com_mensagem). Uma função só pra
+// mensagem, nunca duas implementações do mesmo texto.
+export function mensagemWhatsapp(r: RespostasPerfil, classe: string, cursoCod: string, nivel: string, acertos: number, total: number): string {
   const cargo = labelCargo(r)
   const ref = `VDE-TRIB ${classe} | ${cursoCod} | ${r.momento} | ${r.dor} | ${L.horas[r.horas ?? '']} | edital:${r.edital} | teste ${acertos}/${total} | vde:${r.vde}`
-  const msg = `Oi! Fiz o ${CONFIG.quizName} do VDE Tribunais agora. Deu ${L.momento[r.momento ?? '']}, nível ${nivel} no teste, mirando ${cargo} em ${L.alvo[r.alvo ?? '']}. Queria ver os horários pra montar o meu plano de ação.\n\n(ref ${ref})`
+  return `Oi! Fiz o ${CONFIG.quizName} do VDE Tribunais agora. Deu ${L.momento[r.momento ?? '']}, nível ${nivel} no teste, mirando ${cargo} em ${L.alvo[r.alvo ?? '']}. Queria ver os horários pra montar o meu plano de ação.\n\n(ref ${ref})`
+}
+
+export function waLink(nome: string, r: RespostasPerfil, classe: string, cursoCod: string, nivel: string, acertos: number, total: number): string {
+  const msg = mensagemWhatsapp(r, classe, cursoCod, nivel, acertos, total)
   return `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`
 }

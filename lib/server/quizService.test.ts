@@ -232,7 +232,7 @@ describe('concluirSessao', () => {
     expect(sessao.scoreGeralPct).toBe(100)
     expect(sessao.completedAt).not.toBeNull()
     // perfilCalculado é derivado de perfil + score no momento do finish, nunca do cliente.
-    expect(sessao.perfilCalculado).toEqual({ classe: 'A', pontos: 9, curso: 'Curso 1 · Analista de TRT (168 temas)', cursoCod: 'C1-TRT', ritmo: 'base em menos de 6 meses' })
+    expect(sessao.perfilCalculado).toEqual({ classe: 'A', pontos: 9, curso: 'Curso 1 · Analista de TRT (168 temas)', cursoCod: 'C1-TRT', ritmo: 'base entre 6 e 8 meses' })
   })
 
   it('calcula e grava os blocos escolhidos', async () => {
