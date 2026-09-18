@@ -15,8 +15,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from main import app  # noqa: E402
 from diagnosis.answers import from_code  # noqa: E402
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-CASOS_PATH = REPO_ROOT / "reference/raio-x-da-base/casos-de-teste.json"
+CASOS_PATH = Path(__file__).resolve().parent / "vendor/raio-x-da-base/casos-de-teste.json"
 OUT_DIR = Path(__file__).resolve().parent / "pdfs-teste-python"
 OUT_DIR.mkdir(exist_ok=True)
 

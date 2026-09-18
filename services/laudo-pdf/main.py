@@ -22,8 +22,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 SERVICE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SERVICE_DIR.parent.parent
-PACOTE_DIR = REPO_ROOT / "reference/raio-x-da-base"
+PACOTE_DIR = SERVICE_DIR / "vendor/raio-x-da-base"
 sys.path.insert(0, str(PACOTE_DIR))
 
 import brand  # noqa: E402  (depende do sys.path acima)

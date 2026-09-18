@@ -1,0 +1,1754 @@
+{
+  "_leia": "Gerado de quiz-tribunais/diagnosis/ por _build/build-json.py. Não editar à mão: a fonte de verdade é o Python, e este arquivo é sobrescrito. O contrato está em ENTREGA-DEV.md.",
+  "gerado_em": "2026-09-16",
+  "versao": "RX1",
+  "codigo": {
+    "prefixo": "RX1",
+    "separador": ".",
+    "campos": [
+      "alvo",
+      "cargo",
+      "formacao",
+      "tempo",
+      "provas",
+      "metodo",
+      "vde",
+      "horas",
+      "edital",
+      "dor",
+      "momento",
+      "dinheiro",
+      "leitura"
+    ],
+    "formato": "RX1.<13 respostas na ordem de campos>.<uma letra por questão do teste>.<ids dos editais separados por ->",
+    "teste": "uma letra (A a E) por questão, na ordem de teste[]; '-' quando a pessoa não respondeu",
+    "editais": "ids de editais[alvo]; 'qualquer' também aparece aqui, e não conta como edital de verdade nas regras",
+    "exemplo": "RX1.trt.analista.direito.t4.p1.video.insta.h1.previsto.base.sembase.156.completa.AAAB.trt8",
+    "compatibilidade": "só dá pra acrescentar campo no fim. Mexer na ordem invalida os códigos já enviados, e aí o prefixo tem que virar RX2.",
+    "cargo_fe": "quando alvo é 'fe', as opções válidas de cargo são as de perguntas.cargo_fe, não as de perguntas.cargo."
+  },
+  "perguntas": {
+    "alvo": {
+      "tipo": "single",
+      "titulo": "Qual concurso é a sua prioridade hoje?",
+      "opcoes": [
+        [
+          "tj",
+          "Tribunal de Justiça (TJ)",
+          "o tribunal estadual"
+        ],
+        [
+          "trf",
+          "Tribunal Regional Federal (TRF)"
+        ],
+        [
+          "trt",
+          "Tribunal Regional do Trabalho (TRT)"
+        ],
+        [
+          "fe",
+          "Defensoria, Ministério Público ou Procuradoria",
+          "cargo de analista ou técnico, servidor de apoio"
+        ],
+        [
+          "any",
+          "Qualquer tribunal, o que abrir primeiro"
+        ],
+        [
+          "juridica",
+          "Carreira jurídica",
+          "juiz, promotor, defensor ou procurador"
+        ],
+        [
+          "outro",
+          "Outro concurso, fora dos tribunais"
+        ]
+      ]
+    },
+    "cargo": {
+      "tipo": "single",
+      "titulo": "Qual cargo você mira?",
+      "opcoes": [
+        [
+          "analista",
+          "Analista judiciário"
+        ],
+        [
+          "oficial",
+          "Oficial de justiça"
+        ],
+        [
+          "tecnico",
+          "Técnico judiciário"
+        ],
+        [
+          "escrevente",
+          "Escrevente"
+        ],
+        [
+          "any",
+          "O que vier, quero entrar no tribunal"
+        ],
+        [
+          "unsure",
+          "Ainda não sei a diferença entre eles"
+        ]
+      ]
+    },
+    "cargo_fe": {
+      "tipo": "single",
+      "titulo": "Qual cargo você mira?",
+      "opcoes": [
+        [
+          "analista",
+          "Analista",
+          "nível superior"
+        ],
+        [
+          "tecnico",
+          "Técnico",
+          "nível médio"
+        ],
+        [
+          "any",
+          "O que vier, quero entrar no órgão"
+        ],
+        [
+          "unsure",
+          "Ainda não sei a diferença entre eles"
+        ]
+      ]
+    },
+    "formacao": {
+      "tipo": "single",
+      "titulo": "Qual é a sua formação hoje?",
+      "opcoes": [
+        [
+          "direito",
+          "Bacharel em Direito"
+        ],
+        [
+          "cursando_direito",
+          "Cursando Direito"
+        ],
+        [
+          "outra",
+          "Superior completo em outra área"
+        ],
+        [
+          "cursando_outra",
+          "Cursando outra área"
+        ],
+        [
+          "medio",
+          "Ensino médio completo"
+        ]
+      ]
+    },
+    "tempo": {
+      "tipo": "single",
+      "titulo": "Há quanto tempo você estuda pra concursos?",
+      "opcoes": [
+        [
+          "t0",
+          "Ainda não comecei"
+        ],
+        [
+          "t1",
+          "Menos de 6 meses"
+        ],
+        [
+          "t2",
+          "Entre 6 meses e 1 ano"
+        ],
+        [
+          "t3",
+          "Entre 1 e 2 anos"
+        ],
+        [
+          "t4",
+          "Entre 2 e 4 anos"
+        ],
+        [
+          "t5",
+          "Mais de 4 anos"
+        ]
+      ]
+    },
+    "provas": {
+      "tipo": "single",
+      "titulo": "Quantas provas de tribunal você já fez, e como foi?",
+      "opcoes": [
+        [
+          "p0",
+          "Nunca fiz uma prova de tribunal"
+        ],
+        [
+          "p1",
+          "Fiz uma ou duas e fiquei longe do corte"
+        ],
+        [
+          "p2",
+          "Fiz várias e continuo longe do corte"
+        ],
+        [
+          "p3",
+          "Fico perto do corte, mas não passo"
+        ],
+        [
+          "p4",
+          "Já fui aprovado(a) em algum tribunal e quero subir de cargo"
+        ]
+      ]
+    },
+    "metodo": {
+      "tipo": "single",
+      "titulo": "Como você estudou até aqui?",
+      "opcoes": [
+        [
+          "nenhum",
+          "Nunca estudei com método, vou no improviso"
+        ],
+        [
+          "video",
+          "Videoaulas de cursinho grande, muitas horas de vídeo"
+        ],
+        [
+          "pdf",
+          "PDF e questões, com cronograma"
+        ],
+        [
+          "questoes",
+          "Só questões"
+        ],
+        [
+          "retafinal",
+          "Só quando sai edital, com curso de reta final"
+        ],
+        [
+          "mentoria",
+          "Mentoria ou coaching"
+        ]
+      ]
+    },
+    "vde": {
+      "tipo": "single",
+      "titulo": "Você já conhece o Método VDE?",
+      "opcoes": [
+        [
+          "nunca",
+          "Nunca ouvi falar"
+        ],
+        [
+          "insta",
+          "Sigo no Instagram, mas nunca estudei com vocês"
+        ],
+        [
+          "exaluno",
+          "Já fui aluno(a) da OAB ou de outro curso do VDE"
+        ],
+        [
+          "aluno",
+          "Já sou aluno(a) do VDE Concursos"
+        ]
+      ]
+    },
+    "horas": {
+      "tipo": "single",
+      "titulo": "Quantas horas por dia você consegue estudar, sendo realista?",
+      "opcoes": [
+        [
+          "h0",
+          "Menos de 1 hora"
+        ],
+        [
+          "h1",
+          "Entre 1 e 2 horas"
+        ],
+        [
+          "h2",
+          "Entre 2 e 3 horas"
+        ],
+        [
+          "h3",
+          "Entre 3 e 4 horas"
+        ],
+        [
+          "h4",
+          "Mais de 4 horas"
+        ]
+      ]
+    },
+    "edital": {
+      "tipo": "single",
+      "titulo": "Você tem edital na mira?",
+      "opcoes": [
+        [
+          "reta",
+          "Já saiu, e a prova é em menos de 3 meses"
+        ],
+        [
+          "previsto",
+          "Tem edital previsto pros próximos meses"
+        ],
+        [
+          "sem",
+          "Não tenho um edital específico: quero estar pronto quando abrir"
+        ],
+        [
+          "nao",
+          "Não acompanho as previsões"
+        ]
+      ]
+    },
+    "editais": {
+      "tipo": "multi",
+      "titulo": "Estes são os concursos que estão na fila pra sair. Em qual deles você quer estar pronto?",
+      "opcoes": [
+        [
+          "qualquer",
+          "Qualquer um, quero estar pronto quando abrir"
+        ]
+      ]
+    },
+    "dor": {
+      "tipo": "single",
+      "titulo": "Qual é o seu maior gargalo hoje?",
+      "opcoes": [
+        [
+          "base",
+          "Não tenho base: sinto que começo do zero a cada edital"
+        ],
+        [
+          "improviso",
+          "Estudo no improviso, sem cronograma nem ordem"
+        ],
+        [
+          "tempo",
+          "Pouco tempo: concilio estudo com trabalho"
+        ],
+        [
+          "naojur",
+          "Medo das matérias não jurídicas: Português, RLM, Informática"
+        ],
+        [
+          "fixar",
+          "Leio muito e resolvo pouco: não fixo"
+        ],
+        [
+          "banca",
+          "Não sei o que a FGV e a FCC cobram de verdade"
+        ],
+        [
+          "emocional",
+          "O emocional sabota: ansiedade, comparação, sensação de atraso"
+        ],
+        [
+          "todas",
+          "Todas acima"
+        ]
+      ]
+    },
+    "momento": {
+      "tipo": "single",
+      "titulo": "Última: qual dessas frases você diria pra um amigo hoje?",
+      "opcoes": [
+        [
+          "zero",
+          "Estou começando do zero, ainda me organizando"
+        ],
+        [
+          "sembase",
+          "Estudo há um tempo, mas sem base sólida: fico perdido no meio das matérias"
+        ],
+        [
+          "plato",
+          "Chego perto do corte e não passo, prova atrás de prova"
+        ],
+        [
+          "improviso",
+          "Só estudo quando sai edital, e recomeço do zero toda vez"
+        ],
+        [
+          "servidor",
+          "Já sou servidor(a) e quero subir pra analista"
+        ]
+      ]
+    },
+    "dinheiro": {
+      "tipo": "single",
+      "titulo": "Quanto você receberia a mais por mês se fosse aprovado(a) hoje no cargo que você mira?",
+      "opcoes": [
+        [
+          "60",
+          "Uns R$ 5 mil a mais por mês",
+          "R$ 60 mil por ano"
+        ],
+        [
+          "96",
+          "Uns R$ 8 mil a mais por mês",
+          "R$ 96 mil por ano"
+        ],
+        [
+          "120",
+          "Uns R$ 10 mil a mais por mês",
+          "R$ 120 mil por ano"
+        ],
+        [
+          "156",
+          "Uns R$ 13 mil a mais por mês",
+          "R$ 156 mil por ano"
+        ],
+        [
+          "192",
+          "R$ 16 mil ou mais a mais por mês",
+          "R$ 192 mil por ano"
+        ]
+      ]
+    },
+    "leitura": {
+      "tipo": "single",
+      "titulo": "Quer que eu inclua no seu resultado o que priorizar no seu momento?",
+      "opcoes": [
+        [
+          "completa",
+          "Inclui, por favor"
+        ],
+        [
+          "basica",
+          "Só o diagnóstico já basta"
+        ]
+      ]
+    }
+  },
+  "editais": {
+    "tj": [
+      {
+        "id": "tjgo",
+        "label": "TJ GO",
+        "sub": "concurso autorizado para analista judiciário, área judiciária e de apoio"
+      },
+      {
+        "id": "tjam",
+        "label": "TJ AM",
+        "sub": "cerca de 400 vagas anunciadas pelo tribunal"
+      },
+      {
+        "id": "tjto",
+        "label": "TJ TO",
+        "sub": "banca em contratação; 331 cargos vagos, 117 de analista"
+      },
+      {
+        "id": "tjal",
+        "label": "TJ AL",
+        "sub": "comissão formada para analista, oficial de justiça avaliador"
+      },
+      {
+        "id": "tjrs",
+        "label": "TJ RS",
+        "sub": "comissão formada para analista do Poder Judiciário"
+      },
+      {
+        "id": "tjpb",
+        "label": "TJ PB",
+        "sub": "comissão formada"
+      },
+      {
+        "id": "tjsp",
+        "label": "TJ SP",
+        "sub": "em estudos para escrevente e oficial de justiça"
+      }
+    ],
+    "trf": [
+      {
+        "id": "trf3",
+        "label": "TRF3 (SP e MS)",
+        "sub": "edital iminente para analista judiciário, área judiciária; banca prevista para 2026"
+      }
+    ],
+    "trt": [
+      {
+        "id": "trt8",
+        "label": "TRT8 (PA e AP)",
+        "sub": "banca definida (FCC), edital iminente para técnico e analista"
+      },
+      {
+        "id": "trt4",
+        "label": "TRT4 (RS)",
+        "sub": "autorizado, comissão formada, banca em contratação"
+      },
+      {
+        "id": "trt23",
+        "label": "TRT23 (MT)",
+        "sub": "autorizado pelo Pleno, edital esperado ainda em 2026"
+      },
+      {
+        "id": "trt3",
+        "label": "TRT3 (MG)",
+        "sub": "previsto para 2026, com até 444 vacâncias"
+      },
+      {
+        "id": "trt22",
+        "label": "TRT22 (PI)",
+        "sub": "previsto após dezembro de 2026"
+      }
+    ],
+    "fe": [
+      {
+        "id": "dpu",
+        "label": "DPU",
+        "sub": "810 vagas previstas na LOA 2026, analista e técnico"
+      },
+      {
+        "id": "dpema",
+        "label": "DPE MA",
+        "sub": "primeiro concurso de servidores, previsto para 2026"
+      },
+      {
+        "id": "pgeba",
+        "label": "PGE BA",
+        "sub": "banca definida, 115 vagas de analista e assistente"
+      },
+      {
+        "id": "pgerj",
+        "label": "PGE RJ",
+        "sub": "autorizado para analista"
+      }
+    ]
+  },
+  "teste": [
+    {
+      "disc": "Língua Portuguesa",
+      "fonte": "FGV · TJ RR 2024 · Analista Judiciário",
+      "gabarito": "C",
+      "comentario": "Só a C dá o nome certo à relação: \"quando\" marca tempo. A é condição, B é oposição, D e E são comparação."
+    },
+    {
+      "disc": "Direito Constitucional",
+      "fonte": "FGV · TJ RR 2024 · Analista Judiciário",
+      "gabarito": "C",
+      "comentario": "GLP é energia, e energia é competência privativa da União. A roupagem de defesa do consumidor não transfere a competência."
+    },
+    {
+      "disc": "Direito Processual Civil",
+      "fonte": "FGV · TJ RR 2024 · Analista Judiciário",
+      "gabarito": "B",
+      "comentario": "Averbada a execução no registro do imóvel, a alienação posterior presume-se em fraude. O carro de trabalho é impenhorável, o de lazer não, e o prazo para pagar é de 3 dias."
+    },
+    {
+      "disc": "Raciocínio Lógico",
+      "fonte": "FCC · TRF4 2019 · Oficial de Justiça Avaliador Federal",
+      "gabarito": "A",
+      "comentario": "A morena não é Ana nem Beatriz, então é Carla. Ana não é ruiva, logo é loira. E a loira não é de Jaime nem de Jairo: sobra José."
+    }
+  ],
+  "config": {
+    "quizName": "Raio-X da Base",
+    "whatsapp": "5500000000000",
+    "videoSrc": "",
+    "leadEndpoint": "",
+    "editaisAtualizadosEm": "3 de setembro de 2026",
+    "instagram": "https://www.instagram.com/vdeconcursos/"
+  },
+  "diagnosticos": {
+    "zero": {
+      "titulo": "Você está no melhor momento pra fazer a coisa certa desde o início.",
+      "texto": [
+        "Quem começa sem base pula de videoaula em videoaula e, daqui a dois anos, responde este mesmo quiz marcando “estudo há um tempo e fico perdido”. Eu vejo isso todo dia.",
+        "O que decide o seu caso é ordem. Uma base comum bem construída, Português, Constitucional e Administrativo, vem antes de qualquer matéria específica, porque é essa base que cai em todo tribunal do país."
+      ],
+      "prescricao": "escolher um ritmo de cronograma que caiba no seu dia real, começar por Língua Portuguesa e Direito Constitucional, e resolver questões de FGV e FCC desde a primeira semana, mesmo errando.",
+      "ordem": [
+        "Base comum: Português, Constitucional e Administrativo, nessa ordem.",
+        "Questões da banca desde a primeira semana, com caderno de erros.",
+        "Só depois as específicas do seu tribunal.",
+        "Revisão programada, não revisão quando der."
+      ]
+    },
+    "sembase": {
+      "titulo": "Você já pagou o preço de estudar sem estrutura.",
+      "texto": [
+        "Horas investidas e a sensação de que nada fixa. Falta sequência, e esforço sozinho não compra sequência. A cada edital você recomeça, porque nenhum alicerce sobreviveu do concurso anterior.",
+        "Fonte nova só adia. O que resolve é fechar um único caminho e medir o seu avanço por questão resolvida em cada matéria, com número na mão."
+      ],
+      "prescricao": "parar de acumular fontes, fechar um único cronograma de formação de base e medir o progresso por questões acertadas por matéria, semana a semana.",
+      "ordem": [
+        "Escolher uma fonte por matéria e abandonar as outras.",
+        "Fechar a base comum em sequência, sem pular.",
+        "Questões comentadas da FGV e da FCC como termômetro semanal.",
+        "Específicas do seu tribunal só com a base fechada."
+      ]
+    },
+    "plato": {
+      "titulo": "O seu ponto vaza sempre no mesmo lugar.",
+      "texto": [
+        "Quem para a três questões do corte não sabe menos que o aprovado. Erra em lugares específicos e repete os mesmos lugares em toda prova. Enquanto esses lugares não têm nome, a nota fica parada.",
+        "Mais horas costumam ir justamente pro que você já domina, e por isso a nota fica onde está. Abrir as suas provas e tratar o vazamento onde ele acontece é o que destrava."
+      ],
+      "prescricao": "abrir o espelho da sua última prova e separar o que você errou por não saber o conteúdo do que errou por ler o enunciado errado. São dois problemas diferentes, e tratar os dois do mesmo jeito é o que sustenta o platô.",
+      "ordem": [
+        "Separar erro de conteúdo de erro de leitura de enunciado.",
+        "Erro de conteúdo: teoria curta e questão da mesma banca, no assunto exato.",
+        "Erro de leitura: treino cronometrado, não mais teoria.",
+        "Matéria forte entra só em revisão, nunca em reestudo."
+      ]
+    },
+    "improviso": {
+      "titulo": "Você estuda no modo edital.",
+      "texto": [
+        "Sai o concurso, corre, faz a prova, para. O curso de reta final é ótimo pra quem já tem base, e péssimo pra quem ainda está construindo. Enquanto o ciclo não quebrar, cada edital vai te encontrar no mesmo lugar.",
+        "A boa notícia: tribunal abre o ano inteiro. São 27 TJs, 6 TRFs e 24 TRTs em rodízio, e a base de matérias é a mesma. Quem constrói essa base uma vez aproveita em todos."
+      ],
+      "prescricao": "estudar agora, sem edital publicado, a base comum que cai em todo tribunal, pra que o próximo edital te encontre revisando, e não começando.",
+      "ordem": [
+        "Cronograma de base independente de edital, com data de fim.",
+        "Base comum primeiro: Português, Constitucional, Administrativo.",
+        "Questões da banca como rotina, não como véspera.",
+        "Quando o edital sair, só ajustar as específicas e revisar."
+      ]
+    },
+    "servidor": {
+      "titulo": "Você já provou que sabe passar.",
+      "texto": [
+        "O salto de técnico pra analista é de profundidade jurídica. A prova cobra Civil, Processo Civil, Penal e Processo Penal num nível que a prova de técnico não cobrava, e a FGV e a FCC gostam de caso concreto.",
+        "Recomeçar do zero seria desperdício. O seu caso pede um cronograma que aproveite o que já está de pé e concentre o esforço nas específicas de analista."
+      ],
+      "prescricao": "manter as matérias que já sustentam a sua nota com revisão leve e montar um cronograma focado nas específicas de analista, resolvendo questões de analista desde a primeira semana.",
+      "ordem": [
+        "Diagnóstico do que já está sólido da base comum.",
+        "Específicas de analista em sequência: Civil, Processo Civil, Penal, Processo Penal.",
+        "Questões de analista da banca, não de técnico.",
+        "Revisão leve das matérias já dominadas."
+      ]
+    }
+  },
+  "blocos": [
+    {
+      "group": "A prova que ele marcou",
+      "items": [
+        {
+          "id": "mira",
+          "when": {
+            "editais_min": 1
+          },
+          "title": "Sobre o {edital_label}",
+          "paragraphs": [
+            "Ele está com {edital_sub}, e não vai esperar a sua base ficar pronta. Isso não muda o que você tem que estudar, muda a ordem: começar pelo que tem mais peso e mais chance de cair, e deixar o resto pra depois do edital."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "A estrada até aqui",
+      "items": [
+        {
+          "id": "iniciante",
+          "when": {
+            "any": [
+              {
+                "eq": {
+                  "tempo": [
+                    "t0",
+                    "t1"
+                  ]
+                }
+              },
+              {
+                "eq": {
+                  "provas": [
+                    "p0"
+                  ],
+                  "tempo": [
+                    "t2"
+                  ]
+                }
+              }
+            ]
+          },
+          "title": "Começando agora, o maior risco é estudar pro primeiro edital que sair",
+          "paragraphs": [
+            "É a armadilha clássica. Sai um concurso, você corre pra ele, estuda a lista daquele órgão em três meses, faz a prova, não passa, e no edital seguinte descobre que quase nada ficou de pé.",
+            "Formar base é o caminho oposto. É estudar as disciplinas que se repetem em todo tribunal, na ordem certa e com profundidade pra resolver questão difícil: primeiro a teoria sistematizada do tema, depois a lei e a jurisprudência daquele mesmo tema, depois questões comentadas dele, e simulado todo mês pra medir o que ficou. Feito uma vez, isso serve pro TRT, pro TJ e pro TRF, porque a base é a mesma.",
+            "Quem tem base entra em qualquer edital revisando. Quem não tem entra estudando do zero, com o relógio correndo."
+          ]
+        },
+        {
+          "id": "servidor",
+          "when": {
+            "eq": {
+              "provas": [
+                "p4"
+              ]
+            }
+          },
+          "title": "Você já é servidor, e isso muda a conta",
+          "paragraphs": [
+            "Subir de técnico pra analista é o salto com melhor relação entre esforço e retorno que existe em tribunal. A base comum você já venceu, e a diferença está na profundidade das jurídicas.",
+            "E nada do que você já sabe é jogado fora: no VDE, quem estuda pra analista estuda também o que cai pra técnico. Como você já tem parte do caminho andado, o cronograma personalizado deixa marcar só as disciplinas que precisa aprofundar."
+          ]
+        },
+        {
+          "id": "perto",
+          "when": {
+            "eq": {
+              "provas": [
+                "p3"
+              ]
+            }
+          },
+          "title": "Você já fez prova e para perto do corte, então o ajuste é fino e continua sendo de base",
+          "paragraphs": [
+            "Chegar perto significa que existe alicerce. Ele só não está nivelado: duas ou três disciplinas seguram a sua nota, e você provavelmente sabe quais são, porque são as que você menos abre.",
+            "A tentação nesse ponto é comprar mais reta final e mais simulado. Isso te mantém no mesmo lugar, porque reta final revisa o que já está pronto e não constrói o que falta.",
+            "No VDE dá pra fazer as duas coisas ao mesmo tempo. O cronograma personalizado deixa você marcar só as disciplinas que estão te derrubando e tratar cada uma até o fim, com teoria sistematizada, caderno de leis por incidência em provas e questão comentada do mesmo tema, enquanto o simulado mensal segura o resto.",
+            {
+              "if": {
+                "eq": {
+                  "tempo": [
+                    "t4",
+                    "t5"
+                  ]
+                }
+              },
+              "then": "E como você já está nisso há mais de dois anos, eu não somaria mais uma hora ao seu dia antes de revisar a sequência inteira do que já foi estudado. É isso que a conversa com o consultor faz: pega o que você já viu e monta a ordem do que falta."
+            }
+          ]
+        },
+        {
+          "id": "longe",
+          "when": {
+            "eq": {
+              "provas": [
+                "p1",
+                "p2"
+              ]
+            }
+          },
+          "title": "Você já fez prova de tribunal, então dá pra ser direta com você",
+          "paragraphs": [
+            "Quem faz prova e fica longe do corte quase nunca estuda pouco. Estuda sem base. O que a folha de respostas mostra é uma preparação montada em pedaços: um tanto de videoaula, um PDF achado na internet, questão solta, e nenhuma disciplina fechada do começo ao fim.",
+            "Na prova isso cobra o preço na hora. Você reconhece todos os assuntos e não domina nenhum a ponto de separar duas alternativas parecidas. Como o corte de tribunal é alto, reconhecer não pontua.",
+            "Formação de base é exatamente o que está faltando aí, e é o que o VDE Tribunais faz: um cronograma que fecha {disciplinas} na ordem certa, teoria sistematizada por tema, caderno de leis e informativos com a incidência de cada artigo nas provas anteriores, questões comentadas do mesmo tema logo em seguida e simulado mensal pra medir o avanço. Construída uma vez, ela serve pra todos os editais que vierem.",
+            {
+              "if": {
+                "eq": {
+                  "tempo": [
+                    "t4",
+                    "t5"
+                  ]
+                }
+              },
+              "then": "E como você já está nisso há mais de dois anos, eu não somaria mais uma hora ao seu dia antes de revisar a sequência inteira do que já foi estudado. É isso que a conversa com o consultor faz: pega o que você já viu e monta a ordem do que falta."
+            }
+          ]
+        },
+        {
+          "id": "nuncaprova",
+          "when": {
+            "eq": {
+              "provas": [
+                "p0"
+              ]
+            }
+          },
+          "title": "Você ainda não fez prova de tribunal, e isso é um dado que falta no seu diagnóstico",
+          "paragraphs": [
+            "Estudar sem nunca ter sentado numa prova real é estudar sem termômetro. A sala, o relógio e o jeito da banca escrever mudam o seu desempenho, e só a prova mostra o tamanho dessa diferença.",
+            "Inscreva-se na próxima que aparecer, mesmo sem se sentir pronto, e trate aquilo como medição. Enquanto isso, o que constrói nota é a base: as disciplinas que se repetem em todo tribunal, na ordem certa, com questão comentada desde a primeira semana."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "O tempo disponível por dia",
+      "items": [
+        {
+          "id": "h0",
+          "when": {
+            "eq": {
+              "horas": [
+                "h0"
+              ]
+            }
+          },
+          "title": "Menos de 1 hora por dia é o único ponto que eu mexeria já",
+          "paragraphs": [
+            "Constância vale mais que velocidade, e eu repito isso todo dia. Só que abaixo de uma hora o intervalo entre uma sessão e outra fica tão grande que você gasta metade do tempo relembrando onde parou.",
+            "Não estou te pedindo o dia inteiro. Com 2 horas por dia a base completa fecha em 12 meses, e essas 2 horas podem ser partidas: 1 hora de manhã e 1 hora à noite valem igual. Comece com o que dá hoje e suba pra 2 assim que der, gerando o cronograma de novo com o tempo novo."
+          ]
+        },
+        {
+          "id": "h1",
+          "when": {
+            "eq": {
+              "horas": [
+                "h1"
+              ]
+            }
+          },
+          "title": "1 a 2 horas por dia é suficiente, e eu falo isso com número",
+          "paragraphs": [
+            "Você não precisa de velocidade, precisa de constância. Quem estuda 6 horas no domingo e nada durante a semana rende menos que quem faz 2 horas todo dia, porque o esquecimento trabalha justamente nos intervalos.",
+            "No VDE Tribunais, 2 horas por dia formam a base completa em 12 meses. Esse é o cronograma padrão e ele foi desenhado pra quem trabalha. Se um dia sobrar tempo, ótimo, mas o plano não depende disso."
+          ]
+        },
+        {
+          "id": "h2",
+          "when": {
+            "eq": {
+              "horas": [
+                "h2"
+              ]
+            }
+          },
+          "title": "Com 3 horas você entra no ritmo recomendado, e a base fecha em 8 meses",
+          "paragraphs": [
+            "2 horas por dia fecham a base em 12 meses e 3 horas fecham em 8. Essa hora a mais é a que mais rende no plano inteiro, então, se der pra chegar nas 3 em alguns dias da semana, é ali que eu colocaria.",
+            "Um detalhe que atrapalha muita gente: as horas do cronograma já incluem a resolução de questões. Se você contar só o tempo de leitura, o plano atrasa sem você perceber."
+          ]
+        },
+        {
+          "id": "h3",
+          "when": {
+            "eq": {
+              "horas": [
+                "h3"
+              ]
+            }
+          },
+          "title": "No seu ritmo, a base fecha entre 6 e 8 meses",
+          "paragraphs": [
+            "3 horas por dia fecham em 8 meses e 4 horas fecham em 6. Você está na faixa em que o resultado depende menos de tempo e mais de ordem: estudar a matéria certa na hora certa, e não gastar as melhores horas do dia no que já domina.",
+            "É pra isso que o cronograma vem pronto por tema. Você abre e executa, sem decidir todo dia o que estudar. Decidir cansa, e é esse cansaço que faz gente com tempo render pouco."
+          ]
+        },
+        {
+          "id": "h4",
+          "when": {
+            "eq": {
+              "horas": [
+                "h4"
+              ]
+            }
+          },
+          "title": "Mais de 4 horas por dia: o seu risco é dispersão, não falta de tempo",
+          "paragraphs": [
+            "Com 4 horas a base fecha em 6 meses. Quem tem esse tempo costuma preencher com material demais: dois cursos, três canais, PDF de todo mundo. No fim, muitas horas e pouca profundidade.",
+            "Eu faria o contrário. Uma fonte por matéria, o cronograma de 6 meses, e o tempo que sobrar indo pro banco de questões comentadas. Questão resolvida e entendida é o que transforma hora de estudo em nota."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Como estudou até aqui",
+      "items": [
+        {
+          "id": "retafinal",
+          "when": {
+            "eq": {
+              "metodo": [
+                "retafinal"
+              ]
+            }
+          },
+          "title": "Estudar só quando sai edital pode ser a explicação que está faltando",
+          "paragraphs": [
+            "Reta final é revisão. Funciona muito bem pra quem chega com a base pronta e precisa afiar, e não entrega o que promete pra quem chega do zero, porque em 90 dias não existe primeira leitura de 12 disciplinas.",
+            "Pular de edital em edital te obriga a recomeçar sempre no pior momento, com o relógio correndo. O caminho que eu defendo é o inverso: formar a base completa e aprofundada das disciplinas que se repetem em todo tribunal e, só depois disso, entrar em reta final pra revisar o que você já sabe. Aí sim o curso de reta final vira vantagem."
+          ]
+        },
+        {
+          "id": "video",
+          "when": {
+            "eq": {
+              "metodo": [
+                "video"
+              ]
+            }
+          },
+          "title": "Videoaula em excesso dá sensação de avanço",
+          "paragraphs": [
+            "Assistir é confortável. A matéria parece fácil enquanto o professor explica, e a conta só chega na prova, quando você precisa lembrar sozinho e ninguém está conduzindo o raciocínio.",
+            "No VDE Tribunais eu inverti isso de propósito. A teoria vem em PDF sistematizado, de 30 a 50 páginas por tema, que você lê no seu ritmo e revisita em minutos. Videoaula existe nas não jurídicas, Português, Raciocínio Lógico e Informática, que é onde ver alguém resolvendo na sua frente realmente destrava."
+          ]
+        },
+        {
+          "id": "pdf",
+          "when": {
+            "eq": {
+              "metodo": [
+                "pdf"
+              ]
+            }
+          },
+          "title": "Você já estuda no formato certo, então o ajuste é de conteúdo",
+          "paragraphs": [
+            "PDF com questões e cronograma é exatamente o método que eu defendo, então metade do caminho está feita. O que costuma faltar nesse cenário é calibragem: material genérico de concurso público, escrito pra qualquer carreira, sem a profundidade que tribunal cobra em Processo Civil e sem dizer o que cada banca realmente pega.",
+            "Esse é o recorte do VDE Tribunais: material feito pra tribunal, com o caderno de leis e informativos mostrando a incidência de cada artigo nas provas dos últimos anos."
+          ]
+        },
+        {
+          "id": "questoes",
+          "when": {
+            "eq": {
+              "metodo": [
+                "questoes"
+              ]
+            }
+          },
+          "title": "Só questões trava num teto",
+          "paragraphs": [
+            "Questão é o melhor termômetro que existe e o pior professor. Ela mostra onde você erra e ensina só o pedaço daquele item, então o aprendizado fica cheio de buracos, com assuntos inteiros que nunca apareceram nas questões que você fez.",
+            "O desenho que funciona é ler o tema, ler a lei daquele tema e só então resolver questão comentada do mesmo tema, tudo na mesma semana. Os três passos no mesmo assunto, um atrás do outro."
+          ]
+        },
+        {
+          "id": "nenhum",
+          "when": {
+            "eq": {
+              "metodo": [
+                "nenhum"
+              ]
+            }
+          },
+          "title": "Sem método, o esforço não acumula",
+          "paragraphs": [
+            "Estudar no improviso custa duas vezes: uma no tempo gasto decidindo o que fazer, outra no conteúdo que evapora porque nunca teve segunda passada.",
+            "A parte boa é que isso se resolve numa tarde. Você gera o cronograma, ele te diz o tema do dia, e a sua energia inteira vai pro estudo. O passo zero do VDE é literalmente esse: abrir e ver o que estudar hoje."
+          ]
+        },
+        {
+          "id": "mentoria",
+          "when": {
+            "eq": {
+              "metodo": [
+                "mentoria"
+              ]
+            }
+          },
+          "title": "Mentoria organiza a rotina, e alguém ainda precisa entregar o conteúdo",
+          "paragraphs": [
+            "Mentoria e coaching resolvem rotina, cobrança e cabeça, e isso tem valor real. O que eles não fazem é te ensinar Processo Civil no nível que a FGV cobra: a maioria te orienta a buscar o conteúdo por fora, e você acaba montando a preparação com pedaços de fontes diferentes.",
+            "O VDE Tribunais entrega as duas pontas na mesma plataforma: o cronograma que organiza e o material que ensina, com a Vic.IA, treinada só nos nossos materiais, pra tirar dúvida na hora em que ela aparece."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "O maior gargalo declarado",
+      "items": [
+        {
+          "id": "d_base",
+          "when": {
+            "eq": {
+              "dor": [
+                "base"
+              ]
+            }
+          },
+          "title": "Sentir que começa do zero a cada edital tem causa técnica",
+          "paragraphs": [
+            "Isso acontece quando o estudo nunca teve segunda passada. O conteúdo entra, fica algumas semanas e sai, porque a volta ao assunto só acontece quando ele reaparece num edital.",
+            "No VDE o retorno ao conteúdo é forçado por dois pontos do método: o caderno de leis e informativos, que você revisita por tema, e o simulado mensal, com data já marcada no cronograma, que mostra em número o que ficou de pé e o que evaporou."
+          ]
+        },
+        {
+          "id": "d_improviso",
+          "when": {
+            "eq": {
+              "dor": [
+                "improviso"
+              ]
+            }
+          },
+          "title": "Improviso é o gargalo mais fácil de resolver da sua lista",
+          "paragraphs": [
+            "Estudar sem cronograma quer dizer que toda sessão começa com uma decisão, e decisão gasta a energia que devia ir pro conteúdo. É também o motivo de matéria chata ficar sempre pra depois.",
+            "O passo zero do VDE Tribunais é gerar o cronograma: você diz quantas horas tem por dia, ele distribui os temas, e você abre a plataforma sabendo exatamente o que fazer. Se sair edital no meio do caminho, é só gerar um personalizado com as disciplinas daquele edital."
+          ]
+        },
+        {
+          "id": "d_tempo",
+          "when": {
+            "eq": {
+              "dor": [
+                "tempo"
+              ]
+            }
+          },
+          "title": "Conciliar trabalho e estudo é questão de desenho",
+          "paragraphs": [
+            "Quem trabalha não perde por estudar menos horas. Perde por estudar horas irregulares: três dias intensos, quatro em branco, e o conteúdo escorrendo no meio.",
+            "O desenho que funciona é bloco curto e fixo, todo dia, no mesmo horário, com o tema já definido antes de você sentar. 2 horas por dia formam a base completa em 12 meses. É pouco por dia e vira muito no ano."
+          ]
+        },
+        {
+          "id": "d_naojur",
+          "when": {
+            "eq": {
+              "dor": [
+                "naojur"
+              ]
+            },
+            "not": {
+              "wrong": [
+                0,
+                3
+              ]
+            }
+          },
+          "title": "As não jurídicas decidem mais provas do que parece",
+          "paragraphs": [
+            "Português, Raciocínio Lógico e Informática têm peso alto na prova de tribunal e são justamente onde o bacharel relaxa, achando que garante a nota nas jurídicas. Aí a vaga vai embora por questão de vírgula e de conjunto numérico.",
+            "São essas três que têm videoaula no VDE Tribunais, do zero, além do PDF e das questões comentadas. Foi escolha de método: nas jurídicas, ler e resolver rende mais; nessas, ver alguém resolvendo na sua frente destrava mais rápido."
+          ]
+        },
+        {
+          "id": "d_fixar",
+          "when": {
+            "eq": {
+              "dor": [
+                "fixar"
+              ]
+            }
+          },
+          "title": "Ler muito e fixar pouco é sintoma de estudo sem saída",
+          "paragraphs": [
+            "Leitura sozinha dá sensação de entendimento e não cria memória de prova. O conteúdo só fixa quando você tenta recuperá-lo sem olhar, e questão é a forma mais barata de fazer isso.",
+            "A regra que eu daria pro seu caso: nenhum tema termina no PDF. Leu a teoria, lê a lei daquele tema e resolve questão comentada dele no mesmo dia. Errar ali é ótimo, porque o comentário te devolve o motivo na hora, enquanto o assunto ainda está quente."
+          ]
+        },
+        {
+          "id": "d_banca",
+          "when": {
+            "eq": {
+              "dor": [
+                "banca"
+              ]
+            }
+          },
+          "title": "Saber o que FGV e FCC cobram é conteúdo, e dá pra estudar isso",
+          "paragraphs": [
+            "As duas bancas têm assinatura. A FGV gosta de caso concreto, com você aplicando a regra numa situação; a FCC cobra mais a letra da lei e a literalidade do artigo. Estudar sem olhar pra isso é estudar no escuro.",
+            "O caderno de leis e informativos do VDE traz a análise de incidência: quais artigos apareceram nas últimas provas e com que frequência. E o banco tem mais de 75 mil questões comentadas, o que te deixa treinar no formato exato da banca do seu edital."
+          ]
+        },
+        {
+          "id": "d_emocional",
+          "when": {
+            "eq": {
+              "dor": [
+                "emocional"
+              ]
+            }
+          },
+          "title": "O emocional melhora quando o plano fica visível",
+          "paragraphs": [
+            "Ansiedade e sensação de atraso crescem no escuro. Sem saber quanto falta, todo dia parece pouco, e a comparação com os outros ocupa o espaço que a informação deveria ocupar.",
+            "Ter data de fim muda isso. Saber que a sua base fecha em 8 ou em 12 meses transforma uma angústia sem tamanho numa fila de tarefas com prazo. E o simulado mensal te dá o número real do seu avanço, que quase sempre é melhor que a sua sensação."
+          ]
+        },
+        {
+          "id": "d_todas",
+          "when": {
+            "eq": {
+              "dor": [
+                "todas"
+              ]
+            }
+          },
+          "title": "Marcar todas as opções também é um diagnóstico",
+          "paragraphs": [
+            "Quando tudo dói ao mesmo tempo, o conteúdo raramente é o culpado. Falta uma estrutura sustentando o estudo, e sem estrutura cada dificuldade puxa a seguinte: sem cronograma você não revisa, sem revisar não fixa, sem fixar a prova assusta, e o medo faz trocar de material outra vez.",
+            "Por isso eu não começaria pela matéria mais difícil. Começaria pelo cronograma e por uma fonte única, e metade dessa lista some sozinha nas primeiras semanas."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Nível geral no teste",
+      "items": [
+        {
+          "id": "n01",
+          "when": {
+            "score_max": 1
+          },
+          "title": "Sobre as quatro questões: o teste fez o trabalho dele",
+          "paragraphs": [
+            "Elas são reais, de FGV e de FCC, e escolhidas entre as difíceis. Errar aqui não diz nada sobre a sua capacidade e diz tudo sobre o tamanho do salto entre estudar o assunto e resolver o item.",
+            "Repara no que elas cobraram: relação lógica entre orações, competência legislativa, fraude à execução com prazos, e lógica pura. É esse o nível que a sua base precisa alcançar, e é ele que eu uso como régua ao montar o material."
+          ]
+        },
+        {
+          "id": "n2",
+          "when": {
+            "score_min": 2,
+            "score_max": 2
+          },
+          "title": "Sobre as quatro questões: duas de quatro é um começo real",
+          "paragraphs": [
+            "Metade em questões difíceis significa que existe alicerce em pé. Ele ainda não sustenta a régua de tribunal, onde o corte alto obriga a praticamente fechar a prova, mas sustenta uma preparação séria.",
+            "O que costuma faltar nesse ponto é constância e profundidade nas duas ou três disciplinas de maior peso. É pouco ajuste pra bastante ganho."
+          ]
+        },
+        {
+          "id": "n34",
+          "when": {
+            "score_min": 3
+          },
+          "title": "Sobre as quatro questões: você não precisa recomeçar nada",
+          "paragraphs": [
+            "Nesse nível, refazer teoria do zero seria desperdício do seu tempo. O seu ganho está em profundidade nos pontos específicos que ainda vazam e em volume de questão da sua banca, com tempo cronometrado.",
+            "Se você entrar no curso, o caminho é o cronograma personalizado: marca as disciplinas que precisa e deixa de fora o que já está de pé."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Sinal das não jurídicas",
+      "items": [
+        {
+          "id": "naojur2",
+          "when": {
+            "wrong": [
+              0,
+              3
+            ]
+          },
+          "title": "Você errou Português e Raciocínio Lógico, e essas duas decidem prova de tribunal",
+          "paragraphs": [
+            "Elas não são acessório. Português, Raciocínio Lógico e Informática somam peso alto no total de questões, e são as que mais gente deixa pro final, achando que garante a vaga nas jurídicas. É por ali que a nota vaza.",
+            "Você precisa atacar as duas desde agora, não na véspera. A boa notícia é que são as matérias mais treináveis que existem: regra clara, padrão repetido, questão parecida prova após prova.",
+            "E são exatamente essas que têm videoaula no VDE Tribunais, do zero, além do PDF sistematizado e do banco de questões comentadas. Se você nunca entendeu Português ou congela em lógica, é por essas aulas que eu começaria."
+          ]
+        },
+        {
+          "id": "port",
+          "when": {
+            "wrong": [
+              0
+            ],
+            "right": [
+              3
+            ]
+          },
+          "title": "Você errou a de Português, e Português cai em toda prova de tribunal",
+          "paragraphs": [
+            "A questão pedia nomear a relação lógica entre duas orações, que é interpretação com nome técnico, o tipo de item que a FGV adora. Português tem peso alto em qualquer tribunal e é a matéria que mais aparece, então cada ponto perdido ali sai caro.",
+            "No VDE Tribunais, Português é uma das disciplinas com videoaula do zero, além do PDF e do banco de questões. Se essa for uma dívida antiga sua, dá pra zerar nos primeiros meses do cronograma."
+          ]
+        },
+        {
+          "id": "rlm",
+          "when": {
+            "wrong": [
+              3
+            ],
+            "right": [
+              0
+            ]
+          },
+          "title": "Você errou a de Raciocínio Lógico, e RLM é ponto barato que muita gente entrega",
+          "paragraphs": [
+            "Aquela questão era lógica pura, sem nada pra decorar: só combinação de informações. Ela é difícil na primeira vez e vira mecânica depois de umas trinta parecidas, porque FGV e FCC repetem os mesmos formatos.",
+            "É a matéria com a melhor relação entre tempo investido e ponto ganho da prova inteira. No VDE Tribunais ela tem videoaula do zero, além do PDF e das questões comentadas, e eu colocaria ela no cronograma desde a primeira semana."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Sinal das processuais",
+      "items": [
+        {
+          "id": "proc",
+          "when": {
+            "wrong": [
+              2
+            ]
+          },
+          "title": "Você errou a de Processo Civil, e isso costuma se repetir nos outros processos",
+          "paragraphs": [
+            "Processo Civil é o modelo de raciocínio de todas as processuais. Quem tropeça em prazo, ato e efeito ali costuma tropeçar igual em Processo Penal e em Processo do Trabalho, porque a engrenagem é a mesma: quem pode fazer, em que prazo, e o que acontece se não fizer.",
+            {
+              "if": {
+                "eq": {
+                  "alvo": [
+                    "trt"
+                  ]
+                }
+              },
+              "then": "Isso joga a favor do seu plano: arrumar Processo Civil bem feito arruma as outras junto. E no TRT, Processo Civil e Processo do Trabalho andam colados, então esse é o bloco que eu trataria primeiro.",
+              "else": "Isso joga a favor do seu plano: arrumar Processo Civil bem feito arruma as outras junto. E em TJ e TRF, Processo Civil e Processo Penal somados costumam formar o maior bloco de questões jurídicas da prova."
+            },
+            "No VDE essas matérias vêm com a teoria sistematizada do tema, o caderno de leis com a incidência em provas e a questão comentada logo em seguida. É assim que prazo e ato processual param de escorregar."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Sinal do direito público",
+      "items": [
+        {
+          "id": "pub",
+          "when": {
+            "wrong": [
+              1
+            ]
+          },
+          "title": "Você errou a de Constitucional, e Constitucional é a porta do direito público",
+          "paragraphs": [
+            "A questão era de competência legislativa, um dos assuntos mais cobrados da Constituição e o que sustenta o resto do direito público. Quem não tem esse eixo firme costuma sentir a mesma dificuldade em Administrativo e em Tributário, porque as três repetem a mesma pergunta: quem pode legislar, quem pode agir, e até onde vai esse poder.",
+            "Constitucional e Administrativo estão na base comum de todo tribunal, TRT, TJ e TRF, e caem em toda prova. Se eu fosse escolher por onde você começa, começaria por aí, porque o ganho aparece nas três de uma vez."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Alvo e calendário",
+      "items": [
+        {
+          "id": "reta",
+          "when": {
+            "eq": {
+              "edital": [
+                "reta"
+              ]
+            }
+          },
+          "title": "Sobre a sua prova em menos de 3 meses",
+          "paragraphs": [
+            "Com esse prazo, começar formação de base agora não te ajuda nessa prova. O que rende nas próximas semanas é revisão das disciplinas de maior peso, lei seca e questão da banca. É isso que eu faria no seu lugar.",
+            "Depois dessa prova o cenário muda. São 27 TJs, 6 TRFs e 24 TRTs em rodízio, e o próximo edital vai te encontrar revisando ou começando de novo. Vale conversar com o consultor já pensando nele."
+          ]
+        },
+        {
+          "id": "multi",
+          "when": {
+            "editais_min": 3
+          },
+          "title": "Você marcou vários editais, e essa é uma decisão adiada",
+          "paragraphs": [
+            "Quem quer tudo acaba não estudando de verdade pra nada. Cada edital tem as suas específicas, e correr atrás de todos ao mesmo tempo deixa você raso em todos.",
+            "A saída não é desistir dos outros: é escolher um foco pra base e deixar que os demais venham junto, porque a base comum se repete. Um atalho pra escolher: se você tem afinidade com Trabalho e Processo do Trabalho, vá de TRT; se prefere Penal e Processo Penal, vá de TJ ou TRF."
+          ]
+        },
+        {
+          "id": "alvo_fe",
+          "when": {
+            "eq": {
+              "alvo": [
+                "fe"
+              ]
+            }
+          },
+          "title": "Defensoria, MP e Procuradoria puxam a mesma base",
+          "paragraphs": [
+            "O quadro de apoio desses órgãos tem prova muito próxima da de tribunal: mesma base de matérias e as mesmas bancas. Por isso o curso de TJ e TRF atende bem esse alvo.",
+            "A diferença fica nas específicas, e isso se resolve no cronograma personalizado quando o edital sair."
+          ]
+        },
+        {
+          "id": "alvo_any",
+          "when": {
+            "eq": {
+              "alvo": [
+                "any"
+              ]
+            }
+          },
+          "title": "Você quer o que abrir primeiro, então a base pesa ainda mais",
+          "paragraphs": [
+            "Sem alvo fechado, o que te serve é justamente o que se repete em todos: Português, Raciocínio Lógico, Informática, Ética, Constitucional, Administrativo, Civil e Processo Civil aparecem em TRT, TJ e TRF.",
+            "Ainda assim eu escolheria um curso pra guiar o cronograma, porque as específicas divergem: no TRT são 12 disciplinas, com Trabalho e Processo do Trabalho; em TJ e TRF são 16, com Penal e Processo Penal no meio."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Cargo e formação",
+      "items": [
+        {
+          "id": "tec_sup",
+          "when": {
+            "eq": {
+              "cargo": [
+                "tecnico"
+              ],
+              "formacao": [
+                "direito",
+                "outra"
+              ]
+            },
+            "ne": {
+              "alvo": [
+                "fe"
+              ]
+            }
+          },
+          "title": "Com curso superior, analista deveria estar no seu radar",
+          "paragraphs": [
+            "Analista paga quase o dobro do técnico e cai sobre a mesma base de matérias, com mais profundidade nas jurídicas. E tem um detalhe que economiza tempo: quem estuda pra analista estuda também o que cai pra técnico, então dá pra manter as duas portas abertas com um material só.",
+            "Se você ainda não fez essa conta, vale fazer antes de fechar o seu plano."
+          ]
+        },
+        {
+          "id": "unsure",
+          "when": {
+            "eq": {
+              "cargo": [
+                "unsure"
+              ]
+            }
+          },
+          "title": "Você ainda não escolheu o cargo, e isso dá pra resolver hoje",
+          "paragraphs": [
+            "Resumo rápido. Técnico é nível médio, faz o trabalho de apoio do processo e tem prova mais rasa nas jurídicas. Analista é nível superior, salário bem maior e prova mais profunda: a área judiciária costuma exigir bacharel em Direito e as outras áreas aceitam formações diversas. Oficial de justiça, na maioria dos tribunais, é uma especialidade de analista, com o mesmo patamar de salário e mais Processo Civil na prova.",
+            "Como a base de matérias é a mesma, dá pra começar hoje e fechar a escolha quando o edital sair."
+          ]
+        },
+        {
+          "id": "oficial",
+          "when": {
+            "eq": {
+              "cargo": [
+                "oficial"
+              ]
+            }
+          },
+          "title": "Oficial de justiça é prova de analista com peso extra em Processo Civil",
+          "paragraphs": [
+            "Na maior parte dos tribunais, oficial de justiça é uma especialidade dentro do cargo de analista: mesma exigência de nível superior, mesmo patamar de salário, e prova puxando mais em Processo Civil, porque é ali que estão citação, intimação, penhora e mandado.",
+            "Ou seja, a sua base é a de analista. Estudar como analista te deixa com as duas portas abertas."
+          ]
+        },
+        {
+          "id": "cursando_dir",
+          "when": {
+            "eq": {
+              "formacao": [
+                "cursando_direito"
+              ]
+            }
+          },
+          "title": "Cursando Direito, você está no melhor momento possível",
+          "paragraphs": [
+            "As matérias da faculdade e as do concurso se sobrepõem bastante, então o que você estuda serve pra dupla função. A diferença é o recorte: a faculdade cobra teoria e a banca cobra aplicação, e é a questão de concurso que ajusta essa mira.",
+            "Um ponto prático: o diploma costuma ser exigido só na posse, e a regra sai em cada edital. Dá pra construir a base antes de colar grau e chegar pronto."
+          ]
+        },
+        {
+          "id": "outra_area",
+          "when": {
+            "eq": {
+              "formacao": [
+                "outra",
+                "cursando_outra"
+              ]
+            }
+          },
+          "title": "Sem ser da área do Direito, o caminho existe e tem nome",
+          "paragraphs": [
+            "Você não precisa ser bacharel pra entrar num tribunal. As áreas administrativa e de apoio especializado do cargo de analista costumam aceitar qualquer curso superior, e a área judiciária é a que pede Direito.",
+            "Na prática isso muda as específicas, não a base: Português, Raciocínio Lógico, Informática, Constitucional e Administrativo continuam sendo o coração da prova. Vale confirmar isso com o consultor antes de escolher o curso, pra você não estudar específica que não vai precisar."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Relação com o VDE",
+      "items": [
+        {
+          "id": "v_aluno",
+          "when": {
+            "eq": {
+              "vde": [
+                "aluno"
+              ]
+            }
+          },
+          "title": "Você já é aluno do VDE Concursos",
+          "paragraphs": [
+            "Então metade do caminho está resolvida: você conhece o formato e sabe que ele funciona pra você. O que a conversa com o consultor resolve é o encaixe entre o que você já tem e o VDE Tribunais, pra você não pagar duas vezes pelo mesmo conteúdo nem deixar buraco no meio."
+          ]
+        },
+        {
+          "id": "v_ex",
+          "when": {
+            "eq": {
+              "vde": [
+                "exaluno"
+              ]
+            }
+          },
+          "title": "Você já estudou com a gente antes",
+          "paragraphs": [
+            "Então já sabe como é: PDF direto ao ponto, lei e questão, sem enrolação. O VDE Tribunais é essa mesma lógica calibrada pro nível de tribunal, que é mais profundo nas jurídicas. Menciona que você é ex-aluno na conversa com o consultor."
+          ]
+        },
+        {
+          "id": "v_insta",
+          "when": {
+            "eq": {
+              "vde": [
+                "insta"
+              ]
+            }
+          },
+          "title": "Você me acompanha no Instagram",
+          "paragraphs": [
+            "Então já viu o método pela janela. A diferença entre o que eu posto e o curso é ordem e profundidade: no Instagram cabe o tema solto, no curso cabe a sequência inteira, com cronograma, lei, questão comentada e simulado mensal."
+          ]
+        },
+        {
+          "id": "v_nunca",
+          "when": {
+            "eq": {
+              "vde": [
+                "nunca"
+              ]
+            }
+          },
+          "title": "Você chegou aqui sem me conhecer, então deixa eu me apresentar rápido",
+          "paragraphs": [
+            "VDE é Vício de uma Estudante, e o método tem cinco passos. Você abre o cronograma e vê o tema do dia, lê a teoria sistematizada em PDF, lê o caderno de leis e informativos daquele tema, resolve questões comentadas do mesmo tema e, nas não jurídicas, assiste a videoaula se precisar. Todo mês tem simulado com análise de desempenho, e a Vic.IA, treinada só com os nossos materiais, responde dúvida na hora.",
+            "É isso. Sem maratona de videoaula e sem material genérico de concurso."
+          ]
+        }
+      ]
+    }
+  ],
+  "regras": {
+    "como_ler": "Cada grupo de blocos entrega UM bloco: o primeiro item, na ordem do array, cuja regra 'when' bater. Um parágrafo pode ser texto ou {\"if\": regra, \"then\": texto, \"else\": texto}.",
+    "operadores": {
+      "eq": "{\"eq\": {\"campo\": [valores]}} — a resposta do campo é um dos valores",
+      "ne": "{\"ne\": {\"campo\": [valores]}} — a resposta do campo não é nenhum deles",
+      "wrong": "{\"wrong\": [n]} — errou a questão n do teste (0 a 3)",
+      "right": "{\"right\": [n]} — acertou a questão n do teste (0 a 3)",
+      "score_min": "{\"score_min\": n} — acertou n ou mais das quatro questões",
+      "score_max": "{\"score_max\": n} — acertou n ou menos das quatro questões",
+      "editais_min": "{\"editais_min\": n} — marcou pelo menos n editais de verdade",
+      "any": "{\"any\": [regra, regra]} — basta uma das regras bater",
+      "not": "{\"not\": regra} — a regra não pode bater",
+      "_e": "chaves no mesmo dicionário são somadas (E). Regra vazia bate sempre."
+    },
+    "marcadores": {
+      "{edital_label}": "nome do primeiro edital marcado",
+      "{edital_sub}": "situação do primeiro edital marcado",
+      "{disciplinas}": "'as 12 disciplinas do TRT' quando alvo é trt, senão 'as 16 disciplinas de TJ e TRF'"
+    }
+  },
+  "perfil": {
+    "diagnostico": "diagnosticos[resposta da pergunta 'momento']. É a única pergunta que escolhe o diagnóstico.",
+    "cursos": {
+      "C1-TRT": {
+        "quando": {
+          "eq": {
+            "alvo": [
+              "trt"
+            ]
+          }
+        },
+        "label": "Curso 1 · Analista de TRT (168 temas)"
+      },
+      "C2-TJTRF": {
+        "quando": {
+          "ne": {
+            "alvo": [
+              "trt"
+            ]
+          }
+        },
+        "label": "Curso 2 · Analista de TJ e TRF (231 temas)"
+      }
+    },
+    "ritmos": {
+      "h0": "abaixo do cronograma mínimo; com 2h por dia, base em 12 meses",
+      "h1": "base em 12 meses, no ritmo de 2h por dia",
+      "h2": "base entre 8 e 12 meses",
+      "h3": "base entre 6 e 8 meses",
+      "h4": "base em 6 meses"
+    },
+    "niveis": {
+      "0": "inicial",
+      "1": "inicial",
+      "2": "intermediário",
+      "3": "avançado",
+      "4": "avançado"
+    },
+    "alvos": {
+      "tj": "TJ",
+      "trf": "TRF",
+      "trt": "TRT",
+      "fe": "Defensoria, MP ou Procuradoria",
+      "any": "qualquer tribunal"
+    },
+    "momentos": {
+      "zero": "Começo do zero",
+      "sembase": "Estudo sem base",
+      "plato": "Veterano travado no corte",
+      "improviso": "Ciclo do improviso",
+      "servidor": "Servidor em ascensão"
+    },
+    "pontuacao": {
+      "como": "somar os pontos de todas as regras que baterem",
+      "classe": {
+        "A": "7 pontos ou mais",
+        "B": "menos de 7"
+      },
+      "regras": [
+        {
+          "se": {
+            "eq": {
+              "cargo": [
+                "analista",
+                "oficial"
+              ]
+            }
+          },
+          "pontos": 2
+        },
+        {
+          "se": {
+            "eq": {
+              "cargo": [
+                "any",
+                "unsure"
+              ]
+            }
+          },
+          "pontos": 1
+        },
+        {
+          "se": {
+            "eq": {
+              "cargo": [
+                "tecnico"
+              ]
+            },
+            "ne": {
+              "alvo": [
+                "tj"
+              ]
+            }
+          },
+          "pontos": 1
+        },
+        {
+          "se": {
+            "eq": {
+              "formacao": [
+                "direito"
+              ]
+            }
+          },
+          "pontos": 2
+        },
+        {
+          "se": {
+            "ne": {
+              "formacao": [
+                "direito"
+              ]
+            }
+          },
+          "pontos": 1
+        },
+        {
+          "se": {
+            "eq": {
+              "horas": [
+                "h1"
+              ]
+            }
+          },
+          "pontos": 1
+        },
+        {
+          "se": {
+            "eq": {
+              "horas": [
+                "h2",
+                "h3",
+                "h4"
+              ]
+            }
+          },
+          "pontos": 2
+        },
+        {
+          "se": {
+            "eq": {
+              "edital": [
+                "previsto",
+                "sem"
+              ]
+            }
+          },
+          "pontos": 2
+        },
+        {
+          "se": {
+            "eq": {
+              "edital": [
+                "nao"
+              ]
+            }
+          },
+          "pontos": 1
+        },
+        {
+          "se": {
+            "eq": {
+              "dor": [
+                "base",
+                "improviso",
+                "banca",
+                "todas"
+              ]
+            }
+          },
+          "pontos": 1
+        }
+      ],
+      "conferido": "bate com o points() do Python nas 33600 combinações de cargo, alvo, formação, horas, edital e gargalo"
+    },
+    "uma_linha": "perfil {classe} ({pontos} pts) · {curso_cod} · {momento} · {dor} · {horas} · edital:{edital} · teste {acertos}/4 · vde:{vde}"
+  },
+  "laudo": {
+    "formato": "A4, cinco páginas, HTML autocontido (fonte e logo em base64) convertido em PDF",
+    "fonte": "Poppins 400/500/600/700",
+    "secoes": [
+      {
+        "id": "capa",
+        "titulo": "Capa",
+        "conteudo": "saudação com o primeiro nome, resumo em cartões e índice"
+      },
+      {
+        "id": "leitura",
+        "eyebrow": "A leitura do seu caso",
+        "titulo": "(o título do diagnóstico)",
+        "conteudo": "diagnosticos[momento]: titulo, texto[] e a caixa 'Começa por aqui:' com a prescricao"
+      },
+      {
+        "id": "ordem",
+        "eyebrow": "O que vem primeiro",
+        "titulo": "A ordem que eu seguiria no seu lugar",
+        "conteudo": "diagnosticos[momento].ordem, numerada",
+        "so_quando": {
+          "eq": {
+            "leitura": [
+              "completa"
+            ]
+          }
+        }
+      },
+      {
+        "id": "blocos",
+        "eyebrow": "Resposta por resposta",
+        "titulo": "Ponto a ponto do que você me contou",
+        "conteudo": "um bloco por grupo de blocos[], o primeiro cuja regra bater"
+      },
+      {
+        "id": "questoes",
+        "eyebrow": "O teste de nível",
+        "titulo": "As quatro questões, comentadas",
+        "conteudo": "teste[]: disciplina, fonte, acertou ou errou, comentário"
+      },
+      {
+        "id": "ficha",
+        "eyebrow": "Para conferir",
+        "titulo": "Suas respostas",
+        "conteudo": "rótulo e resposta de cada campo, na ordem de laudo.ficha"
+      },
+      {
+        "id": "fim",
+        "eyebrow": "O próximo passo",
+        "titulo": "Isto diz onde você está. Agora falta o plano.",
+        "conteudo": "convite pro horário com o consultor, com o botão do WhatsApp"
+      }
+    ],
+    "resumo_da_capa": [
+      {
+        "rotulo": "Onde você está",
+        "valor": "perfil.momentos[momento]"
+      },
+      {
+        "rotulo": "Alvo",
+        "valor": "rótulo do cargo + ' · ' + perfil.alvos[alvo]"
+      },
+      {
+        "rotulo": "Nível no teste",
+        "valor": "perfil.niveis[acertos] + ' · N de 4'"
+      },
+      {
+        "rotulo": "Tempo disponível",
+        "valor": "rótulo das horas"
+      },
+      {
+        "rotulo": "Curso indicado",
+        "valor": "perfil.cursos",
+        "largo": true
+      },
+      {
+        "rotulo": "Ritmo no seu tempo de estudo",
+        "valor": "perfil.ritmos[horas]",
+        "largo": true
+      }
+    ],
+    "ficha": [
+      {
+        "campo": "alvo",
+        "rotulo": "Concurso alvo"
+      },
+      {
+        "campo": "cargo",
+        "rotulo": "Cargo"
+      },
+      {
+        "campo": "formacao",
+        "rotulo": "Formação"
+      },
+      {
+        "campo": "tempo",
+        "rotulo": "Tempo de estudo"
+      },
+      {
+        "campo": "provas",
+        "rotulo": "Provas de tribunal já feitas"
+      },
+      {
+        "campo": "metodo",
+        "rotulo": "Como estudou até aqui"
+      },
+      {
+        "campo": "vde",
+        "rotulo": "Conhece o Método VDE"
+      },
+      {
+        "campo": "horas",
+        "rotulo": "Horas por dia"
+      },
+      {
+        "campo": "edital",
+        "rotulo": "Edital na mira"
+      },
+      {
+        "campo": "editais",
+        "rotulo": "Concursos escolhidos"
+      },
+      {
+        "campo": "dor",
+        "rotulo": "Maior gargalo"
+      },
+      {
+        "campo": "momento",
+        "rotulo": "Frase que te define"
+      },
+      {
+        "campo": "dinheiro",
+        "rotulo": "Ganho a mais se aprovado"
+      }
+    ],
+    "css": "\n/* Mesmos tokens do quiz (system/themes/vde-tribunais, variante clara), para o\n   laudo chegar no WhatsApp parecendo a continuação da página, não outro produto. */\n:root{\n  --bg:#FFFFFF; --creme:#F7F5F0; --card:#FBF9F5; --ink:#0B1A3F; --ink-soft:#3D4767; --ink-dim:#7C86A6;\n  --line:#E2DFF0; --line-strong:#C9C4E8; --lav:#C3BEF9; --lav-soft:#F1EFFC;\n  --purple:#5421A1; --navy:#01123A; --gold:#F9E08A; --gold-deep:#C89B18;\n  --gold-soft:#FBF3D6; --gold-text:#8A6A0C; --green:#1F9457; --red:#C92A2A;\n}\n/* As margens ficam com o gerador de PDF, não aqui: margem no CSS ganha da API e\n   o conteúdo passa por cima do rodapé. Por isso o papel é branco, que é a cor\n   que a faixa de margem tem de qualquer jeito; o creme do quiz entra nos\n   cartões e na capa. */\n@page{size:A4}\n*{box-sizing:border-box}\nhtml,body{margin:0;padding:0;background:var(--bg);color:var(--ink);\n  font-family:'Poppins',system-ui,-apple-system,sans-serif;\n  -webkit-print-color-adjust:exact;print-color-adjust:exact}\n.folha{max-width:210mm;margin:0 auto;background:var(--bg);padding:0 15mm}\n@media screen{ .folha{padding:16mm 15mm 20mm} }\n\n/* ---- pílula dourada, igual à do quiz ---- */\n.eyebrow{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.02em;\n  color:var(--gold-text);background:var(--gold-soft);border-radius:999px;padding:5px 11px;\n  margin:0 0 10px}\n\n/* ---- capa ---- */\n.capa{min-height:266mm;display:flex;flex-direction:column;justify-content:space-between;\n  break-after:page}\n.marca{display:flex;align-items:center;gap:10px;color:var(--navy)}\n.marca svg{width:38px;height:38px}\n.marca b{font-size:17px;letter-spacing:-.01em}\n.marca b span{display:inline-block;margin-left:7px;padding:3px 9px;border-radius:999px;\n  background:var(--lav);color:var(--navy);font-size:11px;font-weight:600;vertical-align:middle}\n.capa .painel{background:var(--creme);border-radius:26px;padding:34px 32px 30px}\n.capa .painel .resumo div{background:#fff}   /* cartão branco sobre o creme, como no quiz */\n.capa h1{font-size:31px;line-height:1.18;letter-spacing:-.025em;margin:0 0 12px}\n.capa .abertura{font-size:14px;line-height:1.6;color:var(--ink-soft);margin:0;max-width:150mm}\n.capa .rodape-capa{padding-top:22px;border-top:1.5px solid var(--line);\n  display:flex;justify-content:space-between;align-items:baseline;gap:16px;\n  font-size:11px;color:var(--ink-dim)}\n.capa .rodape-capa b{color:var(--ink);font-weight:600}\n\n/* ---- cartões do resumo ---- */\n.resumo{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:26px 0 0}\n.resumo div{display:flex;justify-content:space-between;gap:10px;background:var(--card);\n  border:1.5px solid var(--line);border-radius:14px;padding:12px 15px;font-size:12px;\n  break-inside:avoid}\n.resumo div span:first-child{color:var(--ink-dim);font-weight:500}\n.resumo div span:last-child{font-weight:600;text-align:right;color:var(--ink)}\n.resumo div.wide{grid-column:1 / -1;border-color:var(--line-strong);background:var(--lav-soft)}\n\n/* ---- índice da capa ---- */\n.indice{margin-top:30px;padding-top:20px;border-top:1.5px solid var(--line)}\n.indice .lbl{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;\n  color:var(--ink-dim);margin:0 0 12px}\n.indice ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;\n  gap:9px 22px;counter-reset:item}\n.indice li{counter-increment:item;display:flex;align-items:center;gap:10px;\n  font-size:12px;font-weight:500;color:var(--ink)}\n.indice li::before{content:counter(item);flex:0 0 auto;width:20px;height:20px;border-radius:50%;\n  background:var(--lav-soft);border:1.5px solid var(--lav);color:var(--purple);\n  font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center}\n\n/* ---- seções ---- */\n.sec{margin-top:26px;break-inside:auto}\n.sec + .sec{margin-top:30px}\nh1{font-size:25px;line-height:1.2;letter-spacing:-.02em;margin:0 0 8px}\nh2{font-size:20px;line-height:1.3;letter-spacing:-.015em;margin:0 0 14px;color:var(--navy);\n  break-after:avoid}\nh3{font-size:14.5px;margin:0 0 7px;color:var(--navy);line-height:1.35}\np{font-size:12.6px;line-height:1.62;color:var(--ink-soft);margin:0 0 9px}\np b,li b{color:var(--ink)}\n.leitura p{font-size:13.2px}\n\n/* ---- blocos do ponto a ponto ---- */\n.blk{background:var(--card);border:1.5px solid var(--line);border-radius:16px;\n  padding:15px 18px;margin:0 0 10px;break-inside:avoid}\n.blk h3{padding-left:13px;border-left:3px solid var(--lav)}\n.blk p:last-child{margin-bottom:0}\n.box{background:var(--card);border:1.5px solid var(--line);border-left:5px solid var(--gold-deep);\n  border-radius:14px;padding:14px 17px;margin:14px 0;break-inside:avoid}\n.box p{margin:0}\nol{margin:0;padding:0;list-style:none;counter-reset:passo}\nol li{counter-increment:passo;position:relative;padding:11px 15px 11px 46px;margin-bottom:8px;\n  background:var(--card);border:1.5px solid var(--line);border-radius:14px;\n  font-size:12.6px;line-height:1.55;color:var(--ink-soft);break-inside:avoid}\nol li::before{content:counter(passo);position:absolute;left:14px;top:10px;width:21px;height:21px;\n  border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:600;\n  display:flex;align-items:center;justify-content:center}\n\n/* ---- questões ---- */\n.q{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:13px 17px;\n  margin-bottom:9px;break-inside:avoid}\n.q .cab{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:4px}\n.q .cab b{font-size:13px}\n.q .cab .r{font-size:11px;font-weight:600;white-space:nowrap;padding:3px 9px;border-radius:999px}\n.q .ok{color:var(--green);background:#E9F7EF}\n.q .no{color:var(--red);background:#FDECEC}\n.q .fonte{font-size:10.5px;color:var(--ink-dim);margin:0 0 7px}\n.q p{margin:0;font-size:12.2px}\n\n/* ---- ficha ---- */\n.ficha{display:grid;grid-template-columns:1fr;gap:6px}\n.ficha div{display:flex;justify-content:space-between;gap:14px;font-size:11.8px;\n  padding:9px 15px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;\n  break-inside:avoid}\n.ficha div span:first-child{color:var(--ink-dim);flex:0 0 auto}\n.ficha div span:last-child{font-weight:600;text-align:right;color:var(--ink)}\n\n/* ---- fechamento ---- */\n.fim{background:var(--navy);color:#fff;border-radius:20px;padding:24px 26px;margin-top:18px;\n  break-inside:avoid}\n.fim .eyebrow{background:rgba(249,224,138,.16);color:var(--gold)}\n.fim h2{color:#fff;margin-bottom:10px}\n.fim p{color:#CBD3E8;font-size:12.8px}\n.fim p:last-child{margin-bottom:0}\n.fim b{color:var(--gold)}\n.fim .selo{display:inline-block;margin-top:14px;text-decoration:none;\n  background:linear-gradient(135deg,var(--gold),var(--gold-deep));\n  color:var(--navy);font-weight:600;font-size:13px;border-radius:999px;padding:12px 22px}\n\nfooter{margin-top:20px;padding-top:11px;border-top:1px solid var(--line);\n  font-size:9.5px;color:var(--ink-dim);line-height:1.6}\nfooter code{display:block;margin-top:3px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;\n  font-size:8.5px;color:#9AA2BC;overflow-wrap:anywhere}\n"
+  }
+}

@@ -12,6 +12,13 @@ pública de resultado já usa):
      tela de resultado usa, via lib/quizContent.ts::waLink), não o link vazio
      que report.py gera sozinho.
 
+`vendor/raio-x-da-base` e `vendor/brand` são cópias de `reference/raio-x-da-base`
+e `public/brand` na raiz do repo — o build de container (Vercel/Docker) usa
+`services/laudo-pdf` isolado como contexto, sem acesso ao resto do repo, então
+o serviço carrega uma cópia própria em vez de referenciar os originais fora
+do seu diretório. Atualizações no pacote original precisam ser copiadas de
+novo pra cá.
+
 Cada override é aplicado via monkeypatch nos nomes que
 `diagnosis.report.build_html` referencia no próprio módulo — nunca editando
 os arquivos de `reference/raio-x-da-base/diagnosis/` em si. `assets.py`
@@ -36,9 +43,8 @@ from pathlib import Path
 from urllib.parse import quote
 
 SERVICE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SERVICE_DIR.parent.parent
-FONTS_DIR = REPO_ROOT / "reference/raio-x-da-base/assets/fonts/Poppins"
-LOGO_PATH = REPO_ROOT / "public/brand/versao01-color0.svg"
+FONTS_DIR = SERVICE_DIR / "vendor/raio-x-da-base/assets/fonts/Poppins"
+LOGO_PATH = SERVICE_DIR / "vendor/brand/versao01-color0.svg"
 
 
 class PacoteMudou(RuntimeError):
