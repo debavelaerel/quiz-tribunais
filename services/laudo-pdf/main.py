@@ -136,7 +136,7 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
         raise HTTPException(status_code=422, detail=str(e)) from e
 
     # report.py::build_html usa date.today() se `hoje` não for passado — em
-    # UTC (Railway roda em UTC), isso data o laudo errado entre 21h e
+    # UTC (o container roda em UTC), isso data o laudo errado entre 21h e
     # meia-noite no horário de Brasília. Calcula explícito em SP_TZ.
     hoje = datetime.now(SP_TZ).date()
 
@@ -148,8 +148,8 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
         pdf_bytes = await render.html_para_pdf(html)
     except Exception:
         # Aqui dentro é sempre bug do serviço (dado do lead já validou acima) —
-        # loga o traceback de verdade pro Railway, mas não devolve detalhe
-        # nenhum pra quem chamou.
+        # loga o traceback de verdade nos logs da plataforma, mas não devolve
+        # detalhe nenhum pra quem chamou.
         logger.exception("falha ao gerar laudo para %s", req.nome)
         raise HTTPException(status_code=500, detail="falha ao gerar o PDF") from None
 
