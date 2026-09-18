@@ -264,6 +264,35 @@ export default function Quiz() {
     setFluxoFinal(new URLSearchParams(window.location.search).get('fluxo') === 'final')
   }, [])
 
+  // Pré-carrega o iframe do vídeo assim que o quiz monta — bem antes da
+  // pessoa chegar na tela 'video' (capa/nome/intro/perfil/mirror vêm antes
+  // dela, ver PASSOS_POS_INTRO). Sem isso, o iframe só passa a existir (DNS,
+  // TLS, bundle do player, fonte) no exato momento em que a tela aparece, e
+  // isso é visível como "vídeo demorando pra carregar". Cria o `<iframe>`
+  // fora da árvore do React, escondido com `position:fixed` fora da
+  // viewport (não `display:none` — isso pausa o carregamento em vários
+  // navegadores) e, quando a tela 'video' aparece, só reaproveita esse
+  // mesmo nó (sem recriar, sem refazer a requisição) — ver o ref callback
+  // no JSX da tela 'video'.
+  const videoHostRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const host = document.createElement('div')
+    host.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;'
+    const iframe = document.createElement('iframe')
+    iframe.src = CONFIG.videoSrc
+    iframe.title = 'Vídeo da Ana Clara'
+    iframe.allow = 'accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture'
+    iframe.allowFullscreen = true
+    iframe.style.cssText = 'width:100%;height:100%;border:0;display:block;'
+    host.appendChild(iframe)
+    document.body.appendChild(host)
+    videoHostRef.current = host
+    return () => {
+      host.remove()
+      videoHostRef.current = null
+    }
+  }, [])
+
   // Anima a tela 'analisando' enquanto ela estiver visível — troca de frase
   // e contagem de porcentagem são só decoração (a chamada real ao /finish
   // não tem etapas pra medir de verdade). Reinicia do zero toda vez que a
@@ -1310,15 +1339,19 @@ export default function Quiz() {
           {/* min-h-0 é o que permite o filho h-full abaixo respeitar a altura
               que sobrou entre título e botão, em vez de estourar o flex. */}
           <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">
-            <div className="aspect-[9/16] h-full max-h-[62svh] w-auto overflow-hidden rounded-[22px] bg-brand-navy shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
-              <iframe
-                src={CONFIG.videoSrc}
-                title="Vídeo da Ana Clara"
-                className="h-full w-full border-0"
-                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-                allowFullScreen
-              />
-            </div>
+            <div
+              className="aspect-[9/16] h-full max-h-[62svh] w-auto overflow-hidden rounded-[22px] bg-brand-navy shadow-[0_10px_30px_rgba(32,60,124,0.25)]"
+              // Reaproveita o mesmo <iframe> pré-carregado desde o mount do
+              // quiz (ver o useEffect de videoHostRef acima) — só reposiciona
+              // o nó pra dentro deste container, nunca cria um novo (isso
+              // refaria a requisição e voltaria a demorar).
+              ref={(el) => {
+                if (el && videoHostRef.current && videoHostRef.current.parentElement !== el) {
+                  videoHostRef.current.style.cssText = 'width:100%;height:100%;'
+                  el.appendChild(videoHostRef.current)
+                }
+              }}
+            />
           </div>
 
           <Button variant="gold" onClick={() => setTela('dinheiro')} className="w-full max-w-xs">
