@@ -1560,7 +1560,6 @@ export default function Quiz() {
   const nivel = resultado ? nivelTeste(resultado.acertos) : ''
   const cargo = labelCargo(respostasPerfil)
   const alvoLabel = respostasPerfil.alvo ? L.alvo[respostasPerfil.alvo] : ''
-  const alvoLongo = respostasPerfil.alvo ? L.alvoLongo[respostasPerfil.alvo] : ''
   const link = resultado
     ? waLink(nome || estado?.nome || '', respostasPerfil, perfilCalculado?.classe ?? 'B', perfilCalculado?.cursoCod ?? 'C2-TJTRF', nivel, resultado.acertos, resultado.total)
     : '#'
@@ -1669,9 +1668,17 @@ export default function Quiz() {
 
                   {resultado.blocos.length > 1 && (
                     <div className="relative mt-2.5">
-                      <div className="flex select-none flex-col gap-2.5" style={{ filter: 'blur(5px)' }}>
-                        {resultado.blocos.slice(1).map((b) => (
-                          <div key={b.id} className="rounded-[16px] border-[1.5px] border-brand-line px-4 py-4">
+                      <div className="flex select-none flex-col gap-2.5">
+                        {resultado.blocos.slice(1).map((b, i) => (
+                          <div
+                            key={b.id}
+                            className="rounded-[16px] border-[1.5px] border-brand-line px-4 py-4"
+                            // Progressivo (2px no primeiro bloco escondido, +2.5px a
+                            // cada um depois, até um teto de 9px) em vez de um blur
+                            // uniforme em tudo — sugere que tem mais conteúdo "atrás",
+                            // não só um único painel embaçado.
+                            style={{ filter: `blur(${Math.min(2 + i * 2.5, 9)}px)` }}
+                          >
                             <h4 className="pl-3 text-[14.5px] font-semibold text-brand-ink" style={{ borderLeft: '3px solid #203C7C' }}>
                               {b.title}
                             </h4>
@@ -1694,38 +1701,43 @@ export default function Quiz() {
                 </div>
               ))}
 
-              <h3 className="mt-8 inline-block rounded-lg bg-brand-tint px-2.5 py-1 font-bold text-brand-navy">Onde isso vira um plano</h3>
-              <p className="mt-4 text-brand-ink-soft">
-                Este diagnóstico leu o seu caso por cima. O seu caso tem os requisitos pra ir mais fundo: uma <b className="text-brand-ink">conversa de uns 20 minutos com um consultor do meu time</b>, que cruza o que você respondeu com o edital de {alvoLongo} e monta o seu plano de ação e te manda, pelo WhatsApp, o seu laudo completo em PDF, com todos os pontos acima destravados.
-              </p>
-              <p className="mt-4 text-brand-ink-soft">
-                Não custa nada. Só que a agenda é curta e cada consultor abre poucos horários por semana. Clica aqui embaixo pra reservar sua vaga e destravar o seu diagnóstico.
-              </p>
+              {/* Cartão navy (não mais texto solto no fundo branco) — copy
+                  reduzida mantendo a mesma ideia da original (leitura
+                  superficial → conversa de 20min → laudo completo por
+                  WhatsApp → grátis, agenda curta), só mais enxuta. */}
+              <div className="mt-8 rounded-[14px] bg-gradient-to-br from-brand-navy to-brand-navy-2 px-5 py-5 shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
+                <p className="text-[13px] leading-relaxed text-white">
+                  Este diagnóstico é uma leitura rápida do seu caso. Numa conversa de 20 minutos, um consultor do meu time cruza suas respostas com o edital e monta seu plano de ação, com o laudo completo em PDF pelo WhatsApp.
+                </p>
+                <p className="mt-3 text-[12px] leading-relaxed text-white/75">
+                  Não custa nada. A agenda é curta, poucos horários por semana: clica aqui embaixo pra reservar sua vaga.
+                </p>
 
-              <a
-                href={link}
-                target="_blank"
-                rel="noopener"
-                onClick={() => {
-                  // Sinal de intenção de compra pro lead scoring comercial —
-                  // silencioso de propósito (fire-and-forget): nunca pode
-                  // atrasar ou travar a abertura do WhatsApp.
-                  if (estado?.sessionToken) {
-                    void fetch('/api/quiz/whatsapp', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ session_token: estado.sessionToken }),
-                    }).catch(() => {})
-                  }
-                }}
-                className="mt-6 flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-br from-brand-gold to-brand-gold-deep px-4 py-3.5 text-[13.5px] font-semibold text-brand-navy shadow-[0_10px_24px_rgba(200,155,24,0.28)] transition-transform hover:-translate-y-0.5 sm:gap-2 sm:px-6 sm:py-4 sm:text-[15.5px]"
-              >
-                {/* Ícone de marca (WhatsApp) — fora do set genérico do lucide, mantido como SVG inline. */}
-                <svg viewBox="0 0 24 24" width={17} height={17} className="flex-none sm:h-5 sm:w-5" fill="currentColor" aria-hidden="true">
-                  <path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6l-.9-2.1c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.3-.6-.4zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.2-1.4c1.4.8 3.1 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 15 3.7 13.5 3.7 12c0-4.6 3.7-8.3 8.3-8.3s8.3 3.7 8.3 8.3-3.7 8.2-8.3 8.2z" />
-                </svg>
-                Falar com o time no WhatsApp
-              </a>
+                <a
+                  href={link}
+                  target="_blank"
+                  rel="noopener"
+                  onClick={() => {
+                    // Sinal de intenção de compra pro lead scoring comercial —
+                    // silencioso de propósito (fire-and-forget): nunca pode
+                    // atrasar ou travar a abertura do WhatsApp.
+                    if (estado?.sessionToken) {
+                      void fetch('/api/quiz/whatsapp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_token: estado.sessionToken }),
+                      }).catch(() => {})
+                    }
+                  }}
+                  className="mt-4 flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-br from-brand-gold to-brand-gold-deep px-4 py-3.5 text-[13.5px] font-semibold text-brand-navy shadow-[0_10px_24px_rgba(200,155,24,0.28)] transition-transform hover:-translate-y-0.5 sm:gap-2 sm:px-6 sm:py-4 sm:text-[15.5px]"
+                >
+                  {/* Ícone de marca (WhatsApp) — fora do set genérico do lucide, mantido como SVG inline. */}
+                  <svg viewBox="0 0 24 24" width={17} height={17} className="flex-none sm:h-5 sm:w-5" fill="currentColor" aria-hidden="true">
+                    <path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6l-.9-2.1c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.3-.6-.4zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.2-1.4c1.4.8 3.1 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 15 3.7 13.5 3.7 12c0-4.6 3.7-8.3 8.3-8.3s8.3 3.7 8.3 8.3-3.7 8.2-8.3 8.2z" />
+                  </svg>
+                  Falar com o time no WhatsApp
+                </a>
+              </div>
               <p className="mt-2 text-center text-[12.5px] text-brand-ink-dim">Abre o WhatsApp com a sua mensagem já escrita. É só enviar.</p>
 
               <button
