@@ -5,6 +5,7 @@ import type { QuizSession } from './types'
 type LinhaBanco = {
   id: number
   session_token: string
+  laudo_token: string
   evento: string
   nome: string
   whatsapp: string
@@ -23,6 +24,8 @@ type LinhaBanco = {
   perfil_calculado: QuizSession['perfilCalculado']
   blocos: QuizSession['blocos']
   whatsapp_clicado_em: string | null
+  laudo_pdf_s3_key: string | null
+  laudo_pdf_erro: string | null
   started_at: string
   updated_at: string
   completed_at: string | null
@@ -32,6 +35,7 @@ function paraSessao(linha: LinhaBanco): QuizSession {
   return {
     id: linha.id,
     sessionToken: linha.session_token,
+    laudoToken: linha.laudo_token,
     evento: linha.evento,
     nome: linha.nome,
     whatsapp: linha.whatsapp,
@@ -50,6 +54,8 @@ function paraSessao(linha: LinhaBanco): QuizSession {
     perfilCalculado: linha.perfil_calculado,
     blocos: linha.blocos,
     whatsappClicadoEm: linha.whatsapp_clicado_em,
+    laudoPdfS3Key: linha.laudo_pdf_s3_key,
+    laudoPdfErro: linha.laudo_pdf_erro,
     startedAt: linha.started_at,
     updatedAt: linha.updated_at,
     completedAt: linha.completed_at,
@@ -77,6 +83,8 @@ function paraLinhaPatch(patch: Partial<QuizSession>): Record<string, unknown> {
   if (patch.perfilCalculado !== undefined) linha.perfil_calculado = patch.perfilCalculado
   if (patch.blocos !== undefined) linha.blocos = patch.blocos
   if (patch.whatsappClicadoEm !== undefined) linha.whatsapp_clicado_em = patch.whatsappClicadoEm
+  if (patch.laudoPdfS3Key !== undefined) linha.laudo_pdf_s3_key = patch.laudoPdfS3Key
+  if (patch.laudoPdfErro !== undefined) linha.laudo_pdf_erro = patch.laudoPdfErro
   if (patch.startedAt !== undefined) linha.started_at = patch.startedAt
   if (patch.completedAt !== undefined) linha.completed_at = patch.completedAt
   return linha
@@ -121,6 +129,12 @@ export function criarSupabaseSessionRepo(client: SupabaseClient): SessionRepo {
     async buscarPorToken(sessionToken) {
       const { data, error } = await client.from('quiz_sessions').select('*')
         .eq('session_token', sessionToken).maybeSingle()
+      if (error) throw error
+      return data ? paraSessao(data as LinhaBanco) : null
+    },
+    async buscarPorLaudoToken(laudoToken) {
+      const { data, error } = await client.from('quiz_sessions').select('*')
+        .eq('laudo_token', laudoToken).maybeSingle()
       if (error) throw error
       return data ? paraSessao(data as LinhaBanco) : null
     },

@@ -27,6 +27,7 @@ sys.path.insert(0, str(PACOTE_DIR))
 
 import brand  # noqa: E402  (depende do sys.path acima)
 import render  # noqa: E402
+import s3  # noqa: E402
 from diagnosis import report as report_mod  # noqa: E402
 from diagnosis.answers import CAMPOS, Lead, LeadInvalido  # noqa: E402
 
@@ -100,6 +101,16 @@ class LaudoRequest(BaseModel):
     # ou altera a marcação do link final.
     whatsapp_numero: str = Field(default="", pattern=r"^\d{0,15}$")
     whatsapp_mensagem: str = ""
+    # session_token do quiz_sessions no Supabase — vira a chave do objeto no
+    # S3 (ver s3.upload_pdf). Opcional: só quem quer o laudo salvo no S3
+    # manda (ver lib/server/laudoPdfBackground.ts); o download avulso do
+    # admin não precisa. Formato uuid (o que o Postgres usa pra
+    # session_token) — nunca vira parte de um path sem validar o formato
+    # antes, pra não deixar a chave do S3 escapar de "laudos/".
+    session_token: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+    )
 
 
 def verificar_segredo(x_laudo_secret: str | None = Header(default=None)) -> None:
@@ -153,9 +164,20 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
         logger.exception("falha ao gerar laudo para %s", req.nome)
         raise HTTPException(status_code=500, detail="falha ao gerar o PDF") from None
 
-    nome_arquivo = brand.nome_para_arquivo(req.nome)
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="laudo-{nome_arquivo}.pdf"'},
-    )
+    headers = {"Content-Disposition": f'attachment; filename="laudo-{brand.nome_para_arquivo(req.nome)}.pdf"'}
+
+    if req.session_token:
+        if s3.configurado():
+            try:
+                headers["X-Laudo-S3-Key"] = await s3.upload_pdf(req.session_token, pdf_bytes)
+            except Exception:
+                # Diferente do except de cima: o PDF já está pronto, o
+                # problema é só salvar no S3 — 502 (upstream), não 500, pra
+                # quem chama (lib/server/laudoPdfBackground.ts) distinguir
+                # "nosso bug" de "S3 fora do ar" se um dia precisar.
+                logger.exception("falha ao subir laudo pro S3 (session_token=%s)", req.session_token)
+                raise HTTPException(status_code=502, detail="falha ao salvar o PDF no S3") from None
+        else:
+            logger.info("S3_BUCKET não configurado — pulando upload (session_token=%s)", req.session_token)
+
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)

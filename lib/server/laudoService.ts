@@ -73,6 +73,7 @@ type PayloadLaudo = {
   teste: Array<{ num: number; escolhida: string }>
   whatsapp_numero: string
   whatsapp_mensagem: string
+  session_token?: string
 }
 
 function montarPayload(sessao: QuizSession, nivel: string): PayloadLaudo {
@@ -112,7 +113,21 @@ function montarPayload(sessao: QuizSession, nivel: string): PayloadLaudo {
 
 export class LaudoIndisponivel extends Error {}
 
-export async function gerarLaudoPdf(sessao: QuizSession, nivel: string): Promise<Buffer> {
+export type ResultadoLaudo = {
+  pdf: Buffer
+  // Chave do objeto no S3 (não a URL — ver lib/server/laudoPdfBackground.ts
+  // pro porquê). null se `salvarS3` não foi pedido, ou se foi pedido mas o
+  // serviço ainda não tem S3_BUCKET configurado (ver services/laudo-pdf/s3.py) —
+  // as duas situações são "sem link ainda", não erro; um S3 configurado que
+  // falhar de verdade vira LaudoIndisponivel (o serviço devolve 502 nesse caso).
+  s3Key: string | null
+}
+
+export async function gerarLaudoPdf(
+  sessao: QuizSession,
+  nivel: string,
+  opts?: { salvarS3?: boolean },
+): Promise<ResultadoLaudo> {
   const baseUrl = process.env.LAUDO_SERVICE_URL
   const segredo = process.env.LAUDO_SERVICE_SECRET
   if (!baseUrl || !segredo) {
@@ -120,6 +135,7 @@ export async function gerarLaudoPdf(sessao: QuizSession, nivel: string): Promise
   }
 
   const payload = montarPayload(sessao, nivel)
+  if (opts?.salvarS3) payload.session_token = sessao.sessionToken
 
   // AbortSignal.timeout, não a promessa nua: sem isso, um serviço travado
   // (não caído — travado, sem responder) prende a requisição do admin até o
@@ -141,5 +157,5 @@ export async function gerarLaudoPdf(sessao: QuizSession, nivel: string): Promise
   }
 
   const arrayBuffer = await resposta.arrayBuffer()
-  return Buffer.from(arrayBuffer)
+  return { pdf: Buffer.from(arrayBuffer), s3Key: resposta.headers.get('X-Laudo-S3-Key') }
 }

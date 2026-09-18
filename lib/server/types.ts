@@ -5,6 +5,12 @@ import type { BlocoEscolhido } from '../blocos'
 export type QuizSession = {
   id: number
   sessionToken: string
+  // Identificador do link do laudo (/api/laudo/[token]) — ao contrário de
+  // sessionToken, NUNCA muda depois de criado (sessionToken é reescrito toda
+  // vez que a mesma pessoa retoma o quiz, ver iniciarSessao; um link pro CRM
+  // baseado nele quebraria nesse momento). Gerado pelo banco
+  // (`default gen_random_uuid()`) — nunca passado em `criar()`.
+  laudoToken: string
   evento: string
   nome: string
   whatsapp: string
@@ -32,6 +38,16 @@ export type QuizSession = {
   // de resultado — sinal de intenção de compra, não de diagnóstico. Só o
   // primeiro clique é gravado (ver registrarCliqueWhatsapp em quizService.ts).
   whatsappClicadoEm: string | null
+  // Chave do objeto no S3 (não a URL — a URL assinada expira em até 7 dias,
+  // a chave não). Gerado em background na conclusão (ver
+  // lib/server/laudoPdfBackground.ts); null até terminar ou se a geração
+  // falhar. /api/laudo/[token] usa essa chave pra montar a URL assinada na
+  // hora de cada acesso.
+  laudoPdfS3Key: string | null
+  // Mensagem da última falha ao gerar/subir o laudo em background — só pra
+  // diagnóstico (ver acima). null quando nunca falhou ou quando um sucesso
+  // posterior limpou o valor.
+  laudoPdfErro: string | null
   startedAt: string
   updatedAt: string
   completedAt: string | null

@@ -43,12 +43,25 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   const nivel = sessao.acertos !== null ? nivelTeste(sessao.acertos) : ''
 
   let pdf: Buffer
+  let s3Key: string | null
   try {
-    pdf = await gerarLaudoPdf(sessao, nivel)
+    ;({ pdf, s3Key } = await gerarLaudoPdf(sessao, nivel, { salvarS3: true }))
   } catch (e) {
     const status = e instanceof LaudoIndisponivel ? 503 : 500
     console.error('[admin/leads/pdf] erro inesperado ao gerar o PDF', e)
     return NextResponse.json({ erro: 'falha ao gerar o PDF' }, { status })
+  }
+
+  // Recuperação manual pro caso de app/api/quiz/finish/route.ts ter tentado
+  // gerar em background e falhado (ou nunca ter rodado): baixar aqui também
+  // preenche laudo_pdf_s3_key, então o link estável (/api/laudo/[token])
+  // passa a funcionar sem precisar de nenhum acesso direto ao banco. Não
+  // trava a resposta por isso — se a gravação falhar, o admin já tem o PDF
+  // que veio pra baixar; só perde a chance de backfill dessa vez.
+  if (s3Key) {
+    await repo.atualizar(sessao.id, { laudoPdfS3Key: s3Key, laudoPdfErro: null }).catch((e) => {
+      console.error('[admin/leads/pdf] falha ao gravar laudo_pdf_s3_key', e)
+    })
   }
 
   return new Response(new Uint8Array(pdf), {

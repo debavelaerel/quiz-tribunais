@@ -70,6 +70,8 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
     perfilCalculado: null,
     blocos: null,
     whatsappClicadoEm: null,
+    laudoPdfS3Key: null,
+    laudoPdfErro: null,
     startedAt: agora,
     updatedAt: agora,
     completedAt: null,

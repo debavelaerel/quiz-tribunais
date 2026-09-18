@@ -4,7 +4,7 @@ import type { QuizSession } from './types'
 
 function sessaoDeExemplo(): QuizSession {
   return {
-    id: 1, sessionToken: 'tok', evento: 'diagnostico-tribunais-comercial',
+    id: 1, laudoToken: 'laudo-tok', sessionToken: 'tok', evento: 'diagnostico-tribunais-comercial',
     nome: 'Camila Nogueira', whatsapp: '11999998888', whatsappNormalizado: '5511999998888',
     email: 'camila@x.com', emailNormalizado: 'camila@x.com', fluxo: 'padrao', status: 'concluido',
     respostas: [
@@ -21,7 +21,8 @@ function sessaoDeExemplo(): QuizSession {
     },
     perfilCalculado: { classe: 'A', pontos: 7, curso: 'Curso 2 · Analista de TJ e TRF (231 temas)', cursoCod: 'C2-TJTRF', ritmo: 'base em 12 meses, no ritmo de 2h por dia' },
     blocos: [],
-    whatsappClicadoEm: null, startedAt: '2026-09-16T10:00:00Z', updatedAt: '2026-09-16T10:20:00Z', completedAt: '2026-09-16T10:20:00Z',
+    whatsappClicadoEm: null, laudoPdfS3Key: null, laudoPdfErro: null,
+    startedAt: '2026-09-16T10:00:00Z', updatedAt: '2026-09-16T10:20:00Z', completedAt: '2026-09-16T10:20:00Z',
   }
 }
 
@@ -89,7 +90,7 @@ describe('gerarLaudoPdf', () => {
     )
     vi.stubGlobal('fetch', fetchEspiao)
 
-    const pdf = await gerarLaudoPdf(sessaoDeExemplo(), 'intermediário')
+    const resultado = await gerarLaudoPdf(sessaoDeExemplo(), 'intermediário')
 
     expect(fetchEspiao).toHaveBeenCalledTimes(1)
     const [url, init] = fetchEspiao.mock.calls[0]
@@ -102,7 +103,22 @@ describe('gerarLaudoPdf', () => {
       { num: 1, escolhida: 'C' }, { num: 2, escolhida: 'A' },
       { num: 3, escolhida: 'B' }, { num: 4, escolhida: 'D' },
     ])
-    expect(Buffer.compare(pdf, Buffer.from(bytesFalsos))).toBe(0)
+    expect(corpo.session_token).toBeUndefined()
+    expect(Buffer.compare(resultado.pdf, Buffer.from(bytesFalsos))).toBe(0)
+    expect(resultado.s3Key).toBeNull()
+  })
+
+  it('salvarS3: manda session_token no corpo e lê a chave do cabeçalho X-Laudo-S3-Key', async () => {
+    const fetchEspiao = vi.fn().mockResolvedValue(
+      new Response(new Uint8Array(), { status: 200, headers: { 'X-Laudo-S3-Key': 'laudos/tok.pdf' } }),
+    )
+    vi.stubGlobal('fetch', fetchEspiao)
+
+    const resultado = await gerarLaudoPdf(sessaoDeExemplo(), 'intermediário', { salvarS3: true })
+
+    const corpo = JSON.parse(fetchEspiao.mock.calls[0][1].body)
+    expect(corpo.session_token).toBe('tok')
+    expect(resultado.s3Key).toBe('laudos/tok.pdf')
   })
 
   it('serviço responde erro (422/500/etc.): estoura LaudoIndisponivel com o corpo da resposta', async () => {

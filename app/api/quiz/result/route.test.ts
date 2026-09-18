@@ -58,7 +58,7 @@ describe('GET /api/quiz/result', () => {
         headers: { 'x-forwarded-for': ip() },
       }))
     }
-    await criarHandlerFinish(repo)(new Request('http://localhost/api/quiz/finish', {
+    await criarHandlerFinish(repo, () => {})(new Request('http://localhost/api/quiz/finish', {
       method: 'POST',
       body: JSON.stringify({ session_token: TOKEN }),
       headers: { 'x-forwarded-for': ip() },

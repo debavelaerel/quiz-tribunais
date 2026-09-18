@@ -1,15 +1,27 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { concluirSessao, SessaoInvalidaError, SessaoConcluidaError, SessaoIncompletaError } from '@/lib/server/quizService'
+import { gerarEArmazenarLaudo } from '@/lib/server/laudoPdfBackground'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
 import { isUuid } from '@/lib/server/uuid'
 import { ipDaRequisicao } from '@/lib/server/ip'
 
 export const runtime = 'nodejs'
+// `after()` conta pro tempo de vida da MESMA function — sem isso, o padrão
+// da plataforma pode matar a função antes do trabalho em background
+// terminar. O fetch pro serviço de laudo já usa um timeout de 55s (ver
+// laudoService.ts) — 60 deixava quase zero folga pra tudo em volta dele
+// (rate limit, ler/gravar a sessão duas vezes no Supabase); 90 dá margem
+// de verdade sem chegar perto do teto de function da Vercel.
+export const maxDuration = 90
 
-export function criarHandlerFinish(repo: SessionRepo) {
+// `after()` exige contexto de requisição real do Next.js — chamar a rota
+// direto (como os testes fazem, sem passar pelo servidor de verdade)
+// estoura "after() was called outside a request scope". Injetável por isso:
+// em produção usa `after` de next/server; os testes passam um stub síncrono.
+export function criarHandlerFinish(repo: SessionRepo, agendarBackground: (tarefa: () => void | Promise<void>) => void = after) {
   return async function handler(req: Request): Promise<Response> {
     if (!permitirRequisicao(`finish:${ipDaRequisicao(req)}`, 10, 60_000)) {
       return NextResponse.json({ erro: 'muitas requisições' }, { status: 429 })
@@ -33,6 +45,11 @@ export function criarHandlerFinish(repo: SessionRepo) {
 
     try {
       const sessao = await concluirSessao(repo, sessionToken)
+      // Gera o laudo em PDF e sobe pro S3 depois de responder — não faz
+      // quem terminou o quiz esperar o Chromium do serviço Python renderizar
+      // (ver lib/server/laudoPdfBackground.ts pro que acontece se isso
+      // falhar: nunca propaga erro pra cá, só grava em laudo_pdf_erro).
+      agendarBackground(() => gerarEArmazenarLaudo(repo, sessao))
       return NextResponse.json({
         score_geral_pct: sessao.scoreGeralPct,
         acertos: sessao.acertos,
