@@ -184,6 +184,27 @@ do Tribunais (interesse em carreira jurídica, cargo abaixo do alvo). Tabela
 independente, sem dedupe, sem update — captura de uma vez só, pra não
 contaminar as métricas do funil principal.
 
+## Perguntas frequentes
+
+**Criou uma tabela nova pros 2 materiais (laudo e apresentação)?**
+Não. Os dois vivem como colunas na mesma tabela `quiz_sessions`:
+`laudo_pdf_s3_key`/`laudo_pdf_erro` (já existiam) e
+`apresentacao_pdf_s3_key`/`apresentacao_pdf_erro` (novas, adicionadas no
+mesmo padrão — ver migration `20260921220000_quiz_sessions_apresentacao_pdf.sql`).
+
+**É relacionada com a outra?**
+Mais que relacionada — é a **mesma linha**. Não existe chave estrangeira nem
+tabela separada, porque os dois materiais pertencem 1:1 à mesma sessão de
+quiz (ver seção "Banco de dados" acima).
+
+**Em quanto tempo ele gera os materiais?**
+- **Laudo**: em segundo plano, assim que o quiz termina (`POST
+  /api/quiz/finish`) — a pessoa não espera nada. O teto de segurança da
+  chamada ao serviço Python é 55s (`AbortSignal.timeout`, ver
+  `lib/server/laudoService.ts`); na prática sai bem mais rápido, é um PDF só.
+- **Apresentação**: só quando o admin clica em "baixar" no painel — aí sim
+  essa pessoa espera a resposta, com o mesmo teto de 55s.
+
 ## API
 
 Convenção: fronteira JSON em `snake_case`; internamente o código é
