@@ -218,6 +218,17 @@ function CampoTexto({ id, rotulo, placeholder, value, onChange, erro, tocado, on
   )
 }
 
+// Fora do componente (não uma closure de estado) por causa da ordem dos efeitos
+// no mount: o efeito que decide pra onde ir se a retomada falhar (abaixo) roda
+// no mesmo mount que o efeito que lê a query string, mas closures de efeito
+// capturam o valor do render em que foram criados — o estado `fluxoFinal`
+// ainda não teria sido atualizado a tempo. Lendo a URL direto aqui, sem
+// depender do estado, evita essa corrida.
+function fluxoFinalDaUrl(): boolean {
+  if (typeof window === 'undefined') return true
+  return new URLSearchParams(window.location.search).get('fluxo') !== 'padrao'
+}
+
 export default function Quiz() {
   const [tela, setTela] = useState<Tela>('intro')
   const [atual, setAtual] = useState(0)
@@ -251,17 +262,17 @@ export default function Quiz() {
   const [fraseAnalisando, setFraseAnalisando] = useState(0)
   const [pctAnalisando, setPctAnalisando] = useState(0)
 
-  // Duas versões do funil, escolhidas por query string (ex.: ?fluxo=final),
-  // pra comparar lado a lado sem duplicar o app: 'inicio' (padrão) pede nome
-  // + WhatsApp + e-mail juntos na capa, antes do perfilamento; 'final' pede
-  // só o nome no começo e WhatsApp + e-mail depois da leitura, antes do
-  // resultado — o quiz inteiro roda em memória no navegador até esse ponto
-  // (sem sessão no servidor), e só então chama /start, /answer e /finish em
-  // sequência, exatamente como o fluxo padrão já faz — nenhuma rota nova.
-  const [fluxoFinal, setFluxoFinal] = useState(false)
+  // Duas versões do funil, escolhidas por query string: a versão principal
+  // (sem parâmetro nenhum, ou ?fluxo=final) pede só o nome no começo e
+  // WhatsApp + e-mail depois da leitura, antes do resultado — o quiz inteiro
+  // roda em memória no navegador até esse ponto (sem sessão no servidor), e
+  // só então chama /start, /answer e /finish em sequência, exatamente como o
+  // fluxo antigo já fazia — nenhuma rota nova. ?fluxo=padrao volta pra versão
+  // antiga (nome + WhatsApp + e-mail juntos na capa, antes do perfilamento),
+  // mantida só pra comparação — não é mais a versão principal.
+  const [fluxoFinal, setFluxoFinal] = useState(true)
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    setFluxoFinal(new URLSearchParams(window.location.search).get('fluxo') === 'final')
+    setFluxoFinal(fluxoFinalDaUrl())
   }, [])
 
   // Pré-carrega o iframe do vídeo assim que o quiz monta — bem antes da
@@ -404,7 +415,7 @@ export default function Quiz() {
           setWhatsapp(salvo.whatsapp)
           setEmail(salvo.email)
           setErro('Não foi possível retomar seu diagnóstico. Confira seus dados e comece de novo.')
-          setTela('capa')
+          setTela(fluxoFinalDaUrl() ? 'nome' : 'capa')
           return
         }
 
@@ -429,7 +440,7 @@ export default function Quiz() {
         setWhatsapp(salvo.whatsapp)
         setEmail(salvo.email)
         setErro('Não foi possível retomar seu diagnóstico. Verifique sua conexão.')
-        setTela('capa')
+        setTela(fluxoFinalDaUrl() ? 'nome' : 'capa')
       } finally {
         // Em StrictMode o efeito roda duas vezes; a execução cancelada não pode
         // soltar a trava da execução que ainda está no ar.

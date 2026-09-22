@@ -35,7 +35,12 @@ function respostaPadrao(): Record<string, () => Response> {
 
 beforeEach(() => {
   localStorage.clear()
-  window.history.pushState({}, '', '/')
+  // Este describe testa o fluxo antigo (nome+WhatsApp+e-mail juntos na capa)
+  // — não é mais o padrão sem query string (ver comentário de fluxoFinal em
+  // Quiz.tsx), então pede ele explicitamente. O describe 'fluxo com contato
+  // no final' abaixo testa a versão principal atual e já seta sua própria
+  // query string em cada teste, sobrescrevendo esta.
+  window.history.pushState({}, '', '/?fluxo=padrao')
   respostas = respostaPadrao()
   vi.stubGlobal('fetch', vi.fn(async (url: string) => {
     if (url.includes('/api/quiz/result')) return respostas.result()
