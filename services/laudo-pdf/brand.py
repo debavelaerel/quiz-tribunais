@@ -166,6 +166,22 @@ def css_com_paleta_do_app(css_original: str) -> str:
     return css
 
 
+_CAPA_MIN_HEIGHT_ORIGINAL = ".capa{min-height:266mm;"
+
+
+def css_com_altura_da_capa_corrigida(css: str) -> str:
+    """A capa tem `min-height:266mm`, mas a área útil da página impressa
+    (render.py: A4 = 297mm, margem top 18mm + bottom 14mm) é só 265mm — 1mm
+    menor que o mínimo pedido. Esse estouro de 1mm empurra o fim da capa pra
+    uma segunda página quase inteira em branco (só header/footer do PDF),
+    antes do `break-after:page` que já força a próxima seção a começar numa
+    página nova — o bug real por trás da "página em branco" do laudo.
+    Reduz com folga (não só pro exato 265mm) pra sobrar margem de erro de
+    arredondamento entre mm e px no motor de PDF."""
+    _confirmar(css.count(_CAPA_MIN_HEIGHT_ORIGINAL) == 1, "CSS de report.py mudou: regra .capa min-height não encontrada (ou já mudou) — correção da página em branco ficaria obsoleta ou reaplicada errado")
+    return css.replace(_CAPA_MIN_HEIGHT_ORIGINAL, ".capa{min-height:262mm;")
+
+
 CTA_SEM_LINK = '<span class="selo">Responder no WhatsApp e marcar o meu horário</span>'
 
 
@@ -223,6 +239,26 @@ def titulo_da_base(html: str) -> str:
     ocorrencias = html.count(RAIO_X_DA_BASE)
     _confirmar(ocorrencias == 3, f"HTML de report.py mudou: esperava 3 ocorrências de \"{RAIO_X_DA_BASE}\" (eyebrow, título, rodapé), achou {ocorrencias} — rebrand ficaria incompleto")
     return html.replace(RAIO_X_DA_BASE, "Diagnóstico da Base")
+
+
+# Além de "Raio-X da Base" (nome do produto, tratado acima), report.py usa
+# "raio-X" solto, como substantivo comum, em mais 3 pontos do corpo do
+# laudo — titulo_da_base() não pega esses (string diferente). Mesmo rebrand
+# aprovado (ver docstring do módulo), só que aplicado às frases inteiras
+# (não dá pra trocar só a palavra: "seu raio-X completo" -> "seu
+# diagnóstico completo" muda a frase toda ao redor pra soar natural).
+_RAIO_X_GENERICO = {
+    "Este é o seu raio-X completo.": "Este é o seu diagnóstico completo.",
+    "Neste raio-X": "Neste diagnóstico",
+    "Um raio-X aponta o problema e não resolve ele sozinho.": "Um diagnóstico aponta o problema e não resolve ele sozinho.",
+}
+
+
+def raio_x_generico(html: str) -> str:
+    for frase, trocada in _RAIO_X_GENERICO.items():
+        _confirmar(html.count(frase) == 1, f"HTML de report.py mudou: não achei (ou achei mais de uma vez) \"{frase}\" — rebrand ficaria incompleto")
+        html = html.replace(frase, trocada)
+    return html
 
 
 def nome_para_arquivo(nome: str) -> str:

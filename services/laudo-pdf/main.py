@@ -44,7 +44,7 @@ logger = logging.getLogger("laudo-pdf")
 # transformada uma vez aqui e reatribuída.
 report_mod.logo_svg = brand.logo_svg_override
 report_mod.fonts_css = brand.fonts_css_override
-report_mod.CSS = brand.css_com_paleta_do_app(report_mod.CSS)
+report_mod.CSS = brand.css_com_altura_da_capa_corrigida(brand.css_com_paleta_do_app(report_mod.CSS))
 
 # fonts_css_override/logo_svg_override só leem arquivo de verdade na
 # primeira chamada (cacheada depois, lru_cache em brand.py) — chama as duas
@@ -158,6 +158,7 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
     try:
         html = report_mod.build_html(lead, hoje=hoje)
         html = brand.titulo_da_base(html)
+        html = brand.raio_x_generico(html)
         html = brand.remover_marca_duplicada(html)
         html = brand.cta_whatsapp_com_mensagem(html, req.whatsapp_numero, req.whatsapp_mensagem)
         pdf_bytes = await render.html_para_pdf(html)
