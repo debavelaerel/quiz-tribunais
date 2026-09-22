@@ -107,6 +107,51 @@ describe('POST /api/quiz/perfil', () => {
     expect(res.status).toBe(422)
   })
 
+  // Regressão: 'alvo' e 'momento' viram chave de lookup em objeto literal
+  // (EDITAIS_BASE[alvo] em lib/blocos.ts; DIAG[momento]/L.momento[momento]
+  // em lib/server/pdf.ts) — um valor tipo "constructor" bate numa
+  // propriedade herdada de Object.prototype em vez de undefined e quebra
+  // esses lookups com TypeError, travando QUALQUER /finish futuro pra esse
+  // token (o valor fica salvo permanentemente). Precisa recusar na entrada.
+  it('recusa um valor de "alvo" fora das opções reais da tela (colisão com Object.prototype)', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    const res = await handler(fazerRequisicao({ session_token: TOKEN, chave: 'alvo', valor: 'constructor' }))
+    expect(res.status).toBe(422)
+    expect(repo.linhas[0].perfil).toEqual({})
+  })
+
+  it('recusa um valor de "momento" fora das opções reais da tela', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    const res = await handler(fazerRequisicao({ session_token: TOKEN, chave: 'momento', valor: 'hasOwnProperty' }))
+    expect(res.status).toBe(422)
+  })
+
+  it('lote: recusa um valor de "alvo" fora das opções reais da tela', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    const res = await handler(fazerRequisicao({ session_token: TOKEN, respostas: { alvo: '__proto__' } }))
+    expect(res.status).toBe(422)
+  })
+
+  it('aceita cada valor real de "alvo" e "momento" (não é uma allowlist vazia por engano)', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerPerfil(repo)
+    for (const valor of ['tj', 'trf', 'trt', 'fe', 'any', 'juridica', 'outro']) {
+      const res = await handler(fazerRequisicao({ session_token: TOKEN, chave: 'alvo', valor }))
+      expect(res.status).toBe(200)
+    }
+    for (const valor of ['zero', 'sembase', 'plato', 'improviso', 'servidor']) {
+      const res = await handler(fazerRequisicao({ session_token: TOKEN, chave: 'momento', valor }))
+      expect(res.status).toBe(200)
+    }
+  })
+
   it('retorna 404 para session_token inexistente', async () => {
     const repo = criarFakeSessionRepo()
     const handler = criarHandlerPerfil(repo)

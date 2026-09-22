@@ -332,6 +332,23 @@ export default function Quiz() {
   // clique no mesmo tick passaria pelo `disabled` e chamaria setAtual duas vezes.
   const emVooRef = useRef(false)
 
+  // Trava + fila dos POSTs de persistirPerfil — nunca deixa 2 em voo ao mesmo
+  // tempo. `registrarPerfil` no servidor é ler-mesclar-gravar (lê `perfil`
+  // atual, mescla a chave nova, grava tudo de volta) sem controle de
+  // concorrência; como cada tela chama persistirPerfil sem aguardar
+  // (fire-and-forget) e sem travar a navegação, duas respostas seguidas em
+  // telas próximas podiam completar fora de ordem numa rede instável, e a
+  // que chegasse por último sobrescrevia com um `perfil` mais velho —
+  // apagando em silêncio a chave gravada pela que "venceu" a corrida mas
+  // terminou antes. Só ENFILEIRA (atrasa o disparo) quando já existe uma
+  // gravação em voo; do contrário dispara na mesma hora, igual a antes —
+  // importante porque responderLeitura conta com a chamada de
+  // persistirPerfil('leitura', ...) saindo ANTES do fetch de /api/quiz/finish
+  // (ver concluir/responderLeitura), senão esse /perfil morre com "sessão já
+  // concluída" (409, achado e corrigido antes — ver histórico do arquivo).
+  const perfilEmVooRef = useRef(false)
+  const filaPerfilRef = useRef<Array<() => void>>([])
+
   // Ao montar: se há sessão em cache, decide entre reexibir o resultado (F5 na tela
   // de resultado) e retomar o quiz de onde parou — sem pedir os dados de novo.
   useEffect(() => {
@@ -499,11 +516,22 @@ export default function Quiz() {
   // uma resposta graduada.
   function persistirPerfil(chave: string, valor: string | string[]) {
     if (!estado) return
-    void fetch('/api/quiz/perfil', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_token: estado.sessionToken, chave, valor }),
-    }).catch(() => {})
+    const sessionToken = estado.sessionToken
+    const disparar = () => {
+      perfilEmVooRef.current = true
+      fetch('/api/quiz/perfil', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: sessionToken, chave, valor }),
+      }).catch(() => {}).then(() => {
+        perfilEmVooRef.current = false
+        filaPerfilRef.current.shift()?.()
+      })
+    }
+    // Ver comentário em perfilEmVooRef/filaPerfilRef: só enfileira (atrasa)
+    // se já tem uma gravação em voo — do contrário dispara já, síncrono.
+    if (perfilEmVooRef.current) filaPerfilRef.current.push(disparar)
+    else disparar()
   }
 
   // Motivo 'outro'/'cargo_baixo' no fluxo padrão: contato já existe (deu na
@@ -712,22 +740,43 @@ export default function Quiz() {
   // Mostra 'analisando' enquanto o /finish está em voo — `telaSeErro` é pra
   // onde volta se falhar (precisa ser uma tela com AlertaErro visível).
   async function concluir(sessionToken: string, proximaTela: Tela, telaSeErro: Tela) {
+    // Só chamada por responderLeitura, sem guarda própria (a tela de leitura
+    // não desabilitava o botão nem travava clique duplo) — um duplo
+    // clique/toque disparava dois /api/quiz/finish concorrentes pra mesma
+    // sessão; o que perdesse a corrida batia em SessaoConcluidaError (409) e
+    // prendia a pessoa num loop de erro, mesmo a sessão já estando concluída
+    // de verdade pelo outro. `emVooRef` aqui garante só 1 em voo por vez.
+    if (emVooRef.current) return
+    emVooRef.current = true
+    setEnviando(true)
     setTela('analisando')
-    const [res] = await Promise.all([
-      fetch('/api/quiz/finish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_token: sessionToken }),
-      }),
-      aguardarNoMinimo(MIN_DURACAO_ANALISANDO),
-    ])
-    if (!res.ok) {
-      setErro('Não foi possível concluir o diagnóstico. Tente novamente.')
+    try {
+      const [res] = await Promise.all([
+        fetch('/api/quiz/finish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_token: sessionToken }),
+        }),
+        aguardarNoMinimo(MIN_DURACAO_ANALISANDO),
+      ])
+      if (!res.ok) {
+        setErro('Não foi possível concluir o diagnóstico. Tente novamente.')
+        setTela(telaSeErro)
+        return
+      }
+      setResultado(await res.json())
+      setTela(proximaTela)
+    } catch {
+      // Sem isso, uma falha de rede bem na hora do /finish (offline, DNS,
+      // timeout) deixava a tela travada em "analisando" pra sempre — o
+      // catch já tinha rodado `setTela('analisando')`, mas nada nunca
+      // chamava setTela de novo pra tirar de lá.
+      setErro('Não foi possível concluir o diagnóstico. Verifique sua conexão.')
       setTela(telaSeErro)
-      return
+    } finally {
+      emVooRef.current = false
+      setEnviando(false)
     }
-    setResultado(await res.json())
-    setTela(proximaTela)
   }
 
   // Fluxo com contato no final: cria (ou atualiza, se o salvamento antecipado
@@ -738,7 +787,15 @@ export default function Quiz() {
   // quem chama decide se mostra erro (silencioso no salvamento antecipado,
   // visível no clique final).
   async function criarOuAtualizarSessaoFinal(): Promise<string | null> {
-    const token = estado?.sessionToken ?? criarNovoSessionToken()
+    // Só reaproveita o token de uma sessão já criada (salvamento antecipado)
+    // se o contato ainda for o mesmo daquela vez — se a pessoa trocou e-mail
+    // E whatsapp depois (edita os dois campos antes do próximo blur/clique),
+    // o servidor não vai mais achar `estado.sessionToken` nem por e-mail nem
+    // por whatsapp e cai no `criar()`, tentando inserir uma linha nova com
+    // um session_token que já é `unique` no banco (o da sessão antiga) — 500
+    // garantido. Contato mudou = trata como pessoa nova, com token novo.
+    const mesmoContato = estado && estado.email === email && estado.whatsapp === whatsapp
+    const token = mesmoContato ? estado!.sessionToken : criarNovoSessionToken()
     const resStart = await fetch('/api/quiz/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1501,11 +1558,12 @@ export default function Quiz() {
             <h1 className="text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">{comNome(primeiroNome, TELA_LEITURA.title)}</h1>
             <div className="mt-6 flex flex-col gap-2.5">
               {opts.map(([valor, texto]: Opcao) => (
-                <OptionButton key={valor} selected={false} onClick={() => responderLeitura(valor)}>
+                <OptionButton key={valor} selected={false} disabled={enviando} onClick={() => responderLeitura(valor)}>
                   {texto}
                 </OptionButton>
               ))}
             </div>
+            {erro && <AlertaErro mensagem={erro} />}
           </div>
         </main>
       </div>

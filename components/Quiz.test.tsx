@@ -245,6 +245,33 @@ describe('Quiz', () => {
     expect(idxLeitura).toBeLessThan(idxFinish)
   })
 
+  // Regressão: uma falha de rede bem na hora do /api/quiz/finish (offline,
+  // timeout, DNS) travava a tela em "analisando" pra sempre — faltava
+  // try/catch em concluir(), então a exceção só rejeitava a promise
+  // "solta" (a chamada é `void concluir(...)`) sem nada trocar a tela de
+  // volta. Ver debug-stuck.png.
+  it('sai da tela "analisando" e mostra erro quando /api/quiz/finish falha de rede', async () => {
+    render(<Quiz />)
+    await chegarAoQuiz()
+    const letras = ['C', 'C', 'B', 'A']
+    for (const letra of letras) {
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${letra} `) }))
+      await waitFor(() => {})
+    }
+    await waitFor(() => expect(screen.getByText(/Maria, você acertou/)).toBeInTheDocument())
+    fireEvent.click(screen.getByText(/Fechar meu diagnóstico/))
+    await waitFor(() => expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument())
+
+    respostas.finish = () => { throw new Error('rede caiu') }
+    fireEvent.click(screen.getByText('Só o diagnóstico já basta'))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument(), { timeout: 3000 })
+    expect(screen.getByText(/Verifique sua conexão/)).toBeInTheDocument()
+    // Não fica preso em "analisando" — volta pra tela de leitura, com o
+    // botão clicável de novo.
+    expect(screen.getByText('Só o diagnóstico já basta')).toBeInTheDocument()
+  })
+
   it('registra o clique no CTA de WhatsApp (sinal de intenção pro lead scoring)', async () => {
     render(<Quiz />)
     await chegarAoResultado()
