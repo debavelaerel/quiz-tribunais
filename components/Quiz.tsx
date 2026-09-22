@@ -165,7 +165,7 @@ const CARREIRAS_JURIDICAS = [
 // `camposTocados`). Uma frase por campo, sem tentar diagnosticar a causa
 // exata do e-mail/telefone inválido, só dizer o formato esperado.
 const MSG_NOME = 'Informe nome e sobrenome.'
-const MSG_WHATSAPP = 'WhatsApp inválido. Use o formato (85) 99682-6067.'
+const MSG_WHATSAPP = 'WhatsApp inválido. Use o formato (11) 91234-5678.'
 const MSG_EMAIL = 'E-mail inválido.'
 
 // Campo de formulário compacto, sem rótulo visível — o placeholder já diz o
@@ -229,6 +229,11 @@ function fluxoFinalDaUrl(): boolean {
   return new URLSearchParams(window.location.search).get('fluxo') !== 'padrao'
 }
 
+// Origem do player pra validar postMessage recebido (evento.origin) e pra
+// mandar o comando de play (contentWindow.postMessage(msg, origem)) — sempre
+// a mesma de CONFIG.videoSrc, nunca hardcoded separado dela.
+const PANDA_ORIGIN = new URL(CONFIG.videoSrc).origin
+
 export default function Quiz() {
   const [tela, setTela] = useState<Tela>('intro')
   const [atual, setAtual] = useState(0)
@@ -286,6 +291,31 @@ export default function Quiz() {
   // mesmo nó (sem recriar, sem refazer a requisição) — ver o ref callback
   // no JSX da tela 'video'.
   const videoHostRef = useRef<HTMLDivElement | null>(null)
+  // Autoplay do vídeo: CONFIG.videoSrc já pede muted=true (obrigatório pra
+  // autoplay funcionar em qualquer navegador), mas NÃO pede autoplay=true —
+  // se pedisse, o player tocaria assim que terminasse de carregar, ainda
+  // escondido no pré-load acima (minutos antes da pessoa chegar na tela
+  // 'video'), e os ~40s do vídeo já teriam passado quando ela finalmente
+  // visse a tela. Em vez disso: espera as DUAS condições baterem — o player
+  // avisar que está pronto (panda_ready) E a tela 'video' ficar visível (ref
+  // callback dela) — e só então manda o comando de play via postMessage.
+  const videoIframeRef = useRef<HTMLIFrameElement | null>(null)
+  const videoProntoRef = useRef(false)
+  const videoVisivelRef = useRef(false)
+  function tentarTocarVideo() {
+    if (videoProntoRef.current && videoVisivelRef.current) {
+      videoIframeRef.current?.contentWindow?.postMessage({ type: 'play' }, PANDA_ORIGIN)
+    }
+  }
+  useEffect(() => {
+    function aoReceberMensagem(evento: MessageEvent) {
+      if (evento.origin !== PANDA_ORIGIN || evento.data?.message !== 'panda_ready') return
+      videoProntoRef.current = true
+      tentarTocarVideo()
+    }
+    window.addEventListener('message', aoReceberMensagem)
+    return () => window.removeEventListener('message', aoReceberMensagem)
+  }, [])
   useEffect(() => {
     const host = document.createElement('div')
     host.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;'
@@ -298,9 +328,11 @@ export default function Quiz() {
     host.appendChild(iframe)
     document.body.appendChild(host)
     videoHostRef.current = host
+    videoIframeRef.current = iframe
     return () => {
       host.remove()
       videoHostRef.current = null
+      videoIframeRef.current = null
     }
   }, [])
 
@@ -970,7 +1002,7 @@ export default function Quiz() {
                   tocado={camposTocados.nome} onTocar={() => marcarTocado('nome')} erro={!nomeValido(nome) ? MSG_NOME : undefined}
                 />
                 <CampoTexto
-                  id="whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
+                  id="whatsapp" rotulo="WhatsApp" placeholder="(11) 91234-5678" value={whatsapp} onChange={setWhatsapp}
                   formatador={formatarWhatsapp} inputMode="tel"
                   tocado={camposTocados.whatsapp} onTocar={() => marcarTocado('whatsapp')} erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
                 />
@@ -1306,7 +1338,7 @@ export default function Quiz() {
                 </div>
               )}
               <CampoTexto
-                id="desq-whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
+                id="desq-whatsapp" rotulo="WhatsApp" placeholder="(11) 91234-5678" value={whatsapp} onChange={setWhatsapp}
                 formatador={formatarWhatsapp} inputMode="tel"
                 tocado={camposTocados['desq-whatsapp']} onTocar={() => marcarTocado('desq-whatsapp')} erro={!whatsappValido(whatsapp) ? MSG_WHATSAPP : undefined}
               />
@@ -1417,6 +1449,8 @@ export default function Quiz() {
                 if (el && videoHostRef.current && videoHostRef.current.parentElement !== el) {
                   videoHostRef.current.style.cssText = 'width:100%;height:100%;'
                   el.appendChild(videoHostRef.current)
+                  videoVisivelRef.current = true
+                  tentarTocarVideo()
                 }
               }}
             />
@@ -1597,7 +1631,7 @@ export default function Quiz() {
             <form onSubmit={(e) => { e.preventDefault(); void enviarContato() }}>
               <div className="mt-6 flex flex-col gap-2.5">
                 <CampoTexto
-                  id="contato-whatsapp" rotulo="WhatsApp" placeholder="(85) 99682-6067" value={whatsapp} onChange={setWhatsapp}
+                  id="contato-whatsapp" rotulo="WhatsApp" placeholder="(11) 91234-5678" value={whatsapp} onChange={setWhatsapp}
                   formatador={formatarWhatsapp} inputMode="tel"
                   tocado={camposTocados['contato-whatsapp']}
                   onTocar={() => { marcarTocado('contato-whatsapp'); void tentarSalvamentoAntecipado() }}

@@ -10,7 +10,11 @@ export const CONFIG = {
   // Placeholder — trocar pelo número real do time de consultores antes de publicar de verdade.
   whatsapp: '5500000000000',
   // Embed do Panda Video — vídeo da Ana Clara na tela 'video' do funil.
-  videoSrc: 'https://player-vz-246ae85e-308.tv.pandavideo.com.br/embed/?v=ceeffaff-3a26-4b53-ae04-2e52a05106e4',
+  // muted=true é obrigatório pro autoplay funcionar em qualquer navegador
+  // (política padrão contra autoplay com som — ver Quiz.tsx onde o play()
+  // é disparado via postMessage); mutedIndicatorIcon mostra o aviso "toca
+  // pra ativar o som" de que a pessoa precisa pra ouvir.
+  videoSrc: 'https://player-vz-246ae85e-308.tv.pandavideo.com.br/embed/?v=ceeffaff-3a26-4b53-ae04-2e52a05106e4&muted=true&mutedIndicatorIcon=true&mutedIndicatorClickRestart=true&saveProgress=false',
   editaisAtualizadosEm: '3 de setembro de 2026',
   instagram: 'https://www.instagram.com/vdeconcursos/',
 }
