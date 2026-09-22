@@ -63,6 +63,19 @@ _DOR_TITULO = {
     "emocional": 'Você disse que o emocional sabota: ansiedade, comparação, sensação de atraso.',
     "todas": 'Você disse que sente um pouco de tudo isso ao mesmo tempo.',
 }
+# Card "maior gargalo" da tela 1 — 3ª pessoa, sem "de verdade"/pontuação
+# final (o rótulo cru da pergunta é em 1ª pessoa: "Não sei...", "Estudo...").
+# Mesma ideia de _TEMPO_TELA1/_PROVAS_TELA1/_EDITAL_TELA1 mais abaixo.
+_DOR_TELA1 = {
+    "base": 'Não tem base: sente que começa do zero a cada edital',
+    "improviso": 'Estuda no improviso, sem cronograma nem ordem',
+    "tempo": 'Pouco tempo: concilia estudo com trabalho',
+    "naojur": 'Medo das matérias não jurídicas: Português, RLM, Informática',
+    "fixar": 'Lê muito e resolve pouco: não fixa',
+    "banca": 'Não sabe o que a FGV e a FCC cobram',
+    "emocional": 'O emocional sabota: ansiedade, comparação, sensação de atraso',
+    "todas": 'Um pouco de tudo isso ao mesmo tempo',
+}
 # Frase de efeito final da tela 3 — só existia pronta pra "banca" no deck
 # original. Não inventei uma pra cada uma das outras 7 (é a única peça de
 # copy nova, não reaproveitada de blocks.py) — fica em branco (o elemento
@@ -197,7 +210,7 @@ def variaveis(dados: dict) -> dict[str, str]:
         "provas": _esc(_PROVAS_TELA1.get(lead.get("provas"), lead.label("provas"))),
         "horas": _esc(lead.label("horas")),
         "edital_curto": _esc(_EDITAL_TELA1.get(edital, lead.label("edital"))),
-        "dor": _esc(lead.label("dor")),
+        "dor": _esc(_DOR_TELA1.get(dor, lead.label("dor"))),
         # tela 2
         "diagnostico": 'O que está entre você e a posse é a <span class="em-gold">formação de base</span>.',
         "momento": _esc(MOMENTOS.get(lead.get("momento"), "")),

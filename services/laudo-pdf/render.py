@@ -100,13 +100,17 @@ async def html_para_pdf(html: str) -> bytes:
 # (tools/export-light.mjs, fora deste repo) já funciona.
 _SET_VARS_JS = """(vars) => {
   for (const [chave, valor] of Object.entries(vars)) {
-    const el = document.querySelector(`[data-var="${chave}"]`);
-    if (!el) continue;
-    // Valor vazio = campo opcional sem conteúdo pra este lead (ex.:
-    // dor_nota, que só existe pra UM dos 8 gargalos) — esconde o elemento
-    // inteiro em vez de deixar uma caixa/borda vazia sobrando na tela.
-    if (valor === '') { el.style.display = 'none'; continue; }
-    el.innerHTML = valor;
+    // querySelectorAll, não querySelector: "nome" e "cargo" aparecem em DUAS
+    // telas cada (capa e tela 1) — pegar só o primeiro elemento deixava a
+    // segunda ocorrência presa no valor de exemplo do deck original.
+    const els = document.querySelectorAll(`[data-var="${chave}"]`);
+    for (const el of els) {
+      // Valor vazio = campo opcional sem conteúdo pra este lead (ex.:
+      // dor_nota, que só existe pra UM dos 8 gargalos) — esconde o elemento
+      // inteiro em vez de deixar uma caixa/borda vazia sobrando na tela.
+      if (valor === '') { el.style.display = 'none'; continue; }
+      el.innerHTML = valor;
+    }
   }
 }"""
 
