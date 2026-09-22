@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Check, X } from 'lucide-react'
 import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
@@ -8,6 +9,7 @@ import { nivelTeste } from '@/lib/perfil'
 import { labelCargo, waLink } from '@/lib/quizContent'
 import { isUuid } from '@/lib/server/uuid'
 import AreaColumns from '@/components/admin/AreaColumns'
+import CampoCopiavel from '@/components/admin/CampoCopiavel'
 
 export const runtime = 'nodejs'
 
@@ -28,6 +30,13 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
   const repo = criarSupabaseSessionRepo(criarSupabaseAdmin())
   const sessao = await repo.buscarPorToken(token)
   if (!sessao) notFound()
+
+  // Base absoluta pro link do CRM (não dá pra usar caminho relativo — o
+  // link vai ser colado fora daqui, no Clint). `host` já vem com domínio +
+  // porta certos em qualquer ambiente (local, preview, produção), sem
+  // precisar de uma env var própria só pra isso.
+  const host = (await headers()).get('host')
+  const baseUrl = `https://${host}`
 
   const editais = sessao.perfil.editais ?? []
   const nivel = sessao.acertos !== null ? nivelTeste(sessao.acertos) : ''
@@ -154,9 +163,25 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
           )}
         </div>
 
-        <div className="rounded-[14px] border-[1.5px] border-brand-line p-5">
-          <h3 className="mb-1 text-[14.5px] font-bold text-brand-navy">Resumo</h3>
-          <p className="text-[13px] text-brand-ink-dim">Alvo · {labelCargo(sessao.perfil)} em {rotuloPerfil('alvo', sessao.perfil.alvo)}</p>
+        <div className="flex flex-col gap-4">
+          <div className="rounded-[14px] border-[1.5px] border-brand-line p-5">
+            <h3 className="mb-1 text-[14.5px] font-bold text-brand-navy">Resumo</h3>
+            <p className="text-[13px] text-brand-ink-dim">Alvo · {labelCargo(sessao.perfil)} em {rotuloPerfil('alvo', sessao.perfil.alvo)}</p>
+          </div>
+
+          {sessao.status === 'concluido' && (
+            <div className="rounded-[14px] border-[1.5px] border-brand-line p-5">
+              <h3 className="mb-1 text-[14.5px] font-bold text-brand-navy">Links pro CRM</h3>
+              <p className="mb-3 text-[12.5px] text-brand-ink-dim">
+                Nunca expiram nem trocam — colar direto no Clint. No primeiro acesso de cada um, o arquivo é gerado
+                na hora (leva alguns segundos); os acessos seguintes são instantâneos.
+              </p>
+              <div className="flex flex-col gap-2.5 text-[12.5px]">
+                <CampoCopiavel label="Laudo em PDF" valor={`${baseUrl}/api/laudo/${sessao.laudoToken}`} />
+                <CampoCopiavel label="Apresentação comercial" valor={`${baseUrl}/api/apresentacao/${sessao.laudoToken}`} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
