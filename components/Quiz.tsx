@@ -1758,7 +1758,11 @@ export default function Quiz() {
                   </div>
 
                   {resultado.blocos.length > 1 && (
-                    <div className="relative mt-2.5">
+                    // max-h fixo (não cresce com a quantidade de blocos — pode ter
+                    // 7-8 blocos restantes conforme o lead) + overflow hidden: sem
+                    // isso o teaser borrado empilhava todos eles, virando uma
+                    // extensão gigante antes do CTA de WhatsApp aparecer.
+                    <div className="relative mt-2.5 max-h-[220px] overflow-hidden">
                       <div className="flex select-none flex-col gap-2.5">
                         {resultado.blocos.slice(1).map((b, i) => (
                           <div
