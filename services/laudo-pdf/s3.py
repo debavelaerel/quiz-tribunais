@@ -4,23 +4,19 @@ tratar como erro (ainda não recebemos as credenciais do devops). Uma vez
 configurado, uma falha real de upload é erro de verdade — vira 502 em
 main.py, não é engolida aqui.
 
-Nomes de env var próprios (LAUDO_S3_*), não os padrão do boto3
-(AWS_ACCESS_KEY_ID/AWS_DEFAULT_REGION/etc.) e passados explícito pro
-client, de propósito: a Vercel expõe as suas PRÓPRIAS AWS_* ambiente (região
-e identidade da function, não credencial de bucket nenhum) pra dentro de
-toda function — se o client lesse as env vars padrão via detecção
-automática, um dia em que alguém esquecesse de configurar uma das nossas
-LAUDO_S3_* faria o boto3 silenciosamente cair pra essa credencial ambiente
-sem permissão nenhuma no nosso bucket, em vez de simplesmente não subir
-nada. Além disso, o boto3 só lê AWS_DEFAULT_REGION (não AWS_REGION) por
-padrão — nome fácil de confundir com o do SDK do Node (lib/server/s3.ts),
-que lê AWS_REGION; usar um nome nosso, igual nos dois lados, evita essa
-armadilha de propósito.
+Nomes de env var próprios (BUCKET_NAME/REGION/ACCESS_KEY/SECRET_KEY), não os
+padrão do boto3 (AWS_ACCESS_KEY_ID/AWS_DEFAULT_REGION/etc.), e passados
+explícito pro client, de propósito: a Vercel expõe as suas PRÓPRIAS AWS_*
+ambiente (região e identidade da function, não credencial de bucket nenhum)
+pra dentro de toda function — se o client lesse as env vars padrão via
+detecção automática, um dia em que alguém esquecesse de configurar uma das
+nossas faria o boto3 silenciosamente cair pra essa credencial ambiente sem
+permissão nenhuma no nosso bucket, em vez de simplesmente não subir nada.
 """
 import os
 from functools import lru_cache
 
-_VARS = ("LAUDO_S3_BUCKET", "LAUDO_S3_REGION", "LAUDO_S3_ACCESS_KEY_ID", "LAUDO_S3_SECRET_ACCESS_KEY")
+_VARS = ("BUCKET_NAME", "REGION", "ACCESS_KEY", "SECRET_KEY")
 
 
 def configurado() -> bool:
@@ -40,9 +36,9 @@ def _cliente():
     # desistir dessa chamada (ver lib/server/laudoService.ts).
     return boto3.client(
         "s3",
-        region_name=os.environ["LAUDO_S3_REGION"],
-        aws_access_key_id=os.environ["LAUDO_S3_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["LAUDO_S3_SECRET_ACCESS_KEY"],
+        region_name=os.environ["REGION"],
+        aws_access_key_id=os.environ["ACCESS_KEY"],
+        aws_secret_access_key=os.environ["SECRET_KEY"],
         config=Config(connect_timeout=5, read_timeout=20, retries={"max_attempts": 2}),
     )
 
@@ -62,7 +58,7 @@ async def upload_pdf(session_token: str, pdf_bytes: bytes, prefixo: str = "laudo
     """
     import asyncio
 
-    bucket = os.environ["LAUDO_S3_BUCKET"]
+    bucket = os.environ["BUCKET_NAME"]
     key = f"{prefixo}/{session_token}.pdf"
     cliente = _cliente()
     await asyncio.to_thread(cliente.put_object, Bucket=bucket, Key=key, Body=pdf_bytes, ContentType="application/pdf")
