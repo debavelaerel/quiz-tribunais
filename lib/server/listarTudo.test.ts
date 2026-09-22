@@ -5,7 +5,7 @@ import type { QuizSession } from './types'
 
 const EVENTO = 'teste-evento'
 
-function sessaoBase(i: number): Omit<QuizSession, 'id'> {
+function sessaoBase(i: number): Omit<QuizSession, 'id' | 'laudoToken'> {
   return {
     sessionToken: `tok-${i}`,
     evento: EVENTO,
@@ -26,6 +26,8 @@ function sessaoBase(i: number): Omit<QuizSession, 'id'> {
     perfilCalculado: null,
     blocos: null,
     whatsappClicadoEm: null,
+    laudoPdfS3Key: null,
+    laudoPdfErro: null,
     startedAt: new Date(2026, 0, 1, 0, i).toISOString(),
     updatedAt: new Date().toISOString(),
     completedAt: null,

@@ -17,13 +17,18 @@ export function criarFakeSessionRepo(): SessionRepo & { linhas: QuizSession[] } 
     async buscarPorToken(sessionToken) {
       return linhas.find((l) => l.sessionToken === sessionToken) ?? null
     },
+    async buscarPorLaudoToken(laudoToken) {
+      return linhas.find((l) => l.laudoToken === laudoToken) ?? null
+    },
     async criar(sessao) {
       // Espelha `session_token uuid not null unique` da migration: sem isso, o fake
       // aceitaria colisões que o Postgres recusaria em produção.
       if (linhas.some((l) => l.sessionToken === sessao.sessionToken)) {
         throw new Error(`session_token duplicado: ${sessao.sessionToken}`)
       }
-      const nova: QuizSession = { ...sessao, id: proximoId++ }
+      // laudoToken nunca vem de quem chama (ver Omit em SessionRepo.criar) —
+      // é o banco que gera (`default gen_random_uuid()`); o fake espelha isso.
+      const nova: QuizSession = { ...sessao, id: proximoId++, laudoToken: crypto.randomUUID() }
       linhas.push(nova)
       return nova
     },
