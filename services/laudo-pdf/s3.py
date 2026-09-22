@@ -47,11 +47,12 @@ def _cliente():
     )
 
 
-async def upload_pdf(session_token: str, pdf_bytes: bytes) -> str:
+async def upload_pdf(session_token: str, pdf_bytes: bytes, prefixo: str = "laudos") -> str:
     """Sobe o PDF pro S3 sob uma chave estável (session_token) — reenviar o
-    laudo do mesmo lead sobrescreve o objeto em vez de acumular versões
-    soltas. Deixa a exceção do boto3 subir pra quem chamou decidir o que
-    fazer com a falha; só chame depois de conferir `configurado()`.
+    laudo (ou a apresentação, ver `prefixo`) do mesmo lead sobrescreve o
+    objeto em vez de acumular versões soltas. Deixa a exceção do boto3 subir
+    pra quem chamou decidir o que fazer com a falha; só chame depois de
+    conferir `configurado()`.
 
     boto3 é síncrono — chamado direto dentro do `async def` de main.py,
     put_object bloquearia o event loop inteiro do uvicorn (um processo só)
@@ -62,7 +63,7 @@ async def upload_pdf(session_token: str, pdf_bytes: bytes) -> str:
     import asyncio
 
     bucket = os.environ["LAUDO_S3_BUCKET"]
-    key = f"laudos/{session_token}.pdf"
+    key = f"{prefixo}/{session_token}.pdf"
     cliente = _cliente()
     await asyncio.to_thread(cliente.put_object, Bucket=bucket, Key=key, Body=pdf_bytes, ContentType="application/pdf")
     return key

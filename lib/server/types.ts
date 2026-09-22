@@ -48,6 +48,12 @@ export type QuizSession = {
   // diagnóstico (ver acima). null quando nunca falhou ou quando um sucesso
   // posterior limpou o valor.
   laudoPdfErro: string | null
+  // Mesma ideia de laudoPdfS3Key/laudoPdfErro, mas pra apresentação comercial
+  // (deck de call 1:1) — só que gerada sob demanda pelo admin, não em
+  // background: fica null até alguém clicar "Baixar apresentação comercial"
+  // pela primeira vez (ver app/api/admin/leads/[token]/apresentacao/route.ts).
+  apresentacaoPdfS3Key: string | null
+  apresentacaoPdfErro: string | null
   startedAt: string
   updatedAt: string
   completedAt: string | null

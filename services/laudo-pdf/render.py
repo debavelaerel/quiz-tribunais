@@ -18,6 +18,7 @@ do FastAPI, sem esse problema de afinidade de thread.
 """
 import asyncio
 
+import img2pdf
 from playwright.async_api import async_playwright
 
 # Rodapé com numeração de página em toda página — o mesmo comportamento dos
@@ -83,5 +84,65 @@ async def html_para_pdf(html: str) -> bytes:
                 footer_template=FOOTER_TEMPLATE,
                 margin={"top": "18mm", "bottom": "14mm", "left": "15mm", "right": "15mm"},
             )
+        finally:
+            await page.close()
+
+
+# Injeta os valores personalizados (um `el.innerHTML = valor` por
+# `data-var`) e tira um screenshot por slide — a mesma técnica que
+# vendor/vde-tribunais-call/_build/shots.mjs já usa pra validar o deck
+# (alternar a classe `active`; ver comentário lá). Não dá pra usar
+# `page.pdf()` direto no documento inteiro: as 22 telas são `position:
+# absolute`, sobrepostas, mostradas uma de cada vez via JS — teria que
+# reimplementar o layout inteiro em CSS de impressão pra imprimir "páginas"
+# que não existem enquanto páginas de verdade. Screenshot + montagem em PDF
+# (sem perda, img2pdf) espelha exatamente como o export oficial do deck
+# (tools/export-light.mjs, fora deste repo) já funciona.
+_SET_VARS_JS = """(vars) => {
+  for (const [chave, valor] of Object.entries(vars)) {
+    const el = document.querySelector(`[data-var="${chave}"]`);
+    if (!el) continue;
+    // Valor vazio = campo opcional sem conteúdo pra este lead (ex.:
+    // dor_nota, que só existe pra UM dos 8 gargalos) — esconde o elemento
+    // inteiro em vez de deixar uma caixa/borda vazia sobrando na tela.
+    if (valor === '') { el.style.display = 'none'; continue; }
+    el.innerHTML = valor;
+  }
+}"""
+
+_ATIVAR_SLIDE_JS = """(id) => {
+  document.querySelectorAll('.slide').forEach((s) => {
+    s.classList.toggle('active', s.dataset.slide === id);
+  });
+}"""
+
+
+async def deck_para_pdf(caminho_html, variaveis: dict, slide_ids: list[str]) -> bytes:
+    """`caminho_html`: caminho local do deck.html (não o conteúdo) — carrega
+    via `file://`, não `set_content()`, pra fontes/imagens em `url(assets/...)`
+    (caminho relativo, sem base URL nenhuma) resolverem sozinhas, do mesmo
+    jeito que _build/shots.mjs (Playwright/Node) já faz com `page.goto`."""
+    if _browser is None:
+        raise RuntimeError("render.iniciar() precisa rodar antes de deck_para_pdf() — chamado fora do lifespan do FastAPI?")
+    async with _semaforo:
+        page = await _browser.new_page(viewport={"width": 1920, "height": 1080})
+        try:
+            await page.goto(f"file://{caminho_html}", wait_until="networkidle")
+            await page.evaluate(_SET_VARS_JS, variaveis)
+            # Sem isso o fade/translate de troca de slide (.5s, ver CSS do
+            # deck) entra no screenshot a meio caminho — a classe muda antes
+            # da transição terminar, então cada slide levaria ~500ms extra
+            # só de espera, 22x nesta função. Trava a transição, não espera
+            # ela: a classe `active` já é o estado final (opacidade 1) desde
+            # o primeiro frame.
+            await page.add_style_tag(content=(
+                ".slide{transition:none!important} "
+                ".nav,.progress-track{display:none!important}"
+            ))
+            paginas = []
+            for slide_id in slide_ids:
+                await page.evaluate(_ATIVAR_SLIDE_JS, slide_id)
+                paginas.append(await page.screenshot(type="png"))
+            return img2pdf.convert(paginas)
         finally:
             await page.close()

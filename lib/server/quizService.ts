@@ -72,6 +72,8 @@ export async function iniciarSessao(repo: SessionRepo, input: IniciarSessaoInput
     whatsappClicadoEm: null,
     laudoPdfS3Key: null,
     laudoPdfErro: null,
+    apresentacaoPdfS3Key: null,
+    apresentacaoPdfErro: null,
     startedAt: agora,
     updatedAt: agora,
     completedAt: null,

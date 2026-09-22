@@ -43,12 +43,20 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
       </Link>
 
       {sessao.status === 'concluido' && (
-        <a
-          href={`/api/admin/leads/${token}/pdf`}
-          className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-brand-ink px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-navy-2"
-        >
-          Baixar PDF do laudo
-        </a>
+        <div className="mb-4 flex flex-wrap gap-2.5">
+          <a
+            href={`/api/admin/leads/${token}/pdf`}
+            className="inline-flex items-center gap-1.5 rounded-full bg-brand-ink px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-navy-2"
+          >
+            Baixar PDF do laudo
+          </a>
+          <a
+            href={`/api/admin/leads/${token}/apresentacao`}
+            className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-brand-line-strong px-4 py-2 text-[13px] font-semibold text-brand-ink hover:bg-brand-tint"
+          >
+            Baixar apresentação comercial
+          </a>
+        </div>
       )}
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">

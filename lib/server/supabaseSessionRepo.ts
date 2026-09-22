@@ -26,6 +26,8 @@ type LinhaBanco = {
   whatsapp_clicado_em: string | null
   laudo_pdf_s3_key: string | null
   laudo_pdf_erro: string | null
+  apresentacao_pdf_s3_key: string | null
+  apresentacao_pdf_erro: string | null
   started_at: string
   updated_at: string
   completed_at: string | null
@@ -56,6 +58,8 @@ function paraSessao(linha: LinhaBanco): QuizSession {
     whatsappClicadoEm: linha.whatsapp_clicado_em,
     laudoPdfS3Key: linha.laudo_pdf_s3_key,
     laudoPdfErro: linha.laudo_pdf_erro,
+    apresentacaoPdfS3Key: linha.apresentacao_pdf_s3_key,
+    apresentacaoPdfErro: linha.apresentacao_pdf_erro,
     startedAt: linha.started_at,
     updatedAt: linha.updated_at,
     completedAt: linha.completed_at,
@@ -85,6 +89,8 @@ function paraLinhaPatch(patch: Partial<QuizSession>): Record<string, unknown> {
   if (patch.whatsappClicadoEm !== undefined) linha.whatsapp_clicado_em = patch.whatsappClicadoEm
   if (patch.laudoPdfS3Key !== undefined) linha.laudo_pdf_s3_key = patch.laudoPdfS3Key
   if (patch.laudoPdfErro !== undefined) linha.laudo_pdf_erro = patch.laudoPdfErro
+  if (patch.apresentacaoPdfS3Key !== undefined) linha.apresentacao_pdf_s3_key = patch.apresentacaoPdfS3Key
+  if (patch.apresentacaoPdfErro !== undefined) linha.apresentacao_pdf_erro = patch.apresentacaoPdfErro
   if (patch.startedAt !== undefined) linha.started_at = patch.startedAt
   if (patch.completedAt !== undefined) linha.completed_at = patch.completedAt
   return linha

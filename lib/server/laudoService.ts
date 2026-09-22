@@ -159,3 +159,41 @@ export async function gerarLaudoPdf(
   const arrayBuffer = await resposta.arrayBuffer()
   return { pdf: Buffer.from(arrayBuffer), s3Key: resposta.headers.get('X-Laudo-S3-Key') }
 }
+
+// Mesmo serviço, mesma validação, mesmo payload do laudo (POST /apresentacao
+// em vez de /laudo) — a apresentação comercial (deck de call 1:1, 22 telas)
+// usa exatamente os mesmos dados de perfil, só personaliza um HTML
+// diferente (services/laudo-pdf/vendor/vde-tribunais-call/deck.html). Ao
+// contrário do laudo, gerada só sob demanda pelo admin, nunca em background.
+export async function gerarApresentacaoPdf(
+  sessao: QuizSession,
+  nivel: string,
+  opts?: { salvarS3?: boolean },
+): Promise<ResultadoLaudo> {
+  const baseUrl = process.env.LAUDO_SERVICE_URL
+  const segredo = process.env.LAUDO_SERVICE_SECRET
+  if (!baseUrl || !segredo) {
+    throw new LaudoIndisponivel('LAUDO_SERVICE_URL e LAUDO_SERVICE_SECRET precisam estar definidos')
+  }
+
+  const payload = montarPayload(sessao, nivel)
+  if (opts?.salvarS3) payload.session_token = sessao.sessionToken
+
+  const resposta = await fetch(`${baseUrl.replace(/\/$/, '')}/apresentacao`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Laudo-Secret': segredo,
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(55_000),
+  })
+
+  if (!resposta.ok) {
+    const corpo = await resposta.text().catch(() => '')
+    throw new LaudoIndisponivel(`serviço de apresentação respondeu ${resposta.status}: ${corpo.slice(0, 500)}`)
+  }
+
+  const arrayBuffer = await resposta.arrayBuffer()
+  return { pdf: Buffer.from(arrayBuffer), s3Key: resposta.headers.get('X-Apresentacao-S3-Key') }
+}

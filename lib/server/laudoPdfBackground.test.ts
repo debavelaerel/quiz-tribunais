@@ -23,6 +23,7 @@ function sessaoConcluidaDeExemplo(): QuizSession {
     perfilCalculado: { classe: 'A', pontos: 7, curso: 'Curso 2 · Analista de TJ e TRF (231 temas)', cursoCod: 'C2-TJTRF', ritmo: 'base em 12 meses, no ritmo de 2h por dia' },
     blocos: [],
     whatsappClicadoEm: null, laudoPdfS3Key: null, laudoPdfErro: null,
+    apresentacaoPdfS3Key: null, apresentacaoPdfErro: null,
     startedAt: '2026-09-16T10:00:00Z', updatedAt: '2026-09-16T10:20:00Z', completedAt: '2026-09-16T10:20:00Z',
   }
 }

@@ -25,11 +25,15 @@ SERVICE_DIR = Path(__file__).resolve().parent
 PACOTE_DIR = SERVICE_DIR / "vendor/raio-x-da-base"
 sys.path.insert(0, str(PACOTE_DIR))
 
+import apresentacao  # noqa: E402
 import brand  # noqa: E402  (depende do sys.path acima)
 import render  # noqa: E402
 import s3  # noqa: E402
 from diagnosis import report as report_mod  # noqa: E402
 from diagnosis.answers import CAMPOS, Lead, LeadInvalido  # noqa: E402
+
+APRESENTACAO_HTML = SERVICE_DIR / "vendor/vde-tribunais-call/deck.html"
+APRESENTACAO_SLIDES = ["capa"] + [str(n) for n in range(1, 22)]
 
 logger = logging.getLogger("laudo-pdf")
 
@@ -176,6 +180,44 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
                 # quem chama (lib/server/laudoPdfBackground.ts) distinguir
                 # "nosso bug" de "S3 fora do ar" se um dia precisar.
                 logger.exception("falha ao subir laudo pro S3 (session_token=%s)", req.session_token)
+                raise HTTPException(status_code=502, detail="falha ao salvar o PDF no S3") from None
+        else:
+            logger.info("S3_BUCKET não configurado — pulando upload (session_token=%s)", req.session_token)
+
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+
+
+@app.post("/apresentacao")
+async def gerar_apresentacao(req: LaudoRequest, _auth: None = Depends(verificar_segredo)) -> Response:
+    # Mesmo corpo de POST /laudo (LaudoRequest) — o deck de call usa o mesmo
+    # perfil do quiz, só não precisa de whatsapp_numero/whatsapp_mensagem
+    # (não tem CTA de WhatsApp nas 22 telas).
+    dados = {
+        "nome": req.nome, "email": req.email, "tel": req.tel,
+        "editais": req.editais,
+        "teste": {r.num - 1: r.escolhida for r in req.teste if r.escolhida},
+        **{campo: getattr(req, campo) for campo in CAMPOS},
+    }
+
+    try:
+        variaveis = apresentacao.variaveis(dados)
+    except LeadInvalido as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    try:
+        pdf_bytes = await render.deck_para_pdf(APRESENTACAO_HTML, variaveis, APRESENTACAO_SLIDES)
+    except Exception:
+        logger.exception("falha ao gerar apresentação para %s", req.nome)
+        raise HTTPException(status_code=500, detail="falha ao gerar o PDF") from None
+
+    headers = {"Content-Disposition": f'attachment; filename="apresentacao-{brand.nome_para_arquivo(req.nome)}.pdf"'}
+
+    if req.session_token:
+        if s3.configurado():
+            try:
+                headers["X-Apresentacao-S3-Key"] = await s3.upload_pdf(req.session_token, pdf_bytes, prefixo="apresentacoes")
+            except Exception:
+                logger.exception("falha ao subir apresentação pro S3 (session_token=%s)", req.session_token)
                 raise HTTPException(status_code=502, detail="falha ao salvar o PDF no S3") from None
         else:
             logger.info("S3_BUCKET não configurado — pulando upload (session_token=%s)", req.session_token)
