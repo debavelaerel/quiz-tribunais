@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server'
 import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import { nivelTeste } from '@/lib/perfil'
-import { gerarApresentacaoPdf, validarSessaoParaLaudo, LaudoIndisponivel } from '@/lib/server/laudoService'
+import { gerarApresentacaoPdf, validarSessaoParaDiagnostico, DiagnosticoIndisponivel } from '@/lib/server/diagnosticoService'
 import { isUuid } from '@/lib/server/uuid'
 
 export const runtime = 'nodejs'
-// Mesmo serviço Python do laudo, mesma justificativa de maxDuration — ver
+// Mesmo serviço Python do diagnóstico, mesma justificativa de maxDuration — ver
 // app/api/admin/leads/[token]/pdf/route.ts.
 export const maxDuration = 60
 
@@ -27,9 +27,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   const sessao = await repo.buscarPorToken(token)
   if (!sessao || sessao.status !== 'concluido') return NextResponse.json({ erro: 'não encontrado' }, { status: 404 })
 
-  // Mesma validação do laudo — a apresentação usa o mesmo perfil da sessão
-  // (ver lib/server/laudoService.ts::validarSessaoParaLaudo).
-  const problemas = validarSessaoParaLaudo(sessao)
+  // Mesma validação do diagnóstico — a apresentação usa o mesmo perfil da sessão
+  // (ver lib/server/diagnosticoService.ts::validarSessaoParaDiagnostico).
+  const problemas = validarSessaoParaDiagnostico(sessao)
   if (problemas.length > 0) {
     console.error('[admin/leads/apresentacao] sessão incompleta pra gerar apresentação', { token, problemas })
     return NextResponse.json({ erro: 'sessão incompleta', detalhes: problemas }, { status: 422 })
@@ -42,12 +42,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   try {
     ;({ pdf, s3Key } = await gerarApresentacaoPdf(sessao, nivel, { salvarS3: true }))
   } catch (e) {
-    const status = e instanceof LaudoIndisponivel ? 503 : 500
+    const status = e instanceof DiagnosticoIndisponivel ? 503 : 500
     console.error('[admin/leads/apresentacao] erro inesperado ao gerar o PDF', e)
     return NextResponse.json({ erro: 'falha ao gerar o PDF' }, { status })
   }
 
-  // Ao contrário do laudo, a apresentação não tem geração em background —
+  // Ao contrário do diagnóstico, a apresentação não tem geração em background —
   // esta chamada sob demanda é sempre a primeira vez que a chave do S3 é
   // conhecida. Mesma lógica de não travar a resposta por causa disso.
   if (s3Key) {

@@ -1,4 +1,4 @@
-// Motor de seleção dos 46 blocos condicionais do laudo — porta operador-a-
+// Motor de seleção dos 46 blocos condicionais do diagnóstico — porta operador-a-
 // operador de `reference/raio-x-da-base/diagnosis/rules.py` (`matches`,
 // `resolve`, `selected_blocks`), conforme ENTREGA-DEV.md, seção "Como avaliar
 // uma regra". Não reescreve lógica de negócio: `calcularPerfil`, `DIAG` e

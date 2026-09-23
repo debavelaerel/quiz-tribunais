@@ -25,7 +25,7 @@ const CAMPOS_OBRIGATORIOS: Array<keyof RespostasPerfil> = [
 // de perfilamento genérico que PERFIL_SCREENS descreve.
 const CAMPOS_SEM_VALIDACAO_DE_OPCAO = new Set<keyof RespostasPerfil>(['leitura', 'dinheiro'])
 
-export function validarSessaoParaLaudo(sessao: QuizSession): string[] {
+export function validarSessaoParaDiagnostico(sessao: QuizSession): string[] {
   const perfil = sessao.perfil
   const problemas: string[] = []
 
@@ -52,7 +52,7 @@ export function validarSessaoParaLaudo(sessao: QuizSession): string[] {
   return problemas
 }
 
-type PayloadLaudo = {
+type PayloadDiagnostico = {
   nome: string
   email: string
   tel: string
@@ -76,7 +76,7 @@ type PayloadLaudo = {
   session_token?: string
 }
 
-function montarPayload(sessao: QuizSession, nivel: string): PayloadLaudo {
+function montarPayload(sessao: QuizSession, nivel: string): PayloadDiagnostico {
   const perfil = sessao.perfil
   // whatsapp_numero fica "" enquanto CONFIG.whatsapp for o placeholder
   // ("5500000...", ver lib/quizContent.ts) — o serviço já trata "" (ou
@@ -111,27 +111,27 @@ function montarPayload(sessao: QuizSession, nivel: string): PayloadLaudo {
   }
 }
 
-export class LaudoIndisponivel extends Error {}
+export class DiagnosticoIndisponivel extends Error {}
 
-export type ResultadoLaudo = {
+export type ResultadoDiagnostico = {
   pdf: Buffer
-  // Chave do objeto no S3 (não a URL — ver lib/server/laudoPdfBackground.ts
+  // Chave do objeto no S3 (não a URL — ver lib/server/diagnosticoPdfBackground.ts
   // pro porquê). null se `salvarS3` não foi pedido, ou se foi pedido mas o
   // serviço ainda não tem S3_BUCKET configurado (ver services/laudo-pdf/s3.py) —
   // as duas situações são "sem link ainda", não erro; um S3 configurado que
-  // falhar de verdade vira LaudoIndisponivel (o serviço devolve 502 nesse caso).
+  // falhar de verdade vira DiagnosticoIndisponivel (o serviço devolve 502 nesse caso).
   s3Key: string | null
 }
 
-export async function gerarLaudoPdf(
+export async function gerarDiagnosticoPdf(
   sessao: QuizSession,
   nivel: string,
   opts?: { salvarS3?: boolean },
-): Promise<ResultadoLaudo> {
+): Promise<ResultadoDiagnostico> {
   const baseUrl = process.env.LAUDO_SERVICE_URL
   const segredo = process.env.LAUDO_SERVICE_SECRET
   if (!baseUrl || !segredo) {
-    throw new LaudoIndisponivel('LAUDO_SERVICE_URL e LAUDO_SERVICE_SECRET precisam estar definidos')
+    throw new DiagnosticoIndisponivel('LAUDO_SERVICE_URL e LAUDO_SERVICE_SECRET precisam estar definidos')
   }
 
   const payload = montarPayload(sessao, nivel)
@@ -153,27 +153,27 @@ export async function gerarLaudoPdf(
 
   if (!resposta.ok) {
     const corpo = await resposta.text().catch(() => '')
-    throw new LaudoIndisponivel(`serviço de laudo respondeu ${resposta.status}: ${corpo.slice(0, 500)}`)
+    throw new DiagnosticoIndisponivel(`serviço de diagnóstico respondeu ${resposta.status}: ${corpo.slice(0, 500)}`)
   }
 
   const arrayBuffer = await resposta.arrayBuffer()
   return { pdf: Buffer.from(arrayBuffer), s3Key: resposta.headers.get('X-Laudo-S3-Key') }
 }
 
-// Mesmo serviço, mesma validação, mesmo payload do laudo (POST /apresentacao
+// Mesmo serviço, mesma validação, mesmo payload do diagnóstico (POST /apresentacao
 // em vez de /laudo) — a apresentação comercial (deck de call 1:1, 22 telas)
 // usa exatamente os mesmos dados de perfil, só personaliza um HTML
 // diferente (services/laudo-pdf/vendor/vde-tribunais-call/deck.html). Ao
-// contrário do laudo, gerada só sob demanda pelo admin, nunca em background.
+// contrário do diagnóstico, gerada só sob demanda pelo admin, nunca em background.
 export async function gerarApresentacaoPdf(
   sessao: QuizSession,
   nivel: string,
   opts?: { salvarS3?: boolean },
-): Promise<ResultadoLaudo> {
+): Promise<ResultadoDiagnostico> {
   const baseUrl = process.env.LAUDO_SERVICE_URL
   const segredo = process.env.LAUDO_SERVICE_SECRET
   if (!baseUrl || !segredo) {
-    throw new LaudoIndisponivel('LAUDO_SERVICE_URL e LAUDO_SERVICE_SECRET precisam estar definidos')
+    throw new DiagnosticoIndisponivel('LAUDO_SERVICE_URL e LAUDO_SERVICE_SECRET precisam estar definidos')
   }
 
   const payload = montarPayload(sessao, nivel)
@@ -191,7 +191,7 @@ export async function gerarApresentacaoPdf(
 
   if (!resposta.ok) {
     const corpo = await resposta.text().catch(() => '')
-    throw new LaudoIndisponivel(`serviço de apresentação respondeu ${resposta.status}: ${corpo.slice(0, 500)}`)
+    throw new DiagnosticoIndisponivel(`serviço de apresentação respondeu ${resposta.status}: ${corpo.slice(0, 500)}`)
   }
 
   const arrayBuffer = await resposta.arrayBuffer()

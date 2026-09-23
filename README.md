@@ -3,7 +3,7 @@
 Funil de quiz comercial: a pessoa responde um teste graduado (4 questões
 reais de concurso) + um perfilamento (alvo, cargo, tempo de estudo, dor,
 momento etc.), e o sistema devolve um resultado personalizado na tela, um
-**laudo em PDF** (gerado sozinho, em background) e — sob demanda, pelo
+**diagnóstico em PDF** (gerado sozinho, em background) e — sob demanda, pelo
 painel administrativo — uma **apresentação comercial em PDF** (deck pra
 call 1:1 de vendas).
 
@@ -37,7 +37,7 @@ call 1:1 de vendas).
                                    │   leads_desqualificados   │
                                    └───────────┬──────────────┘
                                                │
-                     laudo em background ──────┤──── apresentação sob demanda
+                     diagnóstico em background ┤──── apresentação sob demanda
                      (após /quiz/finish)       │     (clique do admin)
                                                ▼
                                    ┌────────────────────────┐
@@ -66,7 +66,7 @@ app/
   page.tsx                    — página pública do quiz (renderiza <Quiz />)
   api/quiz/                   — start, answer, perfil, finish, result, whatsapp
   api/leads/desqualificado/   — captura de lead fora do público-alvo
-  api/laudo/[token]/          — link estável do laudo (redirect pro S3), usado no CRM
+  api/laudo/[token]/          — link estável do diagnóstico (redirect pro S3), usado no CRM
   api/apresentacao/[token]/   — (mesma família de rota, ver abaixo)
   api/admin/                  — login/logout, export CSV, geração de PDF sob demanda
   admin/                      — painel administrativo (login, leads, analytics)
@@ -79,7 +79,7 @@ lib/
   scoring.ts / perfil.ts / blocos.ts / normalize.ts / validacao.ts / mascara.ts
   server/                     — tudo que roda só no servidor (ver abaixo)
 services/laudo-pdf/           — serviço Python de geração de PDF (deploy próprio)
-reference/raio-x-da-base/     — pacote de referência de conteúdo/estrutura do laudo (não editar)
+reference/raio-x-da-base/     — pacote de referência de conteúdo/estrutura do diagnóstico (não editar)
 supabase/migrations/          — schema do banco, em ordem cronológica
 ```
 
@@ -90,9 +90,9 @@ supabase/migrations/          — schema do banco, em ordem cronológica
 | `quizService.ts` | Regras do funil: iniciar/retomar sessão, registrar respostas/perfil, concluir, buscar resultado |
 | `sessionRepo.ts` / `supabaseSessionRepo.ts` | Interface de persistência + implementação Supabase de `quiz_sessions` |
 | `leadsDesqualificados.ts` / `*Repo.ts` | Mesma ideia, pra `leads_desqualificados` |
-| `laudoService.ts` | Cliente HTTP do serviço Python (`/laudo` e `/apresentacao`) |
-| `laudoPdfBackground.ts` | Orquestra a geração do laudo em background após `/quiz/finish` |
-| `s3.ts` | URL assinada do laudo no S3 |
+| `diagnosticoService.ts` | Cliente HTTP do serviço Python (`/laudo` e `/apresentacao`) |
+| `diagnosticoPdfBackground.ts` | Orquestra a geração do diagnóstico em background após `/quiz/finish` |
+| `s3.ts` | URL assinada do diagnóstico no S3 |
 | `adminAuth.ts` | Login por senha única + cookie assinado (HMAC) |
 | `rateLimit.ts` | Rate limit em memória (por IP, por rota) |
 | `csv.ts` / `listarTudo.ts` | Exportação CSV do painel admin (com paginação) |
@@ -133,14 +133,14 @@ supabase/migrations/          — schema do banco, em ordem cronológica
      (`lib/perfil.ts`) e os blocos de texto condicionais
      (`lib/blocos.ts`), marca `status = concluido` e **dispara em
      background** (via `after()` do Next.js, fire-and-forget) a geração do
-     laudo **e** da apresentação comercial em PDF, em paralelo — sem atrasar
+     diagnóstico **e** da apresentação comercial em PDF, em paralelo — sem atrasar
      a resposta pra quem terminou.
 7. **Resultado** (tela final) — busca via **`GET
    /api/quiz/result?session_token=`**: score geral, áreas fortes/fracas,
    blocos de conteúdo personalizados, CTA de WhatsApp.
    - Clique no CTA dispara **`POST /api/quiz/whatsapp`** (fire-and-forget,
      só grava o primeiro clique — sinal de intenção de compra pro painel).
-8. **Laudo em PDF (background)** — `lib/server/laudoPdfBackground.ts`
+8. **Diagnóstico em PDF (background)** — `lib/server/diagnosticoPdfBackground.ts`
    chama o serviço Python (`POST /laudo`), que renderiza com Chromium
    headless e sobe pro S3; a chave do objeto S3 fica salva em
    `quiz_sessions.laudo_pdf_s3_key` (erro, se houver, em
@@ -154,7 +154,7 @@ supabase/migrations/          — schema do banco, em ordem cronológica
     "Baixar apresentação comercial" chama **`GET
     /api/admin/leads/[token]/apresentacao`**: mesmo serviço Python, mesmo
     payload de perfil, endpoint `/apresentacao` (deck de 22 telas pra call
-    1:1, template HTML diferente do laudo). Não roda em background, não
+    1:1, template HTML diferente do diagnóstico). Não roda em background, não
     tem link público — o PDF volta direto na resposta pro admin.
 
 ## Banco de dados
@@ -188,7 +188,7 @@ contaminar as métricas do funil principal.
 
 ## Perguntas frequentes
 
-**Criou uma tabela nova pros 2 materiais (laudo e apresentação)?**
+**Criou uma tabela nova pros 2 materiais (diagnóstico e apresentação)?**
 Não. Os dois vivem como colunas na mesma tabela `quiz_sessions`:
 `laudo_pdf_s3_key`/`laudo_pdf_erro` (já existiam) e
 `apresentacao_pdf_s3_key`/`apresentacao_pdf_erro` (novas, adicionadas no
@@ -203,9 +203,9 @@ quiz (ver seção "Banco de dados" acima).
 Os dois, em segundo plano, assim que o quiz termina (`POST
 /api/quiz/finish`) — a pessoa não espera nada, e as duas chamadas ao serviço
 Python rodam em paralelo (`Promise.all`, ver
-`lib/server/laudoPdfBackground.ts`), não uma depois da outra. Cada uma tem
+`lib/server/diagnosticoPdfBackground.ts`), não uma depois da outra. Cada uma tem
 um teto de segurança de 55s (`AbortSignal.timeout`, ver
-`lib/server/laudoService.ts`); na prática sai bem mais rápido, é um PDF só.
+`lib/server/diagnosticoService.ts`); na prática sai bem mais rápido, é um PDF só.
 Se por algum motivo a geração em background falhar ou ainda estiver rodando
 quando alguém acessar o link antes da hora: `/api/laudo/[token]` devolve
 425 (tenta de novo em instantes) até a chave existir, e
@@ -227,11 +227,11 @@ memória (`lib/server/rateLimit.ts`), por IP.
 | `/api/quiz/start` | POST | Cria/retoma sessão |
 | `/api/quiz/answer` | POST | Registra 1 resposta do teste graduado |
 | `/api/quiz/perfil` | POST | Registra 1 campo de perfilamento |
-| `/api/quiz/finish` | POST | Conclui a sessão, calcula resultado, dispara laudo + apresentação em background (em paralelo) |
+| `/api/quiz/finish` | POST | Conclui a sessão, calcula resultado, dispara diagnóstico + apresentação em background (em paralelo) |
 | `/api/quiz/result` | GET | Busca resultado de uma sessão concluída |
 | `/api/quiz/whatsapp` | POST | Registra clique no CTA de WhatsApp (fire-and-forget) |
 | `/api/leads/desqualificado` | POST | Captura contato de lead fora do público-alvo |
-| `/api/laudo/[laudoToken]` | GET | Redireciona pra URL assinada do laudo no S3 (link estável, usado no CRM) |
+| `/api/laudo/[laudoToken]` | GET | Redireciona pra URL assinada do diagnóstico no S3 (link estável, usado no CRM) |
 | `/api/apresentacao/[laudoToken]` | GET | Mesma ideia, pra apresentação comercial — gera na hora como fallback se a chave ainda não existir |
 
 ### Admin (protegidas por `middleware.ts`, cookie de sessão)
@@ -241,14 +241,14 @@ memória (`lib/server/rateLimit.ts`), por IP.
 | `/api/admin/login` | POST | Autentica com `ADMIN_PASSWORD`, emite cookie assinado |
 | `/api/admin/logout` | POST | Derruba o cookie |
 | `/api/admin/export` | GET | Exporta leads em CSV (filtros de status/fluxo/busca) |
-| `/api/admin/leads/[token]/pdf` | GET | Gera (ou regenera) o laudo sob demanda e devolve o PDF direto |
+| `/api/admin/leads/[token]/pdf` | GET | Gera (ou regenera) o diagnóstico sob demanda e devolve o PDF direto |
 | `/api/admin/leads/[token]/apresentacao` | GET | Gera a apresentação comercial sob demanda e devolve o PDF direto |
 
 ### Painel `/admin` (páginas)
 
 `app/admin/(painel)/` — `layout.tsx` (nav), `leads/page.tsx` (lista +
 filtros + export), `leads/[token]/page.tsx` (detalhe de um lead, botões de
-baixar laudo/apresentação), `analytics/page.tsx` (funil, gráficos —
+baixar diagnóstico/apresentação), `analytics/page.tsx` (funil, gráficos —
 `components/admin/*`). Login em `app/admin/login/page.tsx`.
 
 ## Serviço de PDF (`services/laudo-pdf`)
@@ -259,7 +259,7 @@ referência de conteúdo/estrutura, mantido intocado — overrides de marca em
 `X-Laudo-Secret`, falha fechada sem ele configurado).
 
 - `POST /laudo` — recebe perfil + respostas + editais, devolve o PDF do
-  laudo (relatório de diagnóstico). Sobe pro S3 se `session_token` vier no
+  diagnóstico. Sobe pro S3 se `session_token` vier no
   payload; devolve a chave no header `X-Laudo-S3-Key`.
 - `POST /apresentacao` — mesmo payload, template diferente (deck de 22
   telas pra call 1:1, `vendor/vde-tribunais-call/deck.html`); chave no
@@ -281,7 +281,7 @@ não "slim" puro, ver comentário no arquivo), *Root Directory* =
 | `ADMIN_PASSWORD` | Next.js | Senha única do painel `/admin` |
 | `ADMIN_SESSION_SECRET` | Next.js | Assina o cookie de sessão do admin (HMAC) |
 | `LAUDO_SERVICE_URL`, `LAUDO_SERVICE_SECRET` | Next.js | Base URL + segredo pra chamar `services/laudo-pdf` |
-| `BUCKET_NAME`, `REGION`, `ACCESS_KEY`, `SECRET_KEY` | Next.js | Credenciais do S3 pra gerar URL assinada do laudo (nomes próprios, não os padrão `AWS_*` do SDK — a Vercel já injeta `AWS_*` próprias por function, que não têm nada a ver com o bucket) |
+| `BUCKET_NAME`, `REGION`, `ACCESS_KEY`, `SECRET_KEY` | Next.js | Credenciais do S3 pra gerar URL assinada do diagnóstico (nomes próprios, não os padrão `AWS_*` do SDK — a Vercel já injeta `AWS_*` próprias por function, que não têm nada a ver com o bucket) |
 
 Ver `.env.example` (raiz) pra template das variáveis do Next.js. O serviço
 Python usa suas próprias env vars de S3/segredo (ver `services/laudo-pdf/s3.py`),
@@ -296,7 +296,7 @@ npm run dev                  # http://localhost:3000
 ```
 
 Sem `LAUDO_SERVICE_URL`/`LAUDO_SERVICE_SECRET` configurados, o quiz
-funciona normalmente — só a geração de laudo/apresentação falha (fica
+funciona normalmente — só a geração de diagnóstico/apresentação falha (fica
 registrada em `laudo_pdf_erro`, nunca quebra o fluxo do usuário). Pra
 rodar o serviço de PDF localmente: `cd services/laudo-pdf && pip install
 -r requirements.txt && playwright install --with-deps chromium && uvicorn

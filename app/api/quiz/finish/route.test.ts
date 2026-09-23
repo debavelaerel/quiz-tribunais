@@ -54,7 +54,7 @@ describe('POST /api/quiz/finish', () => {
     expect(json.score_geral_pct).toBe(100)
   })
 
-  it('agenda a geração do laudo em background só quando conclui com sucesso', async () => {
+  it('agenda a geração do diagnóstico em background só quando conclui com sucesso', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarEResponderTudo(repo)
     const agendarBackground = vi.fn()
@@ -67,7 +67,7 @@ describe('POST /api/quiz/finish', () => {
     expect(agendarBackground).toHaveBeenCalledTimes(1)
   })
 
-  it('a tarefa agendada gera laudo e apresentação em paralelo (Promise.all), as duas', async () => {
+  it('a tarefa agendada gera diagnóstico e apresentação em paralelo (Promise.all), as duas', async () => {
     const ENV_ORIGINAL = { ...process.env }
     process.env.LAUDO_SERVICE_URL = 'http://laudo-service.local'
     process.env.LAUDO_SERVICE_SECRET = 'segredo-de-teste'
@@ -80,8 +80,8 @@ describe('POST /api/quiz/finish', () => {
     try {
       const repo = criarFakeSessionRepo()
       await iniciarEResponderTudo(repo)
-      // laudoPdfBackground só chama o serviço com um perfil completo (ver
-      // validarSessaoParaLaudo) — iniciarEResponderTudo não passa pela tela
+      // diagnosticoPdfBackground só chama o serviço com um perfil completo (ver
+      // validarSessaoParaDiagnostico) — iniciarEResponderTudo não passa pela tela
       // de perfilamento, então precisa preencher aqui pra exercitar o
       // caminho de sucesso das duas gerações.
       const sessaoAntes = await repo.buscarPorToken(TOKEN)

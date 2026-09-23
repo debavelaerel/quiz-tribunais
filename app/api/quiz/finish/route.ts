@@ -3,7 +3,7 @@ import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { concluirSessao, SessaoInvalidaError, SessaoConcluidaError, SessaoIncompletaError } from '@/lib/server/quizService'
-import { gerarEArmazenarLaudo, gerarEArmazenarApresentacao } from '@/lib/server/laudoPdfBackground'
+import { gerarEArmazenarDiagnostico, gerarEArmazenarApresentacao } from '@/lib/server/diagnosticoPdfBackground'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
 import { isUuid } from '@/lib/server/uuid'
 import { ipDaRequisicao } from '@/lib/server/ip'
@@ -11,8 +11,8 @@ import { ipDaRequisicao } from '@/lib/server/ip'
 export const runtime = 'nodejs'
 // `after()` conta pro tempo de vida da MESMA function — sem isso, o padrão
 // da plataforma pode matar a função antes do trabalho em background
-// terminar. O fetch pro serviço de laudo já usa um timeout de 55s (ver
-// laudoService.ts) — 60 deixava quase zero folga pra tudo em volta dele
+// terminar. O fetch pro serviço de diagnóstico já usa um timeout de 55s (ver
+// diagnosticoService.ts) — 60 deixava quase zero folga pra tudo em volta dele
 // (rate limit, ler/gravar a sessão duas vezes no Supabase); 90 dá margem
 // de verdade sem chegar perto do teto de function da Vercel.
 export const maxDuration = 90
@@ -45,19 +45,19 @@ export function criarHandlerFinish(repo: SessionRepo, agendarBackground: (tarefa
 
     try {
       const sessao = await concluirSessao(repo, sessionToken)
-      // Gera o laudo e a apresentação comercial em PDF e sobe os dois pro S3
+      // Gera o diagnóstico e a apresentação comercial em PDF e sobe os dois pro S3
       // depois de responder — não faz quem terminou o quiz esperar o
       // Chromium do serviço Python renderizar (ver
-      // lib/server/laudoPdfBackground.ts pro que acontece se isso falhar:
+      // lib/server/diagnosticoPdfBackground.ts pro que acontece se isso falhar:
       // nunca propaga erro pra cá, só grava em
       // laudo_pdf_erro/apresentacao_pdf_erro). As duas chamadas rodam em
       // paralelo (Promise.all), não uma depois da outra — cada uma já tem
-      // seu próprio teto de 55s pro serviço Python (ver laudoService.ts);
+      // seu próprio teto de 55s pro serviço Python (ver diagnosticoService.ts);
       // em paralelo, as duas cabem dentro do maxDuration abaixo sem
       // precisar dobrá-lo.
       agendarBackground(async () => {
         await Promise.all([
-          gerarEArmazenarLaudo(repo, sessao),
+          gerarEArmazenarDiagnostico(repo, sessao),
           gerarEArmazenarApresentacao(repo, sessao),
         ])
       })

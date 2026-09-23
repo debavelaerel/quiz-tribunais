@@ -4,15 +4,15 @@ import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import type { QuizSession } from '@/lib/server/types'
 import { isUuid } from '@/lib/server/uuid'
-import { s3Configurado, urlAssinadaDoLaudo } from '@/lib/server/s3'
-import { gerarApresentacaoPdf, validarSessaoParaLaudo, LaudoIndisponivel } from '@/lib/server/laudoService'
+import { s3Configurado, urlAssinadaDoDiagnostico } from '@/lib/server/s3'
+import { gerarApresentacaoPdf, validarSessaoParaDiagnostico, DiagnosticoIndisponivel } from '@/lib/server/diagnosticoService'
 import { nivelTeste } from '@/lib/perfil'
 
 export const runtime = 'nodejs'
 // A apresentação também é gerada em background na conclusão do quiz (ver
-// lib/server/laudoPdfBackground.ts::gerarEArmazenarApresentacao,
+// lib/server/diagnosticoPdfBackground.ts::gerarEArmazenarApresentacao,
 // app/api/quiz/finish/route.ts) — na prática a chave já costuma estar
-// pronta quando esse link é acessado. Mesmo assim, diferente do laudo, essa
+// pronta quando esse link é acessado. Mesmo assim, diferente do diagnóstico, essa
 // rota gera na hora se ainda não tiver chave (em vez de 425 "ainda
 // gerando") — rede de segurança pro caso raro da geração em background
 // ainda estar rodando ou ter falhado, sem deixar o link do CRM preso
@@ -22,12 +22,12 @@ export const runtime = 'nodejs'
 export const maxDuration = 60
 
 // Link estável pra apresentação comercial de um lead — mesma ideia do link
-// do laudo (app/api/laudo/[token]/route.ts): reaproveita laudoToken (não um
+// do diagnóstico (app/api/laudo/[token]/route.ts): reaproveita laudoToken (não um
 // token próprio) porque session_token é reescrito toda vez que a mesma
 // pessoa retoma o quiz, e laudoToken nunca muda depois de criado.
 export function criarHandlerApresentacao(
   repo: SessionRepo,
-  gerarUrlAssinada: (s3Key: string) => Promise<string> = urlAssinadaDoLaudo,
+  gerarUrlAssinada: (s3Key: string) => Promise<string> = urlAssinadaDoDiagnostico,
   s3Ok: () => boolean = s3Configurado,
   gerarApresentacao: (sessao: QuizSession, nivel: string) => Promise<{ s3Key: string | null }> =
     (sessao, nivel) => gerarApresentacaoPdf(sessao, nivel, { salvarS3: true }),
@@ -47,7 +47,7 @@ export function criarHandlerApresentacao(
 
     let s3Key = sessao.apresentacaoPdfS3Key
     if (!s3Key) {
-      const problemas = validarSessaoParaLaudo(sessao)
+      const problemas = validarSessaoParaDiagnostico(sessao)
       if (problemas.length > 0) {
         console.error('[apresentacao/token] sessão incompleta pra gerar apresentação', { token, problemas })
         return NextResponse.json({ erro: 'sessão incompleta', detalhes: problemas }, { status: 422 })
@@ -57,7 +57,7 @@ export function criarHandlerApresentacao(
       try {
         s3Key = (await gerarApresentacao(sessao, nivel)).s3Key
       } catch (e) {
-        const mensagem = e instanceof LaudoIndisponivel ? e.message : String(e)
+        const mensagem = e instanceof DiagnosticoIndisponivel ? e.message : String(e)
         console.error('[apresentacao/token] falha ao gerar apresentação', { token, erro: mensagem })
         await repo.atualizar(sessao.id, { apresentacaoPdfErro: mensagem }).catch((e2) => {
           console.error('[apresentacao/token] falha ao gravar apresentacao_pdf_erro', e2)
@@ -66,7 +66,7 @@ export function criarHandlerApresentacao(
       }
       // s3Key null aqui só acontece se o serviço Python respondeu OK mas sem
       // S3_BUCKET configurado do lado dele — mesma situação "sem link ainda"
-      // do laudo (ver ResultadoLaudo em lib/server/laudoService.ts).
+      // do diagnóstico (ver ResultadoDiagnostico em lib/server/diagnosticoService.ts).
       if (!s3Key) {
         return NextResponse.json({ erro: 'armazenamento de apresentação não configurado' }, { status: 503 })
       }
@@ -76,7 +76,7 @@ export function criarHandlerApresentacao(
     }
 
     const url = await gerarUrlAssinada(s3Key)
-    // no-store: mesma razão do link do laudo — a URL é assinada e de curta
+    // no-store: mesma razão do link do diagnóstico — a URL é assinada e de curta
     // duração, não pode ficar guardada num proxy/CDN no meio do caminho.
     return NextResponse.redirect(url, { status: 302, headers: { 'Cache-Control': 'no-store' } })
   }

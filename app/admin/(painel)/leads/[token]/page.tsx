@@ -57,7 +57,7 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
             href={`/api/admin/leads/${token}/pdf`}
             className="inline-flex items-center gap-1.5 rounded-full bg-brand-ink px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-navy-2"
           >
-            Baixar PDF do laudo
+            Baixar PDF do diagnóstico
           </a>
           <a
             href={`/api/admin/leads/${token}/apresentacao`}
@@ -177,7 +177,7 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
                 na hora (leva alguns segundos); os acessos seguintes são instantâneos.
               </p>
               <div className="flex flex-col gap-2.5 text-[12.5px]">
-                <CampoCopiavel label="Laudo em PDF" valor={`${baseUrl}/api/laudo/${sessao.laudoToken}`} />
+                <CampoCopiavel label="Diagnóstico em PDF" valor={`${baseUrl}/api/laudo/${sessao.laudoToken}`} />
                 <CampoCopiavel label="Apresentação comercial" valor={`${baseUrl}/api/apresentacao/${sessao.laudoToken}`} />
               </div>
             </div>

@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server'
 import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import { nivelTeste } from '@/lib/perfil'
-import { gerarLaudoPdf, validarSessaoParaLaudo, LaudoIndisponivel } from '@/lib/server/laudoService'
+import { gerarDiagnosticoPdf, validarSessaoParaDiagnostico, DiagnosticoIndisponivel } from '@/lib/server/diagnosticoService'
 import { isUuid } from '@/lib/server/uuid'
 
 export const runtime = 'nodejs'
 // O serviço de PDF em Python (services/laudo-pdf) é quem faz o trabalho
 // pesado (Chromium) agora — essa rota só valida, chama por HTTP e repassa
 // o PDF. maxDuration segue generoso porque o timeout do fetch pro serviço
-// (55s, ver lib/server/laudoService.ts) precisa caber dentro dele.
+// (55s, ver lib/server/diagnosticoService.ts) precisa caber dentro dele.
 export const maxDuration = 60
 
 function nomeParaArquivo(nome: string): string {
@@ -34,9 +34,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   // de segurança pro caminho teórico de uma chamada direta à API bypassando
   // a UI. Confere aqui, com mensagem específica, em vez de deixar o 422
   // genérico do serviço em Python chegar até o admin sem contexto.
-  const problemas = validarSessaoParaLaudo(sessao)
+  const problemas = validarSessaoParaDiagnostico(sessao)
   if (problemas.length > 0) {
-    console.error('[admin/leads/pdf] sessão incompleta pra gerar laudo', { token, problemas })
+    console.error('[admin/leads/pdf] sessão incompleta pra gerar diagnóstico', { token, problemas })
     return NextResponse.json({ erro: 'sessão incompleta', detalhes: problemas }, { status: 422 })
   }
 
@@ -45,9 +45,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   let pdf: Buffer
   let s3Key: string | null
   try {
-    ;({ pdf, s3Key } = await gerarLaudoPdf(sessao, nivel, { salvarS3: true }))
+    ;({ pdf, s3Key } = await gerarDiagnosticoPdf(sessao, nivel, { salvarS3: true }))
   } catch (e) {
-    const status = e instanceof LaudoIndisponivel ? 503 : 500
+    const status = e instanceof DiagnosticoIndisponivel ? 503 : 500
     console.error('[admin/leads/pdf] erro inesperado ao gerar o PDF', e)
     return NextResponse.json({ erro: 'falha ao gerar o PDF' }, { status })
   }
@@ -68,7 +68,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="laudo-${nomeParaArquivo(sessao.nome)}.pdf"`,
+      'Content-Disposition': `attachment; filename="diagnostico-${nomeParaArquivo(sessao.nome)}.pdf"`,
     },
   })
 }

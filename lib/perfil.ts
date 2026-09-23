@@ -87,7 +87,10 @@ export function nivelTeste(acertos: number): string {
 const ANOS_POR_TEMPO: Record<string, number> = { t0: 0, t1: 0.5, t2: 0.75, t3: 1.5, t4: 3, t5: 5 }
 const ROTULO_POR_TEMPO: Record<string, string> = { t1: 'seis meses', t2: 'quase um ano', t3: 'um ano e meio', t4: 'três anos', t5: 'cinco anos' }
 
-export type Conta = { titulo: string; paragrafo: string }
+// `destaque` é o trecho do valor em R$ — separado do resto pra quem
+// renderiza poder dar um leve realce (negrito, ver components/Quiz.tsx) sem
+// precisar fatiar a frase de novo lá.
+export type Conta = { titulo: string; antes: string; destaque: string; depois: string }
 
 // Calculadora de custo da espera (tela "conta") — texto muda conforme o
 // tempo de estudo já investido (retrospectivo) ou não (prospectivo). `nome`
@@ -106,11 +109,15 @@ export function calcularConta(r: RespostasPerfil, nome?: string): Conta {
   if (retro) {
     return {
       titulo: 'O que a espera já te custou.',
-      paragrafo: `${abre(`você estuda há ${rotulo}`)}. Nesse tempo, a diferença entre o que você ganha hoje e o salário do cargo que você mira soma perto de R$ ${acumulado} mil que já não entraram na sua conta.`,
+      antes: `${abre(`você estuda há ${rotulo}`)}. Nesse tempo, a diferença entre o que você ganha hoje e o salário do cargo que você mira soma perto de `,
+      destaque: `R$ ${acumulado} mil`,
+      depois: ' que já não entraram na sua conta.',
     }
   }
   return {
     titulo: 'O que a espera custa.',
-    paragrafo: `${abre(`cada ano que você adia o começo custa cerca de R$ ${anual} mil`)}, a diferença entre o que você ganha hoje e o salário do cargo que você mira.`,
+    antes: abre('cada ano que você adia o começo custa cerca de '),
+    destaque: `R$ ${anual} mil`,
+    depois: ', a diferença entre o que você ganha hoje e o salário do cargo que você mira.',
   }
 }

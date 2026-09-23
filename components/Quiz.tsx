@@ -1496,7 +1496,9 @@ export default function Quiz() {
         <main className="flex flex-1 items-start justify-center px-6 py-8">
           <div className="w-full max-w-md">
             <h1 className="text-2xl font-bold leading-tight tracking-[-0.01em] text-brand-ink">{conta.titulo}</h1>
-            <p className="mt-4 text-brand-ink-soft">{conta.paragrafo}</p>
+            <p className="mt-4 text-brand-ink-soft">
+              {conta.antes}<b className="text-brand-ink">{conta.destaque}</b>{conta.depois}
+            </p>
             <p className="mt-4 text-brand-ink-soft">
               Escrevi isso porque essa conta só para de correr quando a preparação deixa de ser improviso e vira base.
             </p>
@@ -1861,11 +1863,11 @@ export default function Quiz() {
 
               {/* Cartão navy (não mais texto solto no fundo branco) — copy
                   reduzida mantendo a mesma ideia da original (leitura
-                  superficial → conversa de 20min → laudo completo por
+                  superficial → conversa de 20min → diagnóstico completo por
                   WhatsApp → grátis, agenda curta), só mais enxuta. */}
               <div className="mt-4 rounded-[14px] bg-gradient-to-br from-brand-navy to-brand-navy-2 px-5 py-5 shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
                 <p className="text-[13px] leading-relaxed text-white">
-                  Este diagnóstico é uma leitura rápida do seu caso. Numa conversa de 20 minutos, um consultor do meu time cruza suas respostas com o edital e monta seu plano de ação, com o laudo completo em PDF pelo WhatsApp.
+                  Este diagnóstico é uma leitura rápida do seu caso. Numa conversa de 20 minutos, um consultor do <b className="font-semibold">nosso time</b> cruza suas respostas com o edital e monta seu plano de ação, com o diagnóstico completo em PDF pelo WhatsApp.
                 </p>
                 <p className="mt-3 text-[12px] leading-relaxed text-white/75">
                   Não custa nada. A agenda é curta, poucos horários por semana: clica aqui embaixo pra reservar sua vaga.

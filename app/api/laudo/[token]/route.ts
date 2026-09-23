@@ -3,11 +3,11 @@ import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { isUuid } from '@/lib/server/uuid'
-import { s3Configurado, urlAssinadaDoLaudo } from '@/lib/server/s3'
+import { s3Configurado, urlAssinadaDoDiagnostico } from '@/lib/server/s3'
 
 export const runtime = 'nodejs'
 
-// Link estável pro laudo em PDF de um lead — é esse que entra no campo do
+// Link estável pro diagnóstico em PDF de um lead — é esse que entra no campo do
 // CRM (Clint), não uma URL do S3 direto. Uma URL assinada do S3 tem teto de
 // 7 dias (limite do protocolo, não escolha nossa) — guardar ela direto no
 // CRM significa o link morrer numa semana. Essa rota gera uma URL assinada
@@ -17,13 +17,13 @@ export const runtime = 'nodejs'
 // toda vez que a mesma pessoa retoma o quiz (mesmo e-mail/whatsapp, "Refazer
 // o diagnóstico", outro aparelho — ver iniciarSessao em quizService.ts) —
 // um link baseado nele quebraria (404) assim que isso acontecesse depois do
-// laudo já ter sido gerado e o link já ter ido pro CRM. laudoToken nunca
+// diagnóstico já ter sido gerado e o link já ter ido pro CRM. laudoToken nunca
 // muda (ver o comentário em QuizSession.laudoToken). Mesmo nível de
 // proteção que o link de resultado público já usa: não é uma segunda senha,
-// é "quem tem o link vê o laudo dessa pessoa".
-export function criarHandlerLaudo(
+// é "quem tem o link vê o diagnóstico dessa pessoa".
+export function criarHandlerDiagnostico(
   repo: SessionRepo,
-  gerarUrlAssinada: (s3Key: string) => Promise<string> = urlAssinadaDoLaudo,
+  gerarUrlAssinada: (s3Key: string) => Promise<string> = urlAssinadaDoDiagnostico,
   s3Ok: () => boolean = s3Configurado,
 ) {
   return async function handler(_req: Request, { params }: { params: Promise<{ token: string }> }): Promise<Response> {
@@ -40,17 +40,17 @@ export function criarHandlerLaudo(
     // chave e erro nulos — e o CRM ficaria recebendo 425 (tenta de novo)
     // pra sempre num caso que na verdade nunca vai se resolver sozinho.
     if (!s3Ok()) {
-      return NextResponse.json({ erro: 'armazenamento de laudo não configurado' }, { status: 503 })
+      return NextResponse.json({ erro: 'armazenamento de diagnóstico não configurado' }, { status: 503 })
     }
 
     if (!sessao.laudoPdfS3Key) {
       // A geração roda em background na conclusão (ver
-      // lib/server/laudoPdfBackground.ts) — se laudo_pdf_erro tem algo, essa
+      // lib/server/diagnosticoPdfBackground.ts) — se laudo_pdf_erro tem algo, essa
       // tentativa já falhou de vez; sem ele, ainda pode estar em andamento.
       if (sessao.laudoPdfErro) {
-        return NextResponse.json({ erro: 'falha ao gerar o laudo' }, { status: 502 })
+        return NextResponse.json({ erro: 'falha ao gerar o diagnóstico' }, { status: 502 })
       }
-      return NextResponse.json({ erro: 'laudo ainda sendo gerado, tenta de novo em instantes' }, { status: 425 })
+      return NextResponse.json({ erro: 'diagnóstico ainda sendo gerado, tenta de novo em instantes' }, { status: 425 })
     }
 
     const url = await gerarUrlAssinada(sessao.laudoPdfS3Key)
@@ -62,5 +62,5 @@ export function criarHandlerLaudo(
 }
 
 export async function GET(req: Request, ctx: { params: Promise<{ token: string }> }): Promise<Response> {
-  return criarHandlerLaudo(criarSupabaseSessionRepo(criarSupabaseAdmin()))(req, ctx)
+  return criarHandlerDiagnostico(criarSupabaseSessionRepo(criarSupabaseAdmin()))(req, ctx)
 }

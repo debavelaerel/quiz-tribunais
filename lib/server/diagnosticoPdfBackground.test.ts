@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { gerarEArmazenarLaudo, gerarEArmazenarApresentacao } from './laudoPdfBackground'
+import { gerarEArmazenarDiagnostico, gerarEArmazenarApresentacao } from './diagnosticoPdfBackground'
 import { criarFakeSessionRepo } from './testHelpers/fakeSessionRepo'
 import type { QuizSession } from './types'
 
@@ -28,7 +28,7 @@ function sessaoConcluidaDeExemplo(): QuizSession {
   }
 }
 
-describe('gerarEArmazenarLaudo', () => {
+describe('gerarEArmazenarDiagnostico', () => {
   const ENV_ORIGINAL = { ...process.env }
 
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe('gerarEArmazenarLaudo', () => {
     const fetchEspiao = vi.fn()
     vi.stubGlobal('fetch', fetchEspiao)
 
-    await gerarEArmazenarLaudo(repo, criada)
+    await gerarEArmazenarDiagnostico(repo, criada)
 
     expect(fetchEspiao).not.toHaveBeenCalled()
     expect(repo.linhas[0].laudoPdfS3Key).toBeNull()
@@ -62,7 +62,7 @@ describe('gerarEArmazenarLaudo', () => {
       new Response(new Uint8Array(), { status: 200, headers: { 'X-Laudo-S3-Key': 'laudos/aaaaaaaa.pdf' } }),
     ))
 
-    await gerarEArmazenarLaudo(repo, criada)
+    await gerarEArmazenarDiagnostico(repo, criada)
 
     expect(repo.linhas[0].laudoPdfS3Key).toBe('laudos/aaaaaaaa.pdf')
     expect(repo.linhas[0].laudoPdfErro).toBeNull()
@@ -74,19 +74,19 @@ describe('gerarEArmazenarLaudo', () => {
     const criada = await repo.criar(sessao)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(new Uint8Array(), { status: 200 })))
 
-    await gerarEArmazenarLaudo(repo, criada)
+    await gerarEArmazenarDiagnostico(repo, criada)
 
     expect(repo.linhas[0].laudoPdfS3Key).toBeNull()
     expect(repo.linhas[0].laudoPdfErro).toBeNull()
   })
 
-  it('serviço de laudo indisponível: grava o erro, não estoura exceção', async () => {
+  it('serviço de diagnóstico indisponível: grava o erro, não estoura exceção', async () => {
     const repo = criarFakeSessionRepo()
     const sessao = sessaoConcluidaDeExemplo()
     const criada = await repo.criar(sessao)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"detail":"deu ruim"}', { status: 502 })))
 
-    await expect(gerarEArmazenarLaudo(repo, criada)).resolves.toBeUndefined()
+    await expect(gerarEArmazenarDiagnostico(repo, criada)).resolves.toBeUndefined()
 
     expect(repo.linhas[0].laudoPdfErro).toMatch(/502/)
     expect(repo.linhas[0].laudoPdfS3Key).toBeNull()

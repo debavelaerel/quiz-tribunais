@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { validarSessaoParaLaudo, gerarLaudoPdf, LaudoIndisponivel } from './laudoService'
+import { validarSessaoParaDiagnostico, gerarDiagnosticoPdf, DiagnosticoIndisponivel } from './diagnosticoService'
 import type { QuizSession } from './types'
 
 function sessaoDeExemplo(): QuizSession {
@@ -27,22 +27,22 @@ function sessaoDeExemplo(): QuizSession {
   }
 }
 
-describe('validarSessaoParaLaudo', () => {
+describe('validarSessaoParaDiagnostico', () => {
   it('sessão completa (o caminho normal, via UI): sem problemas', () => {
-    expect(validarSessaoParaLaudo(sessaoDeExemplo())).toEqual([])
+    expect(validarSessaoParaDiagnostico(sessaoDeExemplo())).toEqual([])
   })
 
   it('falta um campo do perfil: aponta qual', () => {
     const sessao = sessaoDeExemplo()
     sessao.perfil = { ...sessao.perfil, dor: undefined }
-    const problemas = validarSessaoParaLaudo(sessao)
+    const problemas = validarSessaoParaDiagnostico(sessao)
     expect(problemas).toContain('falta responder "dor"')
   })
 
   it('campo com valor fora das opções válidas: aponta qual e o valor', () => {
     const sessao = sessaoDeExemplo()
     sessao.perfil = { ...sessao.perfil, alvo: 'valor-que-nao-existe' }
-    const problemas = validarSessaoParaLaudo(sessao)
+    const problemas = validarSessaoParaDiagnostico(sessao)
     expect(problemas).toContain('"valor-que-nao-existe" não é uma opção válida de "alvo"')
   })
 
@@ -51,19 +51,19 @@ describe('validarSessaoParaLaudo', () => {
     // 'escrevente' só existe nas opções normais de 'cargo' — com alvo='fe'
     // a validação precisa olhar cargo_fe (que não tem essa opção) e recusar.
     sessao.perfil = { ...sessao.perfil, alvo: 'fe', cargo: 'escrevente' }
-    const problemas = validarSessaoParaLaudo(sessao)
+    const problemas = validarSessaoParaDiagnostico(sessao)
     expect(problemas).toContain('"escrevente" não é uma opção válida de "cargo"')
   })
 
   it('sem nenhuma resposta do teste graduado: aponta isso também', () => {
     const sessao = sessaoDeExemplo()
     sessao.respostas = []
-    const problemas = validarSessaoParaLaudo(sessao)
+    const problemas = validarSessaoParaDiagnostico(sessao)
     expect(problemas).toContain('nenhuma resposta do teste graduado (4 questões) registrada')
   })
 })
 
-describe('gerarLaudoPdf', () => {
+describe('gerarDiagnosticoPdf', () => {
   const ENV_ORIGINAL = { ...process.env }
 
   beforeEach(() => {
@@ -80,7 +80,7 @@ describe('gerarLaudoPdf', () => {
     delete process.env.LAUDO_SERVICE_URL
     const fetchEspiao = vi.fn()
     vi.stubGlobal('fetch', fetchEspiao)
-    await expect(gerarLaudoPdf(sessaoDeExemplo(), 'intermediário')).rejects.toThrow(LaudoIndisponivel)
+    await expect(gerarDiagnosticoPdf(sessaoDeExemplo(), 'intermediário')).rejects.toThrow(DiagnosticoIndisponivel)
     expect(fetchEspiao).not.toHaveBeenCalled()
   })
 
@@ -91,7 +91,7 @@ describe('gerarLaudoPdf', () => {
     )
     vi.stubGlobal('fetch', fetchEspiao)
 
-    const resultado = await gerarLaudoPdf(sessaoDeExemplo(), 'intermediário')
+    const resultado = await gerarDiagnosticoPdf(sessaoDeExemplo(), 'intermediário')
 
     expect(fetchEspiao).toHaveBeenCalledTimes(1)
     const [url, init] = fetchEspiao.mock.calls[0]
@@ -115,24 +115,24 @@ describe('gerarLaudoPdf', () => {
     )
     vi.stubGlobal('fetch', fetchEspiao)
 
-    const resultado = await gerarLaudoPdf(sessaoDeExemplo(), 'intermediário', { salvarS3: true })
+    const resultado = await gerarDiagnosticoPdf(sessaoDeExemplo(), 'intermediário', { salvarS3: true })
 
     const corpo = JSON.parse(fetchEspiao.mock.calls[0][1].body)
     expect(corpo.session_token).toBe('tok')
     expect(resultado.s3Key).toBe('laudos/tok.pdf')
   })
 
-  it('serviço responde erro (422/500/etc.): estoura LaudoIndisponivel com o corpo da resposta', async () => {
+  it('serviço responde erro (422/500/etc.): estoura DiagnosticoIndisponivel com o corpo da resposta', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       new Response('{"detail":"deu ruim"}', { status: 422 }),
     ))
-    await expect(gerarLaudoPdf(sessaoDeExemplo(), 'intermediário')).rejects.toThrow(/422/)
+    await expect(gerarDiagnosticoPdf(sessaoDeExemplo(), 'intermediário')).rejects.toThrow(/422/)
   })
 
   it('WhatsApp ainda no placeholder (CONFIG.whatsapp): manda whatsapp_numero vazio, sem mensagem', async () => {
     const fetchEspiao = vi.fn().mockResolvedValue(new Response(new Uint8Array(), { status: 200 }))
     vi.stubGlobal('fetch', fetchEspiao)
-    await gerarLaudoPdf(sessaoDeExemplo(), 'intermediário')
+    await gerarDiagnosticoPdf(sessaoDeExemplo(), 'intermediário')
     const corpo = JSON.parse(fetchEspiao.mock.calls[0][1].body)
     expect(corpo.whatsapp_numero).toBe('')
     expect(corpo.whatsapp_mensagem).toBe('')

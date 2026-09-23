@@ -1,4 +1,4 @@
-// URL assinada pro PDF do laudo guardado no S3 (ver services/laudo-pdf/s3.py,
+// URL assinada pro PDF do diagnóstico guardado no S3 (ver services/laudo-pdf/s3.py,
 // quem sobe o objeto). Usado só por app/api/laudo/[token]/route.ts — o link
 // estável que vai pro CRM nunca expira porque gera uma URL nova a cada
 // acesso; essa aqui é a de curta duração, só pro tempo do redirect.
@@ -36,7 +36,7 @@ function cliente(): S3Client {
 // jeito (log, proxy, etc.) — bem menor que o teto de 7 dias do protocolo.
 const EXPIRA_EM_SEGUNDOS = 300
 
-export async function urlAssinadaDoLaudo(s3Key: string): Promise<string> {
+export async function urlAssinadaDoDiagnostico(s3Key: string): Promise<string> {
   const bucket = process.env.BUCKET_NAME
   if (!bucket) throw new Error('BUCKET_NAME não configurado')
   const comando = new GetObjectCommand({ Bucket: bucket, Key: s3Key })
