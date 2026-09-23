@@ -4,6 +4,7 @@ import {
   calcularAreas,
   calcularResultado,
   respostasCobremTodasPerguntas,
+  RespostaInvalidaError,
 } from './scoring'
 
 describe('montarRespostaResumo', () => {
@@ -17,8 +18,18 @@ describe('montarRespostaResumo', () => {
     expect(resumo.acertou).toBe(false)
   })
 
-  it('lança erro para um num que não existe no banco de perguntas', () => {
-    expect(() => montarRespostaResumo({ num: 999, escolhida: 'A' })).toThrow()
+  it('lança RespostaInvalidaError para um num que não existe no banco de perguntas', () => {
+    expect(() => montarRespostaResumo({ num: 999, escolhida: 'A' })).toThrow(RespostaInvalidaError)
+  })
+
+  it('lança RespostaInvalidaError para num negativo ou zero', () => {
+    expect(() => montarRespostaResumo({ num: 0, escolhida: 'A' })).toThrow(RespostaInvalidaError)
+    expect(() => montarRespostaResumo({ num: -1, escolhida: 'A' })).toThrow(RespostaInvalidaError)
+  })
+
+  it('lança RespostaInvalidaError para escolhida fora das opções da pergunta', () => {
+    expect(() => montarRespostaResumo({ num: 1, escolhida: 'Z' })).toThrow(RespostaInvalidaError)
+    expect(() => montarRespostaResumo({ num: 1, escolhida: '<script>alert(1)</script>' })).toThrow(RespostaInvalidaError)
   })
 })
 

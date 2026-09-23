@@ -52,6 +52,25 @@ describe('POST /api/quiz/answer', () => {
     expect(res.status).toBe(422)
   })
 
+  it('retorna 422 (não 500) pra num fora do intervalo das 4 perguntas', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerAnswer(repo)
+    for (const num of [0, -1, 999]) {
+      const res = await handler(fazerRequisicao({ session_token: 'aaaaaaaa-1111-1111-1111-111111111111', num, escolhida: 'B' }))
+      expect(res.status).toBe(422)
+    }
+  })
+
+  it('retorna 422 (não 500) pra escolhida fora das opções da pergunta', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerAnswer(repo)
+    const res = await handler(fazerRequisicao({ session_token: 'aaaaaaaa-1111-1111-1111-111111111111', num: 1, escolhida: '<img src=x onerror=alert(1)>' }))
+    expect(res.status).toBe(422)
+    expect(repo.linhas[0].respostas).toHaveLength(0)
+  })
+
   it('lote (respostas): registra várias respostas numa chamada só', async () => {
     const repo = criarFakeSessionRepo()
     await iniciarSessaoDeTeste(repo)
@@ -80,6 +99,17 @@ describe('POST /api/quiz/answer', () => {
     await iniciarSessaoDeTeste(repo)
     const handler = criarHandlerAnswer(repo)
     const res = await handler(fazerRequisicao({ session_token: 'aaaaaaaa-1111-1111-1111-111111111111', respostas: 'nope' }))
+    expect(res.status).toBe(422)
+  })
+
+  it('lote: 422 (não 500) se algum item tiver num ou escolhida inválidos', async () => {
+    const repo = criarFakeSessionRepo()
+    await iniciarSessaoDeTeste(repo)
+    const handler = criarHandlerAnswer(repo)
+    const res = await handler(fazerRequisicao({
+      session_token: 'aaaaaaaa-1111-1111-1111-111111111111',
+      respostas: [{ num: 1, escolhida: 'C' }, { num: 999, escolhida: 'C' }],
+    }))
     expect(res.status).toBe(422)
   })
 

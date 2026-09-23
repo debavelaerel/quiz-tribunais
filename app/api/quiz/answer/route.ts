@@ -3,6 +3,7 @@ import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { registrarResposta, registrarRespostasLote, SessaoInvalidaError, SessaoConcluidaError } from '@/lib/server/quizService'
+import { RespostaInvalidaError } from '@/lib/scoring'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
 import { isUuid } from '@/lib/server/uuid'
 import { ipDaRequisicao } from '@/lib/server/ip'
@@ -45,6 +46,7 @@ export function criarHandlerAnswer(repo: SessionRepo) {
       } catch (e) {
         if (e instanceof SessaoInvalidaError) return NextResponse.json({ erro: 'sessão não encontrada' }, { status: 404 })
         if (e instanceof SessaoConcluidaError) return NextResponse.json({ erro: 'sessão já concluída' }, { status: 409 })
+        if (e instanceof RespostaInvalidaError) return NextResponse.json({ erro: e.message }, { status: 422 })
         console.error('[quiz/answer] erro inesperado (lote)', e)
         throw e
       }
@@ -60,6 +62,7 @@ export function criarHandlerAnswer(repo: SessionRepo) {
     } catch (e) {
       if (e instanceof SessaoInvalidaError) return NextResponse.json({ erro: 'sessão não encontrada' }, { status: 404 })
       if (e instanceof SessaoConcluidaError) return NextResponse.json({ erro: 'sessão já concluída' }, { status: 409 })
+      if (e instanceof RespostaInvalidaError) return NextResponse.json({ erro: e.message }, { status: 422 })
       console.error('[quiz/answer] erro inesperado', e)
       throw e
     }

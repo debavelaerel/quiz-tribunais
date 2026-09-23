@@ -4,9 +4,19 @@ export type RespostaEntrada = { num: number; escolhida: string }
 export type RespostaResumo = { num: number; area: string; escolhida: string; gabarito: string; acertou: boolean }
 export type AreaResumo = { acertos: number; total: number; pct: number }
 
+// Só alcançável chamando a API direto (a UI normal nunca manda `num`/
+// `escolhida` fora do que existe — Quiz.tsx só oferece os botões reais).
+// Tipado pra as rotas (`/api/quiz/answer`) devolverem 422, não 500: sem
+// isso, um `num` ou `escolhida` fora do esperado virava exceção não tratada
+// (achado num teste de segurança — ver git log).
+export class RespostaInvalidaError extends Error {}
+
 export function montarRespostaResumo(entrada: RespostaEntrada): RespostaResumo {
   const questao = QUESTIONS.find((q) => q.num === entrada.num)
-  if (!questao) throw new Error(`pergunta ${entrada.num} não existe`)
+  if (!questao) throw new RespostaInvalidaError(`pergunta ${entrada.num} não existe`)
+  if (!questao.options.some((o) => o.letter === entrada.escolhida)) {
+    throw new RespostaInvalidaError(`"${entrada.escolhida}" não é uma opção válida da pergunta ${entrada.num}`)
+  }
   return {
     num: questao.num,
     area: questao.area,
