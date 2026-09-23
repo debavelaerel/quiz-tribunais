@@ -16,6 +16,14 @@ describe('nomeValido', () => {
     expect(nomeValido('')).toBe(false)
     expect(nomeValido('   ')).toBe(false)
   })
+  it('nome gigante (>200 chars): inválido', () => {
+    expect(nomeValido(`${'A '.repeat(150)}B`)).toBe(false)
+  })
+  it('nome de exatamente 200 chars: ainda válido', () => {
+    const nome = `Maria ${'A'.repeat(200 - 'Maria '.length)}`
+    expect(nome).toHaveLength(200)
+    expect(nomeValido(nome)).toBe(true)
+  })
 })
 
 describe('emailValido', () => {
@@ -34,6 +42,10 @@ describe('emailValido', () => {
   })
   it('com espaço: inválido', () => {
     expect(emailValido('maria @exemplo.com')).toBe(false)
+  })
+  it('gigante (>254 chars): inválido mesmo com formato correto', () => {
+    const localPart = 'a'.repeat(250)
+    expect(emailValido(`${localPart}@x.com`)).toBe(false)
   })
 })
 
