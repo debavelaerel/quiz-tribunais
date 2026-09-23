@@ -129,12 +129,27 @@ describe('gerarDiagnosticoPdf', () => {
     await expect(gerarDiagnosticoPdf(sessaoDeExemplo(), 'intermediário')).rejects.toThrow(/422/)
   })
 
-  it('WhatsApp ainda no placeholder (CONFIG.whatsapp): manda whatsapp_numero vazio, sem mensagem', async () => {
+  it('CONFIG.whatsapp no placeholder ("5500000..."): manda whatsapp_numero vazio, sem mensagem', async () => {
     const fetchEspiao = vi.fn().mockResolvedValue(new Response(new Uint8Array(), { status: 200 }))
     vi.stubGlobal('fetch', fetchEspiao)
-    await gerarDiagnosticoPdf(sessaoDeExemplo(), 'intermediário')
+
+    // Simula o placeholder via mock do módulo (não o CONFIG.whatsapp real,
+    // que já é o número de produção) — preserva a cobertura do ramo
+    // "ainda não configurado" de montarPayload() sem depender de qual
+    // número está em lib/quizContent.ts hoje.
+    vi.resetModules()
+    vi.doMock('../quizContent', async () => {
+      const real = await vi.importActual<typeof import('../quizContent')>('../quizContent')
+      return { ...real, CONFIG: { ...real.CONFIG, whatsapp: '5500000000000' } }
+    })
+    const { gerarDiagnosticoPdf: gerarComPlaceholder } = await import('./diagnosticoService')
+
+    await gerarComPlaceholder(sessaoDeExemplo(), 'intermediário')
     const corpo = JSON.parse(fetchEspiao.mock.calls[0][1].body)
     expect(corpo.whatsapp_numero).toBe('')
     expect(corpo.whatsapp_mensagem).toBe('')
+
+    vi.doUnmock('../quizContent')
+    vi.resetModules()
   })
 })

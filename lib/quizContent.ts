@@ -7,8 +7,8 @@ import type { RespostasPerfil } from './perfil'
 
 export const CONFIG = {
   quizName: 'Diagnóstico da Base',
-  // Placeholder — trocar pelo número real do time de consultores antes de publicar de verdade.
-  whatsapp: '5500000000000',
+  // Número real do time de consultores — +55 (85) 9 9972-3810.
+  whatsapp: '5585999723810',
   // Embed do Panda Video — vídeo da Ana Clara na tela 'video' do funil.
   // muted=true é obrigatório pro autoplay funcionar em qualquer navegador
   // (política padrão contra autoplay com som — ver Quiz.tsx onde o play()
