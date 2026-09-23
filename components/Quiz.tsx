@@ -1841,11 +1841,29 @@ export default function Quiz() {
                 </div>
               ))}
 
+              {/* Ponte pro CTA — mesma linguagem dos blocos "ponto a ponto"
+                  borrados lá em cima (não um blur decorativo solto): mais
+                  conteúdo "trancado" logo antes do convite pra call, em vez
+                  de deixar o último cartão de texto encostado direto no CTA. */}
+              <div className="mt-3 rounded-[16px] border-[1.5px] border-brand-line px-4 py-4">
+                <h4 className="pl-3 text-[14.5px] font-semibold text-brand-ink" style={{ borderLeft: '3px solid #203C7C' }}>
+                  Mais um ponto do seu caso
+                </h4>
+                <div className="select-none">
+                  <p className="mt-2 text-[13px] leading-relaxed text-brand-ink-soft" style={{ filter: 'blur(3px)' }}>
+                    Isso aqui também mudaria bastante o seu cronograma, principalmente
+                  </p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-brand-ink-soft" style={{ filter: 'blur(4px)' }}>
+                    considerando o tempo que você tem disponível por semana.
+                  </p>
+                </div>
+              </div>
+
               {/* Cartão navy (não mais texto solto no fundo branco) — copy
                   reduzida mantendo a mesma ideia da original (leitura
                   superficial → conversa de 20min → laudo completo por
                   WhatsApp → grátis, agenda curta), só mais enxuta. */}
-              <div className="mt-8 rounded-[14px] bg-gradient-to-br from-brand-navy to-brand-navy-2 px-5 py-5 shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
+              <div className="mt-4 rounded-[14px] bg-gradient-to-br from-brand-navy to-brand-navy-2 px-5 py-5 shadow-[0_10px_30px_rgba(32,60,124,0.25)]">
                 <p className="text-[13px] leading-relaxed text-white">
                   Este diagnóstico é uma leitura rápida do seu caso. Numa conversa de 20 minutos, um consultor do meu time cruza suas respostas com o edital e monta seu plano de ação, com o laudo completo em PDF pelo WhatsApp.
                 </p>
