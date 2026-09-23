@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { gerarEArmazenarLaudo } from './laudoPdfBackground'
+import { gerarEArmazenarLaudo, gerarEArmazenarApresentacao } from './laudoPdfBackground'
 import { criarFakeSessionRepo } from './testHelpers/fakeSessionRepo'
 import type { QuizSession } from './types'
 
@@ -90,5 +90,70 @@ describe('gerarEArmazenarLaudo', () => {
 
     expect(repo.linhas[0].laudoPdfErro).toMatch(/502/)
     expect(repo.linhas[0].laudoPdfS3Key).toBeNull()
+  })
+})
+
+describe('gerarEArmazenarApresentacao', () => {
+  const ENV_ORIGINAL = { ...process.env }
+
+  beforeEach(() => {
+    process.env.LAUDO_SERVICE_URL = 'http://laudo-service.local'
+    process.env.LAUDO_SERVICE_SECRET = 'segredo-de-teste'
+  })
+
+  afterEach(() => {
+    process.env = { ...ENV_ORIGINAL }
+    vi.unstubAllGlobals()
+  })
+
+  it('sessão incompleta (perfil faltando): nem chama o serviço', async () => {
+    const repo = criarFakeSessionRepo()
+    const sessao = { ...sessaoConcluidaDeExemplo(), perfil: { ...sessaoConcluidaDeExemplo().perfil, dor: undefined } }
+    const criada = await repo.criar(sessao)
+    const fetchEspiao = vi.fn()
+    vi.stubGlobal('fetch', fetchEspiao)
+
+    await gerarEArmazenarApresentacao(repo, criada)
+
+    expect(fetchEspiao).not.toHaveBeenCalled()
+    expect(repo.linhas[0].apresentacaoPdfS3Key).toBeNull()
+  })
+
+  it('sucesso: salva a chave do S3 e limpa apresentacao_pdf_erro', async () => {
+    const repo = criarFakeSessionRepo()
+    const sessao = { ...sessaoConcluidaDeExemplo(), apresentacaoPdfErro: 'falha antiga' }
+    const criada = await repo.criar(sessao)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response(new Uint8Array(), { status: 200, headers: { 'X-Apresentacao-S3-Key': 'apresentacoes/aaaaaaaa.pdf' } }),
+    ))
+
+    await gerarEArmazenarApresentacao(repo, criada)
+
+    expect(repo.linhas[0].apresentacaoPdfS3Key).toBe('apresentacoes/aaaaaaaa.pdf')
+    expect(repo.linhas[0].apresentacaoPdfErro).toBeNull()
+  })
+
+  it('S3 ainda não configurado no serviço (sem X-Apresentacao-S3-Key): não é erro, não grava nada', async () => {
+    const repo = criarFakeSessionRepo()
+    const sessao = sessaoConcluidaDeExemplo()
+    const criada = await repo.criar(sessao)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(new Uint8Array(), { status: 200 })))
+
+    await gerarEArmazenarApresentacao(repo, criada)
+
+    expect(repo.linhas[0].apresentacaoPdfS3Key).toBeNull()
+    expect(repo.linhas[0].apresentacaoPdfErro).toBeNull()
+  })
+
+  it('serviço de apresentação indisponível: grava o erro, não estoura exceção', async () => {
+    const repo = criarFakeSessionRepo()
+    const sessao = sessaoConcluidaDeExemplo()
+    const criada = await repo.criar(sessao)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"detail":"deu ruim"}', { status: 502 })))
+
+    await expect(gerarEArmazenarApresentacao(repo, criada)).resolves.toBeUndefined()
+
+    expect(repo.linhas[0].apresentacaoPdfErro).toMatch(/502/)
+    expect(repo.linhas[0].apresentacaoPdfS3Key).toBeNull()
   })
 })

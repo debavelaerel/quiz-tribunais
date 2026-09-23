@@ -133,7 +133,8 @@ supabase/migrations/          — schema do banco, em ordem cronológica
      (`lib/perfil.ts`) e os blocos de texto condicionais
      (`lib/blocos.ts`), marca `status = concluido` e **dispara em
      background** (via `after()` do Next.js, fire-and-forget) a geração do
-     laudo em PDF — sem atrasar a resposta pra quem terminou.
+     laudo **e** da apresentação comercial em PDF, em paralelo — sem atrasar
+     a resposta pra quem terminou.
 7. **Resultado** (tela final) — busca via **`GET
    /api/quiz/result?session_token=`**: score geral, áreas fortes/fracas,
    blocos de conteúdo personalizados, CTA de WhatsApp.
@@ -176,7 +177,8 @@ arquivo):
 - Materiais gerados: `laudo_pdf_s3_key`/`laudo_pdf_erro`,
   `apresentacao_pdf_s3_key`/`apresentacao_pdf_erro` — **colunas na mesma
   tabela**, não tabelas separadas; os dois materiais pertencem 1:1 à mesma
-  sessão.
+  sessão. Os dois são gerados automaticamente em background na conclusão do
+  quiz e reaproveitam o mesmo `laudo_token` pro link estável de cada um.
 - `started_at`, `updated_at` (trigger automático), `completed_at`.
 
 **`leads_desqualificados`** — captura de contato de quem não é público-alvo
@@ -198,12 +200,18 @@ tabela separada, porque os dois materiais pertencem 1:1 à mesma sessão de
 quiz (ver seção "Banco de dados" acima).
 
 **Em quanto tempo ele gera os materiais?**
-- **Laudo**: em segundo plano, assim que o quiz termina (`POST
-  /api/quiz/finish`) — a pessoa não espera nada. O teto de segurança da
-  chamada ao serviço Python é 55s (`AbortSignal.timeout`, ver
-  `lib/server/laudoService.ts`); na prática sai bem mais rápido, é um PDF só.
-- **Apresentação**: só quando o admin clica em "baixar" no painel — aí sim
-  essa pessoa espera a resposta, com o mesmo teto de 55s.
+Os dois, em segundo plano, assim que o quiz termina (`POST
+/api/quiz/finish`) — a pessoa não espera nada, e as duas chamadas ao serviço
+Python rodam em paralelo (`Promise.all`, ver
+`lib/server/laudoPdfBackground.ts`), não uma depois da outra. Cada uma tem
+um teto de segurança de 55s (`AbortSignal.timeout`, ver
+`lib/server/laudoService.ts`); na prática sai bem mais rápido, é um PDF só.
+Se por algum motivo a geração em background falhar ou ainda estiver rodando
+quando alguém acessar o link antes da hora: `/api/laudo/[token]` devolve
+425 (tenta de novo em instantes) até a chave existir, e
+`/api/apresentacao/[token]` se vira sozinho, gerando na hora como rede de
+segurança. Em qualquer um dos dois casos, o admin também pode forçar a
+regeração a qualquer momento pelo painel.
 
 ## API
 
@@ -219,11 +227,12 @@ memória (`lib/server/rateLimit.ts`), por IP.
 | `/api/quiz/start` | POST | Cria/retoma sessão |
 | `/api/quiz/answer` | POST | Registra 1 resposta do teste graduado |
 | `/api/quiz/perfil` | POST | Registra 1 campo de perfilamento |
-| `/api/quiz/finish` | POST | Conclui a sessão, calcula resultado, dispara laudo em background |
+| `/api/quiz/finish` | POST | Conclui a sessão, calcula resultado, dispara laudo + apresentação em background (em paralelo) |
 | `/api/quiz/result` | GET | Busca resultado de uma sessão concluída |
 | `/api/quiz/whatsapp` | POST | Registra clique no CTA de WhatsApp (fire-and-forget) |
 | `/api/leads/desqualificado` | POST | Captura contato de lead fora do público-alvo |
 | `/api/laudo/[laudoToken]` | GET | Redireciona pra URL assinada do laudo no S3 (link estável, usado no CRM) |
+| `/api/apresentacao/[laudoToken]` | GET | Mesma ideia, pra apresentação comercial — gera na hora como fallback se a chave ainda não existir |
 
 ### Admin (protegidas por `middleware.ts`, cookie de sessão)
 

@@ -9,13 +9,16 @@ import { gerarApresentacaoPdf, validarSessaoParaLaudo, LaudoIndisponivel } from 
 import { nivelTeste } from '@/lib/perfil'
 
 export const runtime = 'nodejs'
-// Diferente do laudo: quando ninguém gerou a apresentação ainda, essa rota
-// gera na hora (em vez de 425 "ainda gerando") — não tem geração em
-// background pra apresentação (só o clique manual do admin, ver
-// app/api/admin/leads/[token]/apresentacao/route.ts), então "ainda não tem
-// chave" aqui significa "ninguém pediu ainda", não "está a caminho". Por
-// isso o timeout generoso: a primeira visita ao link paga o preço de
-// renderizar as 22 telas; as próximas reaproveitam o S3 e são instantâneas.
+// A apresentação também é gerada em background na conclusão do quiz (ver
+// lib/server/laudoPdfBackground.ts::gerarEArmazenarApresentacao,
+// app/api/quiz/finish/route.ts) — na prática a chave já costuma estar
+// pronta quando esse link é acessado. Mesmo assim, diferente do laudo, essa
+// rota gera na hora se ainda não tiver chave (em vez de 425 "ainda
+// gerando") — rede de segurança pro caso raro da geração em background
+// ainda estar rodando ou ter falhado, sem deixar o link do CRM preso
+// esperando alguém entrar no admin e gerar manualmente. Por isso o timeout
+// generoso: só paga o preço de renderizar as 22 telas quando essa rede de
+// segurança entra em ação; o caminho normal (chave já pronta) é instantâneo.
 export const maxDuration = 60
 
 // Link estável pra apresentação comercial de um lead — mesma ideia do link

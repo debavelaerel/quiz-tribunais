@@ -3,7 +3,7 @@ import { criarSupabaseAdmin } from '@/lib/server/supabaseAdmin'
 import { criarSupabaseSessionRepo } from '@/lib/server/supabaseSessionRepo'
 import type { SessionRepo } from '@/lib/server/sessionRepo'
 import { concluirSessao, SessaoInvalidaError, SessaoConcluidaError, SessaoIncompletaError } from '@/lib/server/quizService'
-import { gerarEArmazenarLaudo } from '@/lib/server/laudoPdfBackground'
+import { gerarEArmazenarLaudo, gerarEArmazenarApresentacao } from '@/lib/server/laudoPdfBackground'
 import { permitirRequisicao } from '@/lib/server/rateLimit'
 import { isUuid } from '@/lib/server/uuid'
 import { ipDaRequisicao } from '@/lib/server/ip'
@@ -45,11 +45,22 @@ export function criarHandlerFinish(repo: SessionRepo, agendarBackground: (tarefa
 
     try {
       const sessao = await concluirSessao(repo, sessionToken)
-      // Gera o laudo em PDF e sobe pro S3 depois de responder — não faz
-      // quem terminou o quiz esperar o Chromium do serviço Python renderizar
-      // (ver lib/server/laudoPdfBackground.ts pro que acontece se isso
-      // falhar: nunca propaga erro pra cá, só grava em laudo_pdf_erro).
-      agendarBackground(() => gerarEArmazenarLaudo(repo, sessao))
+      // Gera o laudo e a apresentação comercial em PDF e sobe os dois pro S3
+      // depois de responder — não faz quem terminou o quiz esperar o
+      // Chromium do serviço Python renderizar (ver
+      // lib/server/laudoPdfBackground.ts pro que acontece se isso falhar:
+      // nunca propaga erro pra cá, só grava em
+      // laudo_pdf_erro/apresentacao_pdf_erro). As duas chamadas rodam em
+      // paralelo (Promise.all), não uma depois da outra — cada uma já tem
+      // seu próprio teto de 55s pro serviço Python (ver laudoService.ts);
+      // em paralelo, as duas cabem dentro do maxDuration abaixo sem
+      // precisar dobrá-lo.
+      agendarBackground(async () => {
+        await Promise.all([
+          gerarEArmazenarLaudo(repo, sessao),
+          gerarEArmazenarApresentacao(repo, sessao),
+        ])
+      })
       return NextResponse.json({
         score_geral_pct: sessao.scoreGeralPct,
         acertos: sessao.acertos,

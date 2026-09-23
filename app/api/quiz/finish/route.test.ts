@@ -67,6 +67,45 @@ describe('POST /api/quiz/finish', () => {
     expect(agendarBackground).toHaveBeenCalledTimes(1)
   })
 
+  it('a tarefa agendada gera laudo e apresentação em paralelo (Promise.all), as duas', async () => {
+    const ENV_ORIGINAL = { ...process.env }
+    process.env.LAUDO_SERVICE_URL = 'http://laudo-service.local'
+    process.env.LAUDO_SERVICE_SECRET = 'segredo-de-teste'
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      const s3Header = url.endsWith('/apresentacao') ? 'X-Apresentacao-S3-Key' : 'X-Laudo-S3-Key'
+      const s3Key = url.endsWith('/apresentacao') ? 'apresentacoes/aaaaaaaa.pdf' : 'laudos/aaaaaaaa.pdf'
+      return Promise.resolve(new Response(new Uint8Array(), { status: 200, headers: { [s3Header]: s3Key } }))
+    }))
+
+    try {
+      const repo = criarFakeSessionRepo()
+      await iniciarEResponderTudo(repo)
+      // laudoPdfBackground só chama o serviço com um perfil completo (ver
+      // validarSessaoParaLaudo) — iniciarEResponderTudo não passa pela tela
+      // de perfilamento, então precisa preencher aqui pra exercitar o
+      // caminho de sucesso das duas gerações.
+      const sessaoAntes = await repo.buscarPorToken(TOKEN)
+      await repo.atualizar(sessaoAntes!.id, {
+        perfil: {
+          alvo: 'tj', cargo: 'analista', formacao: 'cursando_direito', tempo: 't0', provas: 'p0',
+          metodo: 'nenhum', vde: 'nunca', horas: 'h1', edital: 'sem', dor: 'improviso',
+          momento: 'zero', dinheiro: '96', leitura: 'completa', editais: [],
+        },
+      })
+      let tarefaAgendada: (() => void | Promise<void>) | undefined
+      const handler = criarHandlerFinish(repo, (tarefa) => { tarefaAgendada = tarefa })
+      await handler(fazerRequisicao({ session_token: TOKEN }))
+
+      await tarefaAgendada?.()
+
+      expect(repo.linhas[0].laudoPdfS3Key).toBe('laudos/aaaaaaaa.pdf')
+      expect(repo.linhas[0].apresentacaoPdfS3Key).toBe('apresentacoes/aaaaaaaa.pdf')
+    } finally {
+      process.env = { ...ENV_ORIGINAL }
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('retorna 422 quando faltam respostas', async () => {
     const repo = criarFakeSessionRepo()
     const start = criarHandlerStart(repo)
