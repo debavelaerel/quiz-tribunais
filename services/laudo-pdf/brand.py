@@ -245,6 +245,25 @@ def titulo_da_base(html: str) -> str:
     return html.replace(RAIO_X_DA_BASE, "Diagnóstico da Base")
 
 
+_RODAPE_COM_CODIGO_RE = re.compile(r"<footer>.*?</footer>", re.DOTALL)
+
+
+def remover_rodape_com_codigo(html: str) -> str:
+    """report.py fecha o corpo do laudo com um `<footer>` que repete a marca
+    (já mostrada na capa e no rodapé de página impressa, ver
+    render.py::FOOTER_TEMPLATE) e expõe em texto puro o código RX1 do lead
+    (`lead.code()`) — pensado pro consultor colar em `diagnosis/cli.py` e
+    reproduzir o laudo localmente enquanto não havia `leadEndpoint` (ver
+    ENTREGA-DEV.md). Este serviço já recebe os dados prontos via POST /laudo,
+    então o código não serve pra nada aqui — só vaza um identificador de
+    debug pro lead, no PDF de verdade. Precisa rodar depois de
+    `titulo_da_base()`: o rodapé é uma das 3 ocorrências que aquele override
+    espera encontrar."""
+    ocorrencias = len(_RODAPE_COM_CODIGO_RE.findall(html))
+    _confirmar(ocorrencias == 1, f"HTML de report.py mudou: esperava 1 <footer>, achou {ocorrencias} — remoção do rodapé com código ficaria incompleta ou reaplicada errado")
+    return _RODAPE_COM_CODIGO_RE.sub("", html)
+
+
 # Além de "Raio-X da Base" (nome do produto, tratado acima), report.py usa
 # "raio-X" solto, como substantivo comum, em mais 3 pontos do corpo do
 # laudo — titulo_da_base() não pega esses (string diferente). Mesmo rebrand

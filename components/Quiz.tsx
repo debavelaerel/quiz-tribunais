@@ -15,14 +15,9 @@ import {
   labelCargo,
   comNome,
   editaisEscolhidos,
-  fraseEdital,
-  fraseRetaFinal,
-  fraseExtraCargo,
-  fraseVde,
   waLink,
   type TelaPerfil,
   type Opcao,
-  type FraseComNegrito,
 } from '@/lib/quizContent'
 import { calcularPerfil, calcularConta, nivelTeste, type RespostasPerfil } from '@/lib/perfil'
 import { nomeValido, emailValido, whatsappValido } from '@/lib/validacao'
@@ -1702,13 +1697,6 @@ export default function Quiz() {
     ? waLink(nome || estado?.nome || '', respostasPerfil, perfilCalculado?.classe ?? 'B', perfilCalculado?.cursoCod ?? 'C2-TJTRF', nivel, resultado.acertos, resultado.total)
     : '#'
 
-  const frases: (FraseComNegrito | null)[] = [
-    fraseEdital(respostasPerfil),
-    fraseRetaFinal(respostasPerfil),
-    fraseExtraCargo(respostasPerfil),
-    fraseVde(respostasPerfil),
-  ]
-
   return (
     <div className="flex min-h-screen flex-col">
       <Header progresso={100} />
@@ -1788,23 +1776,16 @@ export default function Quiz() {
                 // "Mais um ponto do seu caso", removidos daqui: preview mais
                 // curto, empurra pra conversa no WhatsApp mais cedo em vez de
                 // dar tanto conteúdo de graça antes do CTA.
-                <div className="relative mt-7 max-h-[120px] overflow-hidden">
-                  <div className="select-none" style={{ filter: 'blur(4px)' }}>
+                <div className="relative mt-7 max-h-[150px] overflow-hidden rounded-[16px] border-[1.5px] border-brand-line px-4 py-4">
+                  <div className="select-none" style={{ filter: 'blur(3px)' }}>
                     <h3 className="font-bold text-brand-navy">Por que essa ordem</h3>
                     {diagnostico.texto.map((t, i) => (
                       <p key={i} className="mt-2 text-brand-ink-soft">{t}</p>
                     ))}
                   </div>
-                  <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0), #FFFFFF 70%)' }} />
+                  <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0), #FFFFFF 78%)' }} />
                 </div>
               )}
-
-              {frases.map((f, i) => f && (
-                <div key={i} className="mt-3 rounded-[14px] bg-brand-tint px-4 py-3 text-[13px] leading-relaxed text-brand-ink-soft">
-                  {f.negrito && <b className="text-brand-ink">{f.negrito} </b>}
-                  {f.texto}
-                </div>
-              ))}
 
               {/* Cartão navy (não mais texto solto no fundo branco) — copy
                   reduzida mantendo a mesma ideia da original (leitura

@@ -427,42 +427,6 @@ export const MENSAGENS_CORRECAO: string[] = [
   'As quatro. Nível bom de partida, e a prova real cobra isso em 70 questões seguidas.',
 ]
 
-export type FraseComNegrito = { negrito?: string; texto: string }
-
-export function fraseEdital(r: RespostasPerfil): FraseComNegrito | null {
-  const ed = editaisEscolhidos(r)[0]
-  if (!ed) return null
-  return {
-    negrito: `Sobre o ${ed.label}:`,
-    texto: `está com ${ed.sub}. Ele não vai esperar a base ficar pronta, então a ordem do que você estuda agora importa mais do que a quantidade.`,
-  }
-}
-
-export function fraseRetaFinal(r: RespostasPerfil): FraseComNegrito | null {
-  if (r.edital !== 'reta') return null
-  return {
-    negrito: 'Sobre a sua prova em menos de 3 meses:',
-    texto: 'o plano imediato é reta final, questões da banca e lei seca nas matérias de maior peso. A base a gente constrói pro edital seguinte, e ele vem: são 27 TJs, 6 TRFs e 24 TRTs abrindo em ciclo.',
-  }
-}
-
-export function fraseExtraCargo(r: RespostasPerfil): FraseComNegrito | null {
-  if (r.cargo === 'tecnico' && (r.formacao === 'direito' || r.formacao === 'outra') && r.alvo !== 'fe') {
-    return {
-      negrito: 'Um detalhe que muda o jogo:',
-      texto: 'com curso superior você já pode concorrer a analista, que paga quase o dobro do técnico e cai com o mesmo tronco de matérias. Vale levar isso pra conversa com o consultor.',
-    }
-  }
-  return null
-}
-
-export function fraseVde(r: RespostasPerfil): FraseComNegrito | null {
-  if (r.vde === 'exaluno' || r.vde === 'aluno') {
-    return { texto: 'Você já conhece o jeito VDE de estudar: PDF direto ao ponto, lei e questão. O VDE Tribunais é isso aplicado aos concursos de tribunal, com o cronograma calculado pelo número de temas.' }
-  }
-  return null
-}
-
 // Separado de waLink() pra o serviço de PDF em Python (services/laudo-pdf)
 // poder montar o mesmo link sem duplicar a lógica da mensagem — manda o
 // texto puro (não codificado) + CONFIG.whatsapp, e o serviço monta a URL do
