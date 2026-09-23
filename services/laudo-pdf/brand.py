@@ -12,6 +12,10 @@ pública de resultado já usa):
      tela de resultado usa, via lib/quizContent.ts::waLink), não o link vazio
      que report.py gera sozinho.
 
+Troca adicional em 2026-09-23: "meu time" virou "nosso time" no parágrafo
+final (`voz_do_time`), pra ficar consistente com a mesma frase já trocada em
+components/Quiz.tsx (cartão do CTA de WhatsApp na tela de resultado).
+
 `vendor/raio-x-da-base` e `vendor/brand` são cópias de `reference/raio-x-da-base`
 e `public/brand` na raiz do repo — o build de container (Vercel/Docker) usa
 `services/laudo-pdf` isolado como contexto, sem acesso ao resto do repo, então
@@ -257,6 +261,21 @@ _RAIO_X_GENERICO = {
 def raio_x_generico(html: str) -> str:
     for frase, trocada in _RAIO_X_GENERICO.items():
         _confirmar(html.count(frase) == 1, f"HTML de report.py mudou: não achei (ou achei mais de uma vez) \"{frase}\" — rebrand ficaria incompleto")
+        html = html.replace(frase, trocada)
+    return html
+
+
+# Troca decidida em 2026-09-23, pra ficar consistente com a mesma frase na
+# tela web (components/Quiz.tsx, cartão do CTA de WhatsApp): "meu time" virou
+# "nosso time" lá primeiro, esse laudo ainda dizia "meu".
+_VOZ_DO_TIME = {
+    "O que a conversa com o meu\n    time faz": "O que a conversa com o nosso\n    time faz",
+}
+
+
+def voz_do_time(html: str) -> str:
+    for frase, trocada in _VOZ_DO_TIME.items():
+        _confirmar(html.count(frase) == 1, f"HTML de report.py mudou: não achei (ou achei mais de uma vez) \"{frase}\" — troca de voz ficaria incompleta")
         html = html.replace(frase, trocada)
     return html
 

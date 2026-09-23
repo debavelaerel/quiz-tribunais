@@ -1782,57 +1782,20 @@ export default function Quiz() {
               )}
 
               {diagnostico && (
-                <>
-                  <h3 className="mt-7 font-bold text-brand-navy">Por que essa ordem</h3>
-                  {diagnostico.texto.map((t, i) => (
-                    <p key={i} className="mt-2 text-brand-ink-soft">{t}</p>
-                  ))}
-                </>
-              )}
-
-              {resultado.blocos && resultado.blocos.length > 0 && (
-                <div className="mt-7">
-                  <h3 className="font-bold text-brand-navy">Resposta por resposta</h3>
-                  <p className="mt-2 text-brand-ink-soft">Isso aqui é o que você me contou, ponto a ponto.</p>
-
-                  <div className="mt-3 rounded-[16px] border-[1.5px] border-brand-line px-4 py-4">
-                    <h4 className="pl-3 text-[14.5px] font-semibold text-brand-ink" style={{ borderLeft: '3px solid #203C7C' }}>
-                      {resultado.blocos[0].title}
-                    </h4>
-                    {resultado.blocos[0].paragraphs.map((p, i) => (
-                      <p key={i} className="mt-2 text-[13px] leading-relaxed text-brand-ink-soft">{p}</p>
+                // Blur cobre a explicação inteira — agora é o único teaser
+                // trancado antes do CTA. Substituiu "Resposta por resposta"
+                // (bloco visível + blocos progressivos borrados) e o cartão
+                // "Mais um ponto do seu caso", removidos daqui: preview mais
+                // curto, empurra pra conversa no WhatsApp mais cedo em vez de
+                // dar tanto conteúdo de graça antes do CTA.
+                <div className="relative mt-7 max-h-[120px] overflow-hidden">
+                  <div className="select-none" style={{ filter: 'blur(4px)' }}>
+                    <h3 className="font-bold text-brand-navy">Por que essa ordem</h3>
+                    {diagnostico.texto.map((t, i) => (
+                      <p key={i} className="mt-2 text-brand-ink-soft">{t}</p>
                     ))}
                   </div>
-
-                  {resultado.blocos.length > 1 && (
-                    // max-h fixo (não cresce com a quantidade de blocos — pode ter
-                    // 7-8 blocos restantes conforme o lead) + overflow hidden: sem
-                    // isso o teaser borrado empilhava todos eles, virando uma
-                    // extensão gigante antes do CTA de WhatsApp aparecer.
-                    <div className="relative mt-2.5 max-h-[220px] overflow-hidden">
-                      <div className="flex select-none flex-col gap-2.5">
-                        {resultado.blocos.slice(1).map((b, i) => (
-                          <div
-                            key={b.id}
-                            className="rounded-[16px] border-[1.5px] border-brand-line px-4 py-4"
-                            // Progressivo (2px no primeiro bloco escondido, +2.5px a
-                            // cada um depois, até um teto de 9px) em vez de um blur
-                            // uniforme em tudo — sugere que tem mais conteúdo "atrás",
-                            // não só um único painel embaçado.
-                            style={{ filter: `blur(${Math.min(2 + i * 2.5, 9)}px)` }}
-                          >
-                            <h4 className="pl-3 text-[14.5px] font-semibold text-brand-ink" style={{ borderLeft: '3px solid #203C7C' }}>
-                              {b.title}
-                            </h4>
-                            {b.paragraphs.map((p, i) => (
-                              <p key={i} className="mt-2 text-[13px] leading-relaxed text-brand-ink-soft">{p}</p>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-white" style={{ backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0), #FFFFFF 82%)' }} />
-                    </div>
-                  )}
+                  <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0), #FFFFFF 70%)' }} />
                 </div>
               )}
 
@@ -1842,24 +1805,6 @@ export default function Quiz() {
                   {f.texto}
                 </div>
               ))}
-
-              {/* Ponte pro CTA — mesma linguagem dos blocos "ponto a ponto"
-                  borrados lá em cima (não um blur decorativo solto): mais
-                  conteúdo "trancado" logo antes do convite pra call, em vez
-                  de deixar o último cartão de texto encostado direto no CTA. */}
-              <div className="mt-3 rounded-[16px] border-[1.5px] border-brand-line px-4 py-4">
-                <h4 className="pl-3 text-[14.5px] font-semibold text-brand-ink" style={{ borderLeft: '3px solid #203C7C' }}>
-                  Mais um ponto do seu caso
-                </h4>
-                <div className="select-none">
-                  <p className="mt-2 text-[13px] leading-relaxed text-brand-ink-soft" style={{ filter: 'blur(3px)' }}>
-                    Isso aqui também mudaria bastante o seu cronograma, principalmente
-                  </p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-brand-ink-soft" style={{ filter: 'blur(4px)' }}>
-                    considerando o tempo que você tem disponível por semana.
-                  </p>
-                </div>
-              </div>
 
               {/* Cartão navy (não mais texto solto no fundo branco) — copy
                   reduzida mantendo a mesma ideia da original (leitura

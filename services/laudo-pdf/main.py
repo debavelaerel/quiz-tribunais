@@ -159,6 +159,7 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
         html = report_mod.build_html(lead, hoje=hoje)
         html = brand.titulo_da_base(html)
         html = brand.raio_x_generico(html)
+        html = brand.voz_do_time(html)
         html = brand.remover_marca_duplicada(html)
         html = brand.cta_whatsapp_com_mensagem(html, req.whatsapp_numero, req.whatsapp_mensagem)
         pdf_bytes = await render.html_para_pdf(html)
