@@ -28,6 +28,11 @@ type LinhaBanco = {
   laudo_pdf_erro: string | null
   apresentacao_pdf_s3_key: string | null
   apresentacao_pdf_erro: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  utm_content: string | null
+  utm_term: string | null
   started_at: string
   updated_at: string
   completed_at: string | null
@@ -60,6 +65,11 @@ function paraSessao(linha: LinhaBanco): QuizSession {
     laudoPdfErro: linha.laudo_pdf_erro,
     apresentacaoPdfS3Key: linha.apresentacao_pdf_s3_key,
     apresentacaoPdfErro: linha.apresentacao_pdf_erro,
+    utmSource: linha.utm_source,
+    utmMedium: linha.utm_medium,
+    utmCampaign: linha.utm_campaign,
+    utmContent: linha.utm_content,
+    utmTerm: linha.utm_term,
     startedAt: linha.started_at,
     updatedAt: linha.updated_at,
     completedAt: linha.completed_at,
@@ -91,6 +101,11 @@ function paraLinhaPatch(patch: Partial<QuizSession>): Record<string, unknown> {
   if (patch.laudoPdfErro !== undefined) linha.laudo_pdf_erro = patch.laudoPdfErro
   if (patch.apresentacaoPdfS3Key !== undefined) linha.apresentacao_pdf_s3_key = patch.apresentacaoPdfS3Key
   if (patch.apresentacaoPdfErro !== undefined) linha.apresentacao_pdf_erro = patch.apresentacaoPdfErro
+  if (patch.utmSource !== undefined) linha.utm_source = patch.utmSource
+  if (patch.utmMedium !== undefined) linha.utm_medium = patch.utmMedium
+  if (patch.utmCampaign !== undefined) linha.utm_campaign = patch.utmCampaign
+  if (patch.utmContent !== undefined) linha.utm_content = patch.utmContent
+  if (patch.utmTerm !== undefined) linha.utm_term = patch.utmTerm
   if (patch.startedAt !== undefined) linha.started_at = patch.startedAt
   if (patch.completedAt !== undefined) linha.completed_at = patch.completedAt
   return linha

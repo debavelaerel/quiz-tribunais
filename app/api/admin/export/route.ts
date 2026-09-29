@@ -14,7 +14,7 @@ export const runtime = 'nodejs'
 // comentário em lib/server/listarTudo.ts).
 const LIMITE_EXPORTACAO = 5000
 
-const CABECALHO = ['nome', 'whatsapp', 'email', 'fluxo', 'status', 'acertos', 'total', 'score_geral_pct', 'classe', 'curso_indicado', 'clicou_whatsapp_em', 'iniciado_em', 'concluido_em']
+const CABECALHO = ['nome', 'whatsapp', 'email', 'fluxo', 'status', 'acertos', 'total', 'score_geral_pct', 'classe', 'curso_indicado', 'clicou_whatsapp_em', 'iniciado_em', 'concluido_em', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']
 
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url)
@@ -35,6 +35,7 @@ export async function GET(req: Request): Promise<Response> {
     s.perfilCalculado?.classe ?? '', s.perfilCalculado?.curso ?? '',
     s.whatsappClicadoEm ?? '',
     s.startedAt, s.completedAt,
+    s.utmSource ?? '', s.utmMedium ?? '', s.utmCampaign ?? '', s.utmContent ?? '', s.utmTerm ?? '',
   ])
   const csv = paraCsv(CABECALHO, linhas)
 

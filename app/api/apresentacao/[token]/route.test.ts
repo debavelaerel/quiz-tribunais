@@ -20,6 +20,7 @@ function sessaoBase(overrides: Partial<QuizSession> = {}): Omit<QuizSession, 'id
     perfilCalculado: null, blocos: [],
     whatsappClicadoEm: null, laudoPdfS3Key: null, laudoPdfErro: null,
     apresentacaoPdfS3Key: null, apresentacaoPdfErro: null,
+    utmSource: null, utmMedium: null, utmCampaign: null, utmContent: null, utmTerm: null,
     startedAt: '2026-09-16T10:00:00Z', updatedAt: '2026-09-16T10:20:00Z', completedAt: '2026-09-16T10:20:00Z',
     ...overrides,
   }

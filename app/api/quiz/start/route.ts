@@ -24,13 +24,22 @@ export function criarHandlerStart(repo: SessionRepo) {
       return NextResponse.json({ erro: 'json inválido' }, { status: 400 })
     }
 
-    const { nome, whatsapp, email, session_token: sessionToken, fluxo } = (corpo ?? {}) as Record<string, unknown>
+    const {
+      nome, whatsapp, email, session_token: sessionToken, fluxo,
+      utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign,
+      utm_content: utmContent, utm_term: utmTerm,
+    } = (corpo ?? {}) as Record<string, unknown>
     if (typeof nome !== 'string' || !nomeValido(nome)) {
       return NextResponse.json({ erro: 'nome e sobrenome obrigatórios' }, { status: 422 })
     }
     // Puramente informativo (ver migration 20260908000001) — cliente antigo
     // sem o campo, ou valor fora da allowlist, cai em 'padrao' silenciosamente.
     const fluxoValido: 'padrao' | 'final' = fluxo === 'final' ? 'final' : 'padrao'
+    // Idem: puramente informativo (ver migration 20260929000000) — string
+    // vazia ou absurdamente longa (lixo/abuso) só é ignorada, nunca barra o
+    // quiz por causa de um parâmetro de tracking.
+    const utmValido = (v: unknown): string | undefined =>
+      typeof v === 'string' && v.trim().length > 0 && v.length <= 200 ? v.trim() : undefined
     if (typeof email !== 'string' || !emailValido(email)) {
       return NextResponse.json({ erro: 'email inválido' }, { status: 422 })
     }
@@ -44,6 +53,8 @@ export function criarHandlerStart(repo: SessionRepo) {
     try {
       const resultado = await iniciarSessao(repo, {
         nome, whatsapp: whatsapp as string, email, sessionToken, evento: EVENTO, fluxo: fluxoValido,
+        utmSource: utmValido(utmSource), utmMedium: utmValido(utmMedium), utmCampaign: utmValido(utmCampaign),
+        utmContent: utmValido(utmContent), utmTerm: utmValido(utmTerm),
       })
       // Fronteira JSON em snake_case (mesma convenção de /finish e /result);
       // internamente o serviço continua em camelCase.

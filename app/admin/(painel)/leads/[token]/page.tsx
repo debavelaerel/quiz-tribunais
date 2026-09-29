@@ -99,6 +99,19 @@ export default async function LeadDetalhePage({ params }: { params: Promise<{ to
             </dl>
           </div>
 
+          {(sessao.utmSource || sessao.utmMedium || sessao.utmCampaign || sessao.utmContent || sessao.utmTerm) && (
+            <div className="rounded-[14px] border-[1.5px] border-brand-line p-5">
+              <h3 className="mb-3 text-[14.5px] font-bold text-brand-navy">Origem</h3>
+              <dl className="flex flex-col gap-2 text-[13.5px]">
+                {sessao.utmSource && <div className="flex justify-between border-b border-brand-line pb-2"><dt className="text-brand-ink-dim">Source</dt><dd className="font-semibold text-brand-ink">{sessao.utmSource}</dd></div>}
+                {sessao.utmMedium && <div className="flex justify-between border-b border-brand-line pb-2"><dt className="text-brand-ink-dim">Medium</dt><dd className="font-semibold text-brand-ink">{sessao.utmMedium}</dd></div>}
+                {sessao.utmCampaign && <div className="flex justify-between border-b border-brand-line pb-2"><dt className="text-brand-ink-dim">Campaign</dt><dd className="font-semibold text-brand-ink">{sessao.utmCampaign}</dd></div>}
+                {sessao.utmContent && <div className="flex justify-between border-b border-brand-line pb-2"><dt className="text-brand-ink-dim">Content</dt><dd className="font-semibold text-brand-ink">{sessao.utmContent}</dd></div>}
+                {sessao.utmTerm && <div className="flex justify-between"><dt className="text-brand-ink-dim">Term</dt><dd className="font-semibold text-brand-ink">{sessao.utmTerm}</dd></div>}
+              </dl>
+            </div>
+          )}
+
           <div className="rounded-[14px] border-[1.5px] border-brand-line p-5">
             <h3 className="mb-3 text-[14.5px] font-bold text-brand-navy">Ficha de perfil</h3>
             <div className="grid grid-cols-2 gap-x-5 gap-y-3 text-[13.5px]">

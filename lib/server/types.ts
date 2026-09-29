@@ -54,6 +54,14 @@ export type QuizSession = {
   // pela primeira vez (ver app/api/admin/leads/[token]/apresentacao/route.ts).
   apresentacaoPdfS3Key: string | null
   apresentacaoPdfErro: string | null
+  // UTMs de onde o lead entrou no quiz (window.location.search na tela
+  // inicial) — só preenchidas na criação da sessão (ver iniciarSessao em
+  // quizService.ts), nunca sobrescritas numa retomada: é sempre first touch.
+  utmSource: string | null
+  utmMedium: string | null
+  utmCampaign: string | null
+  utmContent: string | null
+  utmTerm: string | null
   startedAt: string
   updatedAt: string
   completedAt: string | null
@@ -68,6 +76,13 @@ export type IniciarSessaoInput = {
   // Opcional (default 'padrao' em iniciarSessao) pra não forçar todo call
   // site de teste a especificar algo irrelevante pro que cada um cobre.
   fluxo?: 'padrao' | 'final'
+  // Opcionais — ausentes quando a pessoa entrou sem UTM na URL (a maioria).
+  // Só usadas na criação; ver comentário de utmSource em QuizSession.
+  utmSource?: string
+  utmMedium?: string
+  utmCampaign?: string
+  utmContent?: string
+  utmTerm?: string
 }
 
 export type IniciarSessaoResultado = {

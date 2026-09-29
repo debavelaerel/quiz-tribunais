@@ -77,6 +77,22 @@ function tokenDaResposta(json: RespostaStart): string | null {
   return typeof json.session_token === 'string' && json.session_token !== '' ? json.session_token : null
 }
 
+// UTMs da URL que trouxe a pessoa até o quiz — lidas uma vez (a URL não muda
+// entre telas, é tudo estado de um componente só) e mandadas nos dois pontos
+// que de fato podem CRIAR uma sessão nova (iniciar() e
+// criarOuAtualizarSessaoFinal()). Só entram no corpo do POST as que existirem
+// na URL — o servidor ignora o resto (ver /api/quiz/start).
+function utmsDaUrl(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  const params = new URLSearchParams(window.location.search)
+  const utms: Record<string, string> = {}
+  for (const campo of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+    const valor = params.get(campo)
+    if (valor) utms[campo] = valor
+  }
+  return utms
+}
+
 // A sessão que o /start resolveu (por email/whatsapp) já estava concluída
 // ANTES desta visita — ver comentário de `sessaoJaConcluida` no componente.
 function jaConcluidaNaResposta(json: RespostaStart): boolean {
@@ -520,7 +536,10 @@ export default function Quiz() {
       const res = await fetch('/api/quiz/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, whatsapp, email, session_token: criarNovoSessionToken(), fluxo: fluxoFinal ? 'final' : 'padrao' }),
+        body: JSON.stringify({
+          nome, whatsapp, email, session_token: criarNovoSessionToken(), fluxo: fluxoFinal ? 'final' : 'padrao',
+          ...utmsDaUrl(),
+        }),
       })
       if (!res.ok) {
         setErro('Não foi possível iniciar. Confira seus dados.')
@@ -837,7 +856,7 @@ export default function Quiz() {
     const resStart = await fetch('/api/quiz/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, whatsapp, email, session_token: token, fluxo: 'final' }),
+      body: JSON.stringify({ nome, whatsapp, email, session_token: token, fluxo: 'final', ...utmsDaUrl() }),
     })
     if (!resStart.ok) return null
     const jsonStart: RespostaStart = await resStart.json()
