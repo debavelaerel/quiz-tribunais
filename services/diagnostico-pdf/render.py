@@ -44,7 +44,7 @@ FOOTER_TEMPLATE = """
 # browser são seguras na API assíncrona (diferente da síncrona). O
 # semáforo não é sobre correção, é sobre não deixar 40 requisições
 # simultâneas abrirem 40 páginas/renders ao mesmo tempo num contêiner
-# pequeno — a geração do laudo é um clique manual de admin, não um caminho
+# pequeno — a geração do diagnóstico é um clique manual de admin, não um caminho
 # de alto tráfego, então um teto pequeno (2) é sobra, não gargalo real.
 _playwright = None
 _browser = None

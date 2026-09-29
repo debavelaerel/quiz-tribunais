@@ -4,8 +4,8 @@ vendor/vde-tribunais-call/deck.html.
 O deck é HTML fixo (design aprovado, não mexer) com ~30 pontos marcados
 `data-var="chave"` — cada um já vem preenchido com o valor de um lead de
 exemplo (Rafael). Este módulo calcula o valor de cada `data-var` a partir dos
-dados brutos do quiz, reaproveitando o MESMO pacote de diagnóstico do laudo
-(diagnosis/) — o deck e o laudo descrevem o mesmo lead, então usam a mesma
+dados brutos do quiz, reaproveitando o MESMO pacote (diagnosis/) usado no
+diagnóstico — o deck e o diagnóstico descrevem o mesmo lead, então usam a mesma
 fonte de verdade (profile.py, blocks.py), não duas.
 
 Onde o deck precisa de uma frase que não é so o rótulo cru da pergunta (ex.:
@@ -52,7 +52,7 @@ GRADE_TJTRF = {
 # Título: eco em 3ª pessoa da opção que o lead marcou no quiz (mesmo padrão
 # do único exemplo que o deck já trazia, "banca"). Corpo: os dois parágrafos
 # de blocks.py (grupo "O maior gargalo declarado") — a MESMA copy que já vai
-# pro laudo de todo lead, só reaproveitada aqui, não reescrita.
+# pro diagnóstico de todo lead, só reaproveitada aqui, não reescrita.
 _DOR_TITULO = {
     "base": 'Você disse que não tem base: sente que começa do zero a cada edital.',
     "improviso": 'Você disse que estuda no improviso, sem cronograma nem ordem.',
@@ -185,7 +185,7 @@ def variaveis(dados: dict) -> dict[str, str]:
     edital = lead.get("edital")
 
     # "base entre 8 e 12 meses" -> "Entre 8 e 12 meses" (mesma frase,
-    # maiúscula, sem o "base" que só faz sentido dentro do laudo).
+    # maiúscula, sem o "base" que só faz sentido dentro do diagnóstico).
     ritmo = perfil["ritmo"]
     prazo = ritmo[len("base "):] if ritmo.startswith("base ") else ritmo
     prazo = prazo[:1].upper() + prazo[1:]

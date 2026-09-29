@@ -18,7 +18,7 @@ components/Quiz.tsx (cartão do CTA de WhatsApp na tela de resultado).
 
 `vendor/raio-x-da-base` e `vendor/brand` são cópias de `reference/raio-x-da-base`
 e `public/brand` na raiz do repo — o build de container (Vercel/Docker) usa
-`services/laudo-pdf` isolado como contexto, sem acesso ao resto do repo, então
+`services/diagnostico-pdf` isolado como contexto, sem acesso ao resto do repo, então
 o serviço carrega uma cópia própria em vez de referenciar os originais fora
 do seu diretório. Atualizações no pacote original precisam ser copiadas de
 novo pra cá.
@@ -77,7 +77,7 @@ LATIN = ("U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
 
 # Mesmos tokens de app/globals.css — ver components/AreaRadar.tsx e
 # lib/server/pdf.ts (o port em TS que este serviço substitui) pra
-# consistência: mesma paleta em todo lugar que esse laudo já foi renderizado.
+# consistência: mesma paleta em todo lugar que esse diagnóstico já foi renderizado.
 # --lav/--lav-soft/--purple não têm equivalente direto no app (não existe
 # lavanda na paleta) — mapeados pra dourado, o mesmo acento que o port em TS
 # usa pros números do índice. Precisam ficar diferentes de --creme: são
@@ -144,7 +144,7 @@ _MARCA_SVG_38PX = ".marca svg{width:38px;height:38px}"
 
 def css_com_paleta_do_app(css_original: str) -> str:
     """Troca os valores hexadecimais do bloco `:root{...}` do CSS original
-    do laudo pelos tokens do app, e o tamanho fixo de `.marca svg` — mantém
+    do diagnóstico pelos tokens do app, e o tamanho fixo de `.marca svg` — mantém
     o resto de 100% da estrutura/seletores/regras do pacote. `css_original`
     é `diagnosis.report.CSS` (a constante de módulo), lido em runtime antes
     de qualquer override."""
@@ -179,7 +179,7 @@ def css_com_altura_da_capa_corrigida(css: str) -> str:
     menor que o mínimo pedido. Esse estouro de 1mm empurra o fim da capa pra
     uma segunda página quase inteira em branco (só header/footer do PDF),
     antes do `break-after:page` que já força a próxima seção a começar numa
-    página nova — o bug real por trás da "página em branco" do laudo.
+    página nova — o bug real por trás da "página em branco" do diagnóstico.
     Reduz com folga (não só pro exato 265mm) pra sobrar margem de erro de
     arredondamento entre mm e px no motor de PDF."""
     _confirmar(css.count(_CAPA_MIN_HEIGHT_ORIGINAL) == 1, "CSS de report.py mudou: regra .capa min-height não encontrada (ou já mudou) — correção da página em branco ficaria obsoleta ou reaplicada errado")
@@ -249,11 +249,11 @@ _RODAPE_COM_CODIGO_RE = re.compile(r"<footer>.*?</footer>", re.DOTALL)
 
 
 def remover_rodape_com_codigo(html: str) -> str:
-    """report.py fecha o corpo do laudo com um `<footer>` que repete a marca
+    """report.py fecha o corpo do diagnóstico com um `<footer>` que repete a marca
     (já mostrada na capa e no rodapé de página impressa, ver
     render.py::FOOTER_TEMPLATE) e expõe em texto puro o código RX1 do lead
     (`lead.code()`) — pensado pro consultor colar em `diagnosis/cli.py` e
-    reproduzir o laudo localmente enquanto não havia `leadEndpoint` (ver
+    reproduzir o diagnóstico localmente enquanto não havia `leadEndpoint` (ver
     ENTREGA-DEV.md). Este serviço já recebe os dados prontos via POST /laudo,
     então o código não serve pra nada aqui — só vaza um identificador de
     debug pro lead, no PDF de verdade. Precisa rodar depois de
@@ -266,7 +266,7 @@ def remover_rodape_com_codigo(html: str) -> str:
 
 # Além de "Raio-X da Base" (nome do produto, tratado acima), report.py usa
 # "raio-X" solto, como substantivo comum, em mais 3 pontos do corpo do
-# laudo — titulo_da_base() não pega esses (string diferente). Mesmo rebrand
+# diagnóstico — titulo_da_base() não pega esses (string diferente). Mesmo rebrand
 # aprovado (ver docstring do módulo), só que aplicado às frases inteiras
 # (não dá pra trocar só a palavra: "seu raio-X completo" -> "seu
 # diagnóstico completo" muda a frase toda ao redor pra soar natural).
@@ -286,7 +286,7 @@ def raio_x_generico(html: str) -> str:
 
 # Troca decidida em 2026-09-23, pra ficar consistente com a mesma frase na
 # tela web (components/Quiz.tsx, cartão do CTA de WhatsApp): "meu time" virou
-# "nosso time" lá primeiro, esse laudo ainda dizia "meu".
+# "nosso time" lá primeiro, esse diagnóstico ainda dizia "meu".
 _VOZ_DO_TIME = {
     "O que a conversa com o meu\n    time faz": "O que a conversa com o nosso\n    time faz",
 }

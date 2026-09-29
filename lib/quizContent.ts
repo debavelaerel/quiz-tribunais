@@ -427,7 +427,7 @@ export const MENSAGENS_CORRECAO: string[] = [
   'As quatro. Nível bom de partida, e a prova real cobra isso em 70 questões seguidas.',
 ]
 
-// Separado de waLink() pra o serviço de PDF em Python (services/laudo-pdf)
+// Separado de waLink() pra o serviço de PDF em Python (services/diagnostico-pdf)
 // poder montar o mesmo link sem duplicar a lógica da mensagem — manda o
 // texto puro (não codificado) + CONFIG.whatsapp, e o serviço monta a URL do
 // jeito dele (ver brand.cta_whatsapp_com_mensagem). Uma função só pra

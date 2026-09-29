@@ -41,7 +41,7 @@ call 1:1 de vendas).
                      (após /quiz/finish)       │     (clique do admin)
                                                ▼
                                    ┌────────────────────────┐
-                                   │ services/laudo-pdf        │
+                                   │ services/diagnostico-pdf  │
                                    │ FastAPI + Chromium (Python)│
                                    │ POST /laudo, /apresentacao │
                                    └───────────┬──────────────┘
@@ -54,10 +54,10 @@ call 1:1 de vendas).
 
 Dois deploys separados na Vercel:
 - **App Next.js** (raiz do repo) — quiz público + painel `/admin`.
-- **`services/laudo-pdf`** — container Docker à parte (Playwright precisa
+- **`services/diagnostico-pdf`** — container Docker à parte (Playwright precisa
   de Chromium instalado no sistema; não roda numa function serverless
   comum). No projeto da Vercel desse serviço, *Root Directory* precisa ser
-  `services/laudo-pdf` (ver comentário no topo do `Dockerfile`).
+  `services/diagnostico-pdf` (ver comentário no topo do `Dockerfile`).
 
 ## Estrutura de pastas
 
@@ -78,7 +78,7 @@ lib/
   questions.ts                — as 4 questões graduadas (deriva de quizContent.ts)
   scoring.ts / perfil.ts / blocos.ts / normalize.ts / validacao.ts / mascara.ts
   server/                     — tudo que roda só no servidor (ver abaixo)
-services/laudo-pdf/           — serviço Python de geração de PDF (deploy próprio)
+services/diagnostico-pdf/     — serviço Python de geração de PDF (deploy próprio)
 reference/raio-x-da-base/     — pacote de referência de conteúdo/estrutura do diagnóstico (não editar)
 supabase/migrations/          — schema do banco, em ordem cronológica
 ```
@@ -251,7 +251,7 @@ filtros + export), `leads/[token]/page.tsx` (detalhe de um lead, botões de
 baixar diagnóstico/apresentação), `analytics/page.tsx` (funil, gráficos —
 `components/admin/*`). Login em `app/admin/login/page.tsx`.
 
-## Serviço de PDF (`services/laudo-pdf`)
+## Serviço de PDF (`services/diagnostico-pdf`)
 
 FastAPI fino em volta de `reference/raio-x-da-base/diagnosis` (pacote de
 referência de conteúdo/estrutura, mantido intocado — overrides de marca em
@@ -271,7 +271,7 @@ referência de conteúdo/estrutura, mantido intocado — overrides de marca em
 
 Deploy: container Docker próprio (`Dockerfile`, Python 3.12 slim-bookworm —
 não "slim" puro, ver comentário no arquivo), *Root Directory* =
-`services/laudo-pdf` no projeto Vercel correspondente.
+`services/diagnostico-pdf` no projeto Vercel correspondente.
 
 ## Variáveis de ambiente
 
@@ -280,11 +280,11 @@ não "slim" puro, ver comentário no arquivo), *Root Directory* =
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Next.js | Conexão com o Postgres (só service role, sem policy pública) |
 | `ADMIN_PASSWORD` | Next.js | Senha única do painel `/admin` |
 | `ADMIN_SESSION_SECRET` | Next.js | Assina o cookie de sessão do admin (HMAC) |
-| `LAUDO_SERVICE_URL`, `LAUDO_SERVICE_SECRET` | Next.js | Base URL + segredo pra chamar `services/laudo-pdf` |
+| `LAUDO_SERVICE_URL`, `LAUDO_SERVICE_SECRET` | Next.js | Base URL + segredo pra chamar `services/diagnostico-pdf` |
 | `BUCKET_NAME`, `REGION`, `ACCESS_KEY`, `SECRET_KEY` | Next.js | Credenciais do S3 pra gerar URL assinada do diagnóstico (nomes próprios, não os padrão `AWS_*` do SDK — a Vercel já injeta `AWS_*` próprias por function, que não têm nada a ver com o bucket) |
 
 Ver `.env.example` (raiz) pra template das variáveis do Next.js. O serviço
-Python usa suas próprias env vars de S3/segredo (ver `services/laudo-pdf/s3.py`),
+Python usa suas próprias env vars de S3/segredo (ver `services/diagnostico-pdf/s3.py`),
 configuradas à parte no deploy dele.
 
 ## Rodando localmente
@@ -298,7 +298,7 @@ npm run dev                  # http://localhost:3000
 Sem `LAUDO_SERVICE_URL`/`LAUDO_SERVICE_SECRET` configurados, o quiz
 funciona normalmente — só a geração de diagnóstico/apresentação falha (fica
 registrada em `laudo_pdf_erro`, nunca quebra o fluxo do usuário). Pra
-rodar o serviço de PDF localmente: `cd services/laudo-pdf && pip install
+rodar o serviço de PDF localmente: `cd services/diagnostico-pdf && pip install
 -r requirements.txt && playwright install --with-deps chromium && uvicorn
 main:app --reload`.
 

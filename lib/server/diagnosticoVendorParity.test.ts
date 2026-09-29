@@ -3,10 +3,10 @@ import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
-// services/laudo-pdf/vendor/ é uma cópia local de reference/raio-x-da-base e
+// services/diagnostico-pdf/vendor/ é uma cópia local de reference/raio-x-da-base e
 // public/brand/versao01-color0.svg — necessária porque o build de container
-// na Vercel usa services/laudo-pdf/ isolado como contexto, sem acesso ao
-// resto do repo (ver o cabeçalho de services/laudo-pdf/brand.py). Isso cria
+// na Vercel usa services/diagnostico-pdf/ isolado como contexto, sem acesso ao
+// resto do repo (ver o cabeçalho de services/diagnostico-pdf/brand.py). Isso cria
 // duas fontes de verdade que podem divergir silenciosamente: os checks de
 // `_confirmar`/`PacoteMudou` em brand.py só validam o conteúdo da cópia que
 // o serviço carrega, nunca "cópia bateu com o original". Esse teste é quem
@@ -38,17 +38,17 @@ function compararArvores(origemDir: string, copiaDir: string) {
   expect(divergentes, `conteúdo divergente (cópia desatualizada) em: ${divergentes.join(', ')}`).toEqual([])
 }
 
-describe('services/laudo-pdf/vendor está sincronizado com os originais', () => {
+describe('services/diagnostico-pdf/vendor está sincronizado com os originais', () => {
   it('vendor/raio-x-da-base bate com reference/raio-x-da-base', () => {
     compararArvores(
       join(REPO_ROOT, 'reference/raio-x-da-base'),
-      join(REPO_ROOT, 'services/laudo-pdf/vendor/raio-x-da-base'),
+      join(REPO_ROOT, 'services/diagnostico-pdf/vendor/raio-x-da-base'),
     )
   })
 
   it('vendor/brand/versao01-color0.svg bate com public/brand/versao01-color0.svg', () => {
     const origem = join(REPO_ROOT, 'public/brand/versao01-color0.svg')
-    const copia = join(REPO_ROOT, 'services/laudo-pdf/vendor/brand/versao01-color0.svg')
+    const copia = join(REPO_ROOT, 'services/diagnostico-pdf/vendor/brand/versao01-color0.svg')
     expect(hashArquivo(copia)).toBe(hashArquivo(origem))
   })
 })

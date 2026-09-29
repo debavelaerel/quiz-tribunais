@@ -1,10 +1,10 @@
-# Build a partir deste diretório (services/laudo-pdf/), não da raiz do repo —
+# Build a partir deste diretório (services/diagnostico-pdf/), não da raiz do repo —
 # o serviço é auto-contido: vendor/raio-x-da-base e vendor/brand são cópias
 # de reference/raio-x-da-base e public/brand na raiz do repo (ver o
 # cabeçalho de brand.py), porque o contexto do build de container não
 # alcança nada fora deste diretório. Pra isso funcionar em deploy disparado
 # por git (não só `vercel deploy` manual daqui de dentro), o projeto na
-# Vercel precisa ter Root Directory = services/laudo-pdf configurado em
+# Vercel precisa ter Root Directory = services/diagnostico-pdf configurado em
 # Settings → Build and Deployment — sem isso o build lido a partir da raiz
 # do repo não encontra vercel.json e falha com "Project framework is set to
 # services, but no services are declared".

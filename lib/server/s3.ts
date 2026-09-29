@@ -1,11 +1,11 @@
-// URL assinada pro PDF do diagnóstico guardado no S3 (ver services/laudo-pdf/s3.py,
+// URL assinada pro PDF do diagnóstico guardado no S3 (ver services/diagnostico-pdf/s3.py,
 // quem sobe o objeto). Usado só por app/api/laudo/[token]/route.ts — o link
 // estável que vai pro CRM nunca expira porque gera uma URL nova a cada
 // acesso; essa aqui é a de curta duração, só pro tempo do redirect.
 //
 // Nomes de env var próprios (BUCKET_NAME/REGION/ACCESS_KEY/SECRET_KEY), não
 // os padrão do SDK (AWS_ACCESS_KEY_ID/AWS_REGION/etc.), pelo mesmo motivo do
-// lado Python (services/laudo-pdf/s3.py, comentário no topo): a Vercel
+// lado Python (services/diagnostico-pdf/s3.py, comentário no topo): a Vercel
 // injeta as PRÓPRIAS AWS_* ambiente (região/identidade da function, não
 // credencial de bucket nenhuma) em toda function — se o client detectasse
 // credenciais via essas env vars padrão, esquecer de configurar uma das

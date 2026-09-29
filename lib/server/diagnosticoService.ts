@@ -1,4 +1,4 @@
-// Cliente do serviço de PDF em Python (services/laudo-pdf) — chamado pela
+// Cliente do serviço de PDF em Python (services/diagnostico-pdf) — chamado pela
 // rota do admin em vez de lib/server/pdf.ts (o port em TS, descontinuado
 // depois que o serviço em Python real foi validado contra os 8 casos de
 // aceite do pacote e revisado).
@@ -117,7 +117,7 @@ export type ResultadoDiagnostico = {
   pdf: Buffer
   // Chave do objeto no S3 (não a URL — ver lib/server/diagnosticoPdfBackground.ts
   // pro porquê). null se `salvarS3` não foi pedido, ou se foi pedido mas o
-  // serviço ainda não tem S3_BUCKET configurado (ver services/laudo-pdf/s3.py) —
+  // serviço ainda não tem S3_BUCKET configurado (ver services/diagnostico-pdf/s3.py) —
   // as duas situações são "sem link ainda", não erro; um S3 configurado que
   // falhar de verdade vira DiagnosticoIndisponivel (o serviço devolve 502 nesse caso).
   s3Key: string | null
@@ -163,7 +163,7 @@ export async function gerarDiagnosticoPdf(
 // Mesmo serviço, mesma validação, mesmo payload do diagnóstico (POST /apresentacao
 // em vez de /laudo) — a apresentação comercial (deck de call 1:1, 22 telas)
 // usa exatamente os mesmos dados de perfil, só personaliza um HTML
-// diferente (services/laudo-pdf/vendor/vde-tribunais-call/deck.html). Ao
+// diferente (services/diagnostico-pdf/vendor/vde-tribunais-call/deck.html). Ao
 // contrário do diagnóstico, gerada só sob demanda pelo admin, nunca em background.
 export async function gerarApresentacaoPdf(
   sessao: QuizSession,

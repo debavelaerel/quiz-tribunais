@@ -33,7 +33,7 @@ def _cliente():
     # trava deixa a put_object presa por minutos. Já roda em thread separada
     # (ver upload_pdf), então "só" atrasa aquele upload, mas não faz sentido
     # deixar mais longo que o timeout de 55s que o lado Next.js já usa pra
-    # desistir dessa chamada (ver lib/server/laudoService.ts).
+    # desistir dessa chamada (ver lib/server/diagnosticoService.ts).
     return boto3.client(
         "s3",
         region_name=os.environ["REGION"],
@@ -45,7 +45,7 @@ def _cliente():
 
 async def upload_pdf(session_token: str, pdf_bytes: bytes, prefixo: str = "laudos") -> str:
     """Sobe o PDF pro S3 sob uma chave estável (session_token) — reenviar o
-    laudo (ou a apresentação, ver `prefixo`) do mesmo lead sobrescreve o
+    diagnóstico (ou a apresentação, ver `prefixo`) do mesmo lead sobrescreve o
     objeto em vez de acumular versões soltas. Deixa a exceção do boto3 subir
     pra quem chamou decidir o que fazer com a falha; só chame depois de
     conferir `configurado()`.
@@ -53,7 +53,7 @@ async def upload_pdf(session_token: str, pdf_bytes: bytes, prefixo: str = "laudo
     boto3 é síncrono — chamado direto dentro do `async def` de main.py,
     put_object bloquearia o event loop inteiro do uvicorn (um processo só)
     até terminar ou dar timeout, travando toda outra requisição em voo
-    (outros laudos, /health) junto. `asyncio.to_thread` tira a chamada de
+    (outros diagnósticos, /health) junto. `asyncio.to_thread` tira a chamada de
     rede do loop principal.
     """
     import asyncio

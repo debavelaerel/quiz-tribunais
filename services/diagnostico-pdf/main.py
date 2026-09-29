@@ -1,6 +1,6 @@
-"""Serviço de geração do laudo em PDF — FastAPI fino em volta de
+"""Serviço de geração do diagnóstico em PDF — FastAPI fino em volta de
 reference/raio-x-da-base/diagnosis, o pacote entregue como referência de
-conteúdo/estrutura do laudo. O pacote fica intocado; os overrides de marca
+conteúdo/estrutura do diagnóstico. O pacote fica intocado; os overrides de marca
 (paleta, logo, nome do produto, CTA de WhatsApp) estão em brand.py.
 
 POST /laudo recebe os dados da sessão (perfil + respostas + editais) e
@@ -35,7 +35,7 @@ from diagnosis.answers import CAMPOS, Lead, LeadInvalido  # noqa: E402
 APRESENTACAO_HTML = SERVICE_DIR / "vendor/vde-tribunais-call/deck.html"
 APRESENTACAO_SLIDES = ["capa"] + [str(n) for n in range(1, 22)]
 
-logger = logging.getLogger("laudo-pdf")
+logger = logging.getLogger("diagnostico-pdf")
 
 # Overrides de marca, aplicados uma vez no carregamento do processo — ver
 # brand.py pro porquê de cada um. logo_svg/fonts_css são funções (nomes
@@ -62,7 +62,7 @@ async def lifespan(_app: FastAPI):
     await render.encerrar()
 
 
-app = FastAPI(title="laudo-pdf", lifespan=lifespan)
+app = FastAPI(title="diagnostico-pdf", lifespan=lifespan)
 
 SP_TZ = ZoneInfo("America/Sao_Paulo")
 
@@ -77,7 +77,7 @@ class RespostaTeste(BaseModel):
     escolhida: str = ""
 
 
-class LaudoRequest(BaseModel):
+class DiagnosticoRequest(BaseModel):
     nome: str
     email: str = ""
     tel: str = ""
@@ -106,8 +106,8 @@ class LaudoRequest(BaseModel):
     whatsapp_numero: str = Field(default="", pattern=r"^\d{0,15}$")
     whatsapp_mensagem: str = ""
     # session_token do quiz_sessions no Supabase — vira a chave do objeto no
-    # S3 (ver s3.upload_pdf). Opcional: só quem quer o laudo salvo no S3
-    # manda (ver lib/server/laudoPdfBackground.ts); o download avulso do
+    # S3 (ver s3.upload_pdf). Opcional: só quem quer o diagnóstico salvo no S3
+    # manda (ver lib/server/diagnosticoPdfBackground.ts); o download avulso do
     # admin não precisa. Formato uuid (o que o Postgres usa pra
     # session_token) — nunca vira parte de um path sem validar o formato
     # antes, pra não deixar a chave do S3 escapar de "laudos/".
@@ -133,7 +133,7 @@ def health() -> dict:
 
 
 @app.post("/laudo")
-async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo)) -> Response:
+async def gerar_diagnostico(req: DiagnosticoRequest, _auth: None = Depends(verificar_segredo)) -> Response:
     dados = {
         "nome": req.nome, "email": req.email, "tel": req.tel,
         "editais": req.editais,
@@ -147,11 +147,11 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
         # 422, não 500: dado de entrada ruim (sessão com perfil incompleto ou
         # resposta fora das opções válidas), não bug do serviço. O Next.js já
         # deveria ter barrado isso antes de chamar aqui (ver
-        # validarSessaoParaLaudo do lado dele) — isso é a segunda camada.
+        # validarSessaoParaDiagnostico do lado dele) — isso é a segunda camada.
         raise HTTPException(status_code=422, detail=str(e)) from e
 
     # report.py::build_html usa date.today() se `hoje` não for passado — em
-    # UTC (o container roda em UTC), isso data o laudo errado entre 21h e
+    # UTC (o container roda em UTC), isso data o diagnóstico errado entre 21h e
     # meia-noite no horário de Brasília. Calcula explícito em SP_TZ.
     hoje = datetime.now(SP_TZ).date()
 
@@ -168,10 +168,10 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
         # Aqui dentro é sempre bug do serviço (dado do lead já validou acima) —
         # loga o traceback de verdade nos logs da plataforma, mas não devolve
         # detalhe nenhum pra quem chamou.
-        logger.exception("falha ao gerar laudo para %s", req.nome)
+        logger.exception("falha ao gerar diagnóstico para %s", req.nome)
         raise HTTPException(status_code=500, detail="falha ao gerar o PDF") from None
 
-    headers = {"Content-Disposition": f'attachment; filename="laudo-{brand.nome_para_arquivo(req.nome)}.pdf"'}
+    headers = {"Content-Disposition": f'attachment; filename="diagnostico-{brand.nome_para_arquivo(req.nome)}.pdf"'}
 
     if req.session_token:
         if s3.configurado():
@@ -180,9 +180,9 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
             except Exception:
                 # Diferente do except de cima: o PDF já está pronto, o
                 # problema é só salvar no S3 — 502 (upstream), não 500, pra
-                # quem chama (lib/server/laudoPdfBackground.ts) distinguir
+                # quem chama (lib/server/diagnosticoPdfBackground.ts) distinguir
                 # "nosso bug" de "S3 fora do ar" se um dia precisar.
-                logger.exception("falha ao subir laudo pro S3 (session_token=%s)", req.session_token)
+                logger.exception("falha ao subir diagnóstico pro S3 (session_token=%s)", req.session_token)
                 raise HTTPException(status_code=502, detail="falha ao salvar o PDF no S3") from None
         else:
             logger.info("S3_BUCKET não configurado — pulando upload (session_token=%s)", req.session_token)
@@ -191,8 +191,8 @@ async def gerar_laudo(req: LaudoRequest, _auth: None = Depends(verificar_segredo
 
 
 @app.post("/apresentacao")
-async def gerar_apresentacao(req: LaudoRequest, _auth: None = Depends(verificar_segredo)) -> Response:
-    # Mesmo corpo de POST /laudo (LaudoRequest) — o deck de call usa o mesmo
+async def gerar_apresentacao(req: DiagnosticoRequest, _auth: None = Depends(verificar_segredo)) -> Response:
+    # Mesmo corpo de POST /laudo (DiagnosticoRequest) — o deck de call usa o mesmo
     # perfil do quiz, só não precisa de whatsapp_numero/whatsapp_mensagem
     # (não tem CTA de WhatsApp nas 22 telas).
     dados = {

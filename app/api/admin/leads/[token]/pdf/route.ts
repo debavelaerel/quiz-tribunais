@@ -6,7 +6,7 @@ import { gerarDiagnosticoPdf, validarSessaoParaDiagnostico, DiagnosticoIndisponi
 import { isUuid } from '@/lib/server/uuid'
 
 export const runtime = 'nodejs'
-// O serviço de PDF em Python (services/laudo-pdf) é quem faz o trabalho
+// O serviço de PDF em Python (services/diagnostico-pdf) é quem faz o trabalho
 // pesado (Chromium) agora — essa rota só valida, chama por HTTP e repassa
 // o PDF. maxDuration segue generoso porque o timeout do fetch pro serviço
 // (55s, ver lib/server/diagnosticoService.ts) precisa caber dentro dele.
