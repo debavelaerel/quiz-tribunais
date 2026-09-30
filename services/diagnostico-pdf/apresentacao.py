@@ -195,7 +195,14 @@ def variaveis(dados: dict) -> dict[str, str]:
 
     condicao_old = 1997.00
     condicao_new = round(condicao_old * 0.95, 2)
-    parcela = round(condicao_new / 12, 2)
+    # Parcela pela Tabela Price (juros compostos), não uma divisão simples —
+    # parcelado custa mais que à vista, igual a qualquer parcelamento de
+    # cartão de verdade. 2,49% a.m. é a taxa confirmada em 2026-09-29 contra
+    # o valor real do gateway (à vista R$ 1.797,30 / 12x R$ 175,10, outro
+    # produto — usada aqui só como taxa, aplicada em cima do preço com os já
+    # com os 5% de desconto). Trocar a constante se a taxa do gateway mudar.
+    TAXA_JUROS_MENSAL = 0.024893
+    parcela = round(condicao_new * TAXA_JUROS_MENSAL / (1 - (1 + TAXA_JUROS_MENSAL) ** -12), 2)
 
     return {
         # capa
