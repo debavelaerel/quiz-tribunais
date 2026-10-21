@@ -194,15 +194,11 @@ def variaveis(dados: dict) -> dict[str, str]:
     mensal = dinheiro // 12
 
     condicao_old = 1997.00
-    condicao_new = round(condicao_old * 0.95, 2)
-    # Parcela pela Tabela Price (juros compostos), não uma divisão simples —
-    # parcelado custa mais que à vista, igual a qualquer parcelamento de
-    # cartão de verdade. 2,49% a.m. é a taxa confirmada em 2026-09-29 contra
-    # o valor real do gateway (à vista R$ 1.797,30 / 12x R$ 175,10, outro
-    # produto — usada aqui só como taxa, aplicada em cima do preço com os já
-    # com os 5% de desconto). Trocar a constante se a taxa do gateway mudar.
-    TAXA_JUROS_MENSAL = 0.024893
-    parcela = round(condicao_new * TAXA_JUROS_MENSAL / (1 - (1 + TAXA_JUROS_MENSAL) ** -12), 2)
+    condicao_new = 1697.00  # ≈ 15% abaixo de condicao_old (15,02%)
+    # Parcela fixa, no valor que o gateway cobra pra R$ 1.697,00 à vista em
+    # 12x. Fixa porque a taxa de juros derivada de outro produto (2,49% a.m.)
+    # dava R$ 165,37 — centavos acima do real. Trocar se o preço ou o gateway mudar.
+    parcela = 165.34
 
     return {
         # capa
@@ -237,8 +233,8 @@ def variaveis(dados: dict) -> dict[str, str]:
         # tela 6
         "curso_titulo": _curso_titulo_html(alvo),
         "curso_grade": _curso_grade_html(alvo),
-        # tela 19 — condição fixa (5%), não vem mais de preenchimento manual
-        "condicao_k": "+ 5% de desconto",
+        # tela 19 — condição fixa (15%), não vem mais de preenchimento manual
+        "condicao_k": "+ 15% de desconto",
         "condicao_old": _reais(condicao_old),
         "condicao_new": _reais(condicao_new),
         "condicao_sub": f"à vista, ou 12x de {_reais(parcela)}",
