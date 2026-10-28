@@ -1106,7 +1106,7 @@ export default function Quiz() {
               Os próximos 12 meses vão ser dos concursos de tribunais.
             </h1>
             <p className="mt-3 text-[13.5px] leading-normal text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
-              TRT8 já com banca definida. TRF3, TRT4, TJ AM, TJ GO e a DPU na fila.
+              TRT8, TRF3, TRT4, TJ PB e TJ SP já com edital publicado. TRT23 com banca definida. TJ AM, TJ GO e a DPU na fila.
             </p>
             <p className="mt-3 text-[13.5px] leading-normal text-brand-ink-soft sm:mt-4 sm:text-[17px] sm:leading-relaxed">
               Não dá pra desperdiçar essas oportunidades. Quem chega despreparado não perde só uma prova: perde o ciclo inteiro, porque o próximo edital do mesmo tribunal demora anos.
