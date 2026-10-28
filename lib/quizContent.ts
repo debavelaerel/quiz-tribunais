@@ -15,40 +15,44 @@ export const CONFIG = {
   // é disparado via postMessage); mutedIndicatorIcon mostra o aviso "toca
   // pra ativar o som" de que a pessoa precisa pra ouvir.
   videoSrc: 'https://player-vz-246ae85e-308.tv.pandavideo.com.br/embed/?v=ceeffaff-3a26-4b53-ae04-2e52a05106e4&muted=true&mutedIndicatorIcon=true&mutedIndicatorClickRestart=true&saveProgress=false',
-  editaisAtualizadosEm: '3 de setembro de 2026',
+  editaisAtualizadosEm: '28 de outubro de 2026',
   instagram: 'https://www.instagram.com/vdeconcursos/',
 }
 
-export type Edital = { id: string; label: string; sub: string }
+// `aberto`: o edital já saiu e as inscrições estão abertas (ou foram abertas). Só o TS usa — o
+// serviço de PDF (Python) tem a mesma lista sem esse campo, e o texto de `sub` já diz a situação.
+export type Edital = { id: string; label: string; sub: string; aberto?: boolean }
 
 export const EDITAIS: Record<string, Edital[]> = {
   tj: [
-    { id: 'tjgo', label: 'TJ GO', sub: 'concurso autorizado para analista judiciário, área judiciária e de apoio' },
-    { id: 'tjam', label: 'TJ AM', sub: 'cerca de 400 vagas anunciadas pelo tribunal' },
-    { id: 'tjto', label: 'TJ TO', sub: 'banca em contratação; 331 cargos vagos, 117 de analista' },
-    { id: 'tjal', label: 'TJ AL', sub: 'comissão formada para analista, oficial de justiça avaliador' },
-    { id: 'tjrs', label: 'TJ RS', sub: 'comissão formada para analista do Poder Judiciário' },
-    { id: 'tjpb', label: 'TJ PB', sub: 'comissão formada' },
-    { id: 'tjsp', label: 'TJ SP', sub: 'em estudos para escrevente e oficial de justiça' },
+    { id: 'tjpb', label: 'TJ PB', sub: 'edital aberto (FGV) com 50 vagas de analista judiciário, inscrições até 18 de novembro, prova em 24 de janeiro', aberto: true },
+    { id: 'tjsp', label: 'TJ SP', sub: 'dois editais abertos (Vunesp): oficial de justiça, com 132 vagas imediatas e nível superior, e escrevente, com cadastro de reserva e ensino médio; inscrições até 10 de dezembro, prova em 14 de março', aberto: true },
+    { id: 'tjgo', label: 'TJ GO', sub: 'concurso autorizado para analista judiciário, área judiciária e de apoio; banca prevista para fevereiro de 2027' },
+    { id: 'tjam', label: 'TJ AM', sub: 'cerca de 400 vagas previstas no orçamento, com edital esperado em 2027' },
+    { id: 'tjto', label: 'TJ TO', sub: 'autorizado, com banca em contratação; 117 cargos vagos de analista' },
+    { id: 'tjal', label: 'TJ AL', sub: 'comissão formada para analista, oficial de justiça avaliador; banca ainda não definida' },
+    { id: 'tjrs', label: 'TJ RS', sub: 'comissão formada para analista de apoio especializado; sem edital publicado' },
   ],
   trf: [
-    { id: 'trf3', label: 'TRF3 (SP e MS)', sub: 'edital iminente para analista judiciário, área judiciária; banca prevista para 2026' },
+    { id: 'trf3', label: 'TRF3 (SP e MS)', sub: 'edital aberto (Vunesp) para analista e técnico, inscrições de 4 a 23 de novembro, prova em 31 de janeiro', aberto: true },
+    { id: 'trf2', label: 'TRF2 (RJ e ES)', sub: 'previsto no orçamento de 2027, sem banca nem cronograma' },
   ],
   trt: [
-    { id: 'trt8', label: 'TRT8 (PA e AP)', sub: 'banca definida (FCC), edital iminente para técnico e analista' },
-    { id: 'trt4', label: 'TRT4 (RS)', sub: 'autorizado, comissão formada, banca em contratação' },
-    { id: 'trt23', label: 'TRT23 (MT)', sub: 'autorizado pelo Pleno, edital esperado ainda em 2026' },
-    { id: 'trt3', label: 'TRT3 (MG)', sub: 'previsto para 2026, com até 444 vacâncias' },
-    { id: 'trt22', label: 'TRT22 (PI)', sub: 'previsto após dezembro de 2026' },
+    { id: 'trt8', label: 'TRT8 (PA e AP)', sub: 'edital aberto (FCC) para analista e técnico, inscrições até 5 de novembro, prova em 17 de janeiro', aberto: true },
+    { id: 'trt4', label: 'TRT4 (RS)', sub: 'edital aberto (FCC) para analista e técnico, inscrições até 25 de novembro, prova em 31 de janeiro', aberto: true },
+    { id: 'trt23', label: 'TRT23 (MT)', sub: 'banca definida (FCC), edital esperado em breve' },
+    { id: 'trt3', label: 'TRT3 (MG)', sub: 'autorizado, com banca a definir e edital esperado em 2027' },
+    { id: 'trt5', label: 'TRT5 (BA)', sub: 'previsto no orçamento de 2027, com banca a definir; último concurso em 2013' },
+    { id: 'trt22', label: 'TRT22 (PI)', sub: 'novo concurso em planejamento, dependendo de liberação orçamentária' },
   ],
   fe: [
-    { id: 'dpu', label: 'DPU', sub: '810 vagas previstas na LOA 2026, analista e técnico' },
-    { id: 'dpema', label: 'DPE MA', sub: 'primeiro concurso de servidores, previsto para 2026' },
-    { id: 'pgeba', label: 'PGE BA', sub: 'banca definida, 115 vagas de analista e assistente' },
-    { id: 'pgerj', label: 'PGE RJ', sub: 'autorizado para analista' },
+    { id: 'dpu', label: 'DPU', sub: 'sem banca nem edital confirmados para analista e técnico' },
+    { id: 'dpema', label: 'DPE MA', sub: 'primeiro concurso de servidores em preparação, com 31 cargos vagos de técnico de nível superior; sem edital' },
+    { id: 'pgeba', label: 'PGE BA', sub: 'banca definida (FCC), 115 vagas de analista e assistente de procuradoria; edital ainda não publicado' },
+    { id: 'pgerj', label: 'PGE RJ', sub: 'autorizado para analista, sem banca nem edital' },
   ],
 }
-EDITAIS.any = [...EDITAIS.trt.slice(0, 2), ...EDITAIS.trf, ...EDITAIS.tj.slice(0, 3)]
+EDITAIS.any = [...EDITAIS.trt.slice(0, 3), ...EDITAIS.trf.slice(0, 1), ...EDITAIS.tj.slice(0, 2)]
 
 export const L = {
   alvo: { tj: 'TJ', trf: 'TRF', trt: 'TRT', fe: 'Defensoria, MP ou Procuradoria', any: 'qualquer tribunal', juridica: 'carreira jurídica', outro: 'outro concurso' } as Record<string, string>,
@@ -266,7 +270,8 @@ export const PERFIL_SCREENS: TelaPerfil[] = [
             ['analista', 'Analista judiciário'],
             ['oficial', 'Oficial de justiça'],
             ['tecnico', 'Técnico judiciário'],
-            ['escrevente', 'Escrevente'],
+            // Escrevente é cargo de Tribunal de Justiça estadual (TJ SP) — não existe em TRF nem TRT.
+            ...(r.alvo === 'tj' || r.alvo === 'any' ? [['escrevente', 'Escrevente'] as Opcao] : []),
             ['any', 'O que vier, quero entrar no tribunal'],
             ['unsure', 'Ainda não sei a diferença entre eles'],
           ],
@@ -280,7 +285,9 @@ export const PERFIL_SCREENS: TelaPerfil[] = [
       ['cursando_outra', 'Cursando outra área'],
       ['medio', 'Ensino médio completo'],
     ],
-    after: (r) => (r.cargo === 'escrevente' || r.formacao === 'medio' ? 'desqualificado' : null),
+    // Escrevente (TJ SP) é cargo de nível médio e o diagnóstico serve pra ele (o site do VDE Tribunais
+    // diz que sim) — por isso ensino médio só desqualifica quem NÃO mira escrevente.
+    after: (r) => (r.formacao === 'medio' && r.cargo !== 'escrevente' ? 'desqualificado' : null),
   },
   {
     type: 'single', key: 'tempo', title: 'Há quanto tempo você estuda pra concursos?',
@@ -345,10 +352,10 @@ export const PERFIL_SCREENS: TelaPerfil[] = [
     ],
   },
   {
-    type: 'multi', key: 'editais', title: 'Estes são os concursos que estão na fila pra sair. Em qual deles você quer estar pronto?',
+    type: 'multi', key: 'editais', title: 'Estes são os concursos abertos e os que estão por vir. Em qual deles você quer estar pronto?',
     hint: (r) => `Pode marcar mais de um. Situação em ${CONFIG.editaisAtualizadosEm}.`,
     opts: (r) => {
-      const lista = EDITAIS[r.alvo ?? ''] ?? EDITAIS.any
+      const lista = editaisDisponiveis(r)
       return [...lista.map((e): Opcao => [e.id, e.label, e.sub]), ['qualquer', 'Qualquer um, quero estar pronto quando abrir']]
     },
   },
@@ -413,8 +420,15 @@ export function labelCargo(r: RespostasPerfil): string {
   return r.alvo === 'fe' ? (L.cargoFe[r.cargo ?? ''] ?? '') : (L.cargo[r.cargo ?? ''] ?? '')
 }
 
+// Lista de concursos oferecida na pergunta dos editais. Escrevente é cargo de Tribunal de Justiça
+// estadual, então quem mira escrevente só vê os TJs — mesmo tendo escolhido "qualquer tribunal".
+export function editaisDisponiveis(r: RespostasPerfil): Edital[] {
+  if (r.cargo === 'escrevente') return EDITAIS.tj
+  return EDITAIS[r.alvo ?? ''] ?? EDITAIS.any
+}
+
 export function editaisEscolhidos(r: RespostasPerfil): Edital[] {
-  const lista = EDITAIS[r.alvo ?? ''] ?? EDITAIS.any
+  const lista = editaisDisponiveis(r)
   return (r.editais ?? []).filter((x) => x !== 'qualquer').map((id) => lista.find((e) => e.id === id)).filter((e): e is Edital => Boolean(e))
 }
 

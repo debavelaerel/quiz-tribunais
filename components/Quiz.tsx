@@ -1217,9 +1217,8 @@ export default function Quiz() {
         'Pra carreiras jurídicas o VDE tem outra formação de base, o VDE Carreiras Jurídicas. Se fizer sentido, me chama no Instagram que eu te aponto o caminho.',
       ]
     } else {
-      const alvoTxt = respostasPerfil.cargo === 'escrevente' ? 'escrevente' : 'técnico de nível médio'
       paragrafos = [
-        `O VDE Tribunais é calibrado pro nível de analista e oficial de justiça, então ele aprofunda as matérias jurídicas mais do que a prova de ${alvoTxt} pede.`,
+        'O VDE Tribunais é calibrado pro nível de analista e oficial de justiça, então ele aprofunda as matérias jurídicas mais do que a prova de técnico de nível médio pede.',
         'Prefiro te dizer isso agora. Se em algum momento o seu alvo virar analista, o diagnóstico continua aqui.',
       ]
     }
@@ -1377,7 +1376,11 @@ export default function Quiz() {
     const alvoLongo = respostasPerfil.alvo ? L.alvoLongo[respostasPerfil.alvo] : ''
     const escolhidos = editaisEscolhidos(respostasPerfil)
     const provaNaMira = escolhidos[0]
-    const edFrase = provaNaMira ? `O ${provaNaMira.label} já está na fila (${provaNaMira.sub}), então o seu tempo tem dono. ` : ''
+    const edFrase = provaNaMira
+      ? provaNaMira.aberto
+        ? `O ${provaNaMira.label} está com ${provaNaMira.sub}, então o seu tempo tem dono. `
+        : `O ${provaNaMira.label} já está na fila (${provaNaMira.sub}), então o seu tempo tem dono. `
+      : ''
     const progresso = Math.round((PERFIL_SCREENS.length / PASSOS_POS_INTRO) * 100)
     return (
       <div className="flex min-h-screen flex-col">

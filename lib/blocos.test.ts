@@ -121,27 +121,23 @@ describe('selecionarBlocos — os 8 casos de aceite do pacote raio-x-da-base', (
     })
   }
 
-  // Caso 9, achado por fuzz diferencial contra a implementação Python de
-  // referência (4000 leads aleatórios válidos, 396 divergiam antes do fix).
-  // `alvo === 'any'` não tem lista própria em `EDITAIS` (só tj/trf/trt/fe
-  // existem no pacote Python); o bug indexava `lib/quizContent.ts`'s
-  // `EDITAIS.any` — uma lista sintética só de UI, inexistente na
-  // referência — em vez de cair no fallback `trt`
-  // (`EDITAIS.get(alvo) or EDITAIS.get("trt", [])`). Isso fazia os editais
-  // "tjto"/"tjam" (que não existem na lista `trt`) resolverem como editais
-  // de verdade, acionando "editais_min": 1 e o bloco "mira" ("Sobre o TJ
-  // TO..."), que a referência nunca escolhe pra esse lead. Nenhum dos 8
-  // casos originais cobria isso: o único caso com alvo 'any' (05) só marca
-  // 'qualquer', que o código com bug e o corrigido descartam do mesmo jeito.
-  it('caso 09-any-com-edital-nao-trt: alvo "any" com editais fora da lista trt não deve acionar o bloco "mira"', () => {
+  // Caso 9, achado por fuzz diferencial contra o Python de referência. `alvo === 'any'` não tem lista
+  // própria em `EDITAIS` (só tj/trf/trt/fe existem no pacote Python), e o bug indexava
+  // `EDITAIS.any` de lib/quizContent.ts — uma lista só de UI — em vez da lista do pacote.
+  //
+  // Desvio consciente do pacote, decidido em 2026-10-28: o Python original caía no grupo `trt`
+  // nesse caso, então um TJ/TRF marcado por quem escolheu "qualquer tribunal" sumia do diagnóstico
+  // (nenhum bloco "Sobre o TJ TO"). Agora `answers.py::Lead.editais` (vendor e reference) e
+  // `selecionarBlocos` caem na união de todos os grupos, e os dois continuam batendo entre si.
+  // O que este caso protege continua valendo: a lista sintética da UI não vaza pro motor.
+  it('caso 09-any-com-edital-nao-trt: alvo "any" reconhece editais de TJ/TRF marcados (aciona o bloco "mira")', () => {
     const { perfil, respostas } = decodeRX1(
       'RX1.any.oficial.outra.t2.p2.retafinal.insta.h0.nao.base.improviso.120.completa.-B-D.tjto-tjam',
     )
     const blocos = selecionarBlocos(perfil, respostas)
     expect(blocos.map((b) => b.id)).toEqual([
-      'longe', 'h0', 'retafinal', 'd_base', 'n01', 'naojur2', 'proc', 'pub', 'alvo_any', 'oficial', 'v_insta',
+      'mira', 'longe', 'h0', 'retafinal', 'd_base', 'n01', 'naojur2', 'proc', 'pub', 'alvo_any', 'oficial', 'v_insta',
     ])
-    expect(blocos.map((b) => b.id)).not.toContain('mira')
   })
 })
 
@@ -168,4 +164,18 @@ describe('EDITAIS_BASE — allowlist do fix "alvo any" (round anterior)', () => 
       expect(EDITAIS_BASE[chave].map((e) => e.id)).toEqual(editaisRef[chave].map((e) => e.id))
     },
   )
+})
+
+describe('selecionarBlocos — "qualquer tribunal" reconhece o concurso marcado em qualquer grupo', () => {
+  const { perfil, respostas } = decodeRX1(casosDeTeste.casos[0].entrada.codigo)
+
+  it('um TJ marcado por quem escolheu "qualquer tribunal" gera o bloco "Sobre o TJ SP"', () => {
+    const blocos = selecionarBlocos({ ...perfil, alvo: 'any', editais: ['tjsp'] }, respostas)
+    expect(blocos.map((b) => b.title)).toContain('Sobre o TJ SP')
+  })
+
+  it('o mesmo vale pra um TRF marcado', () => {
+    const blocos = selecionarBlocos({ ...perfil, alvo: 'any', editais: ['trf3'] }, respostas)
+    expect(blocos.map((b) => b.title)).toContain('Sobre o TRF3 (SP e MS)')
+  })
 })

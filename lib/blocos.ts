@@ -116,13 +116,13 @@ function resolveParagrafo(p: Paragrafo, bateFn: (r: Regra | undefined) => boolea
 
 // Só os 4 grupos que existem no `EDITAIS` do pacote Python (`questions.py`:
 // tj, trf, trt, fe). `lib/quizContent.ts` define um `EDITAIS.any` extra — uma
-// lista sintética só pra UI do quiz (trt.slice(0,2) + trf + tj.slice(0,3)) —
-// que NÃO existe na referência; se o motor de blocos indexasse `EDITAIS`
-// direto, um lead com `alvo === 'any'` bateria nesse `any` da UI em vez de
-// cair no fallback `trt` que o Python usa (`EDITAIS.get(alvo) or
-// EDITAIS.get("trt", [])`), incluindo blocos que a referência nunca
-// selecionaria pra esse lead (ex.: "mira", quando o único edital marcado é
-// de um tribunal fora da lista `trt`).
+// lista sintética só pra UI do quiz — que NÃO existe na referência; se o motor
+// de blocos indexasse `EDITAIS` direto, um lead com `alvo === 'any'` ("qualquer
+// tribunal") só reconheceria os concursos dessa lista da UI.
+// Desvio consciente do pacote: o Python original caía no grupo `trt` nesse
+// caso (`EDITAIS.get(alvo) or EDITAIS.get("trt", [])`), então um TJ ou TRF
+// marcado por quem escolheu "qualquer tribunal" sumia do diagnóstico. Aqui, e
+// em `answers.py::Lead.editais`, o fallback é a união de todos os grupos.
 export const EDITAIS_BASE = { tj: EDITAIS.tj, trf: EDITAIS.trf, trt: EDITAIS.trt, fe: EDITAIS.fe } as const
 
 // Nota de fidelidade: esse é o único lookup do arquivo que precisa do
@@ -139,7 +139,7 @@ export function selecionarBlocos(perfil: RespostasPerfil, respostas: RespostaRes
   // quando a lista existe mas está vazia, não só quando a chave falta.
   const listaEditais = EDITAIS_BASE[perfil.alvo as keyof typeof EDITAIS_BASE]?.length
     ? EDITAIS_BASE[perfil.alvo as keyof typeof EDITAIS_BASE]
-    : EDITAIS.trt
+    : Object.values(EDITAIS_BASE).flat()
   const porId = new Map(listaEditais.map((e) => [e.id, e]))
   const editaisReais = (perfil.editais ?? [])
     .map((id) => porId.get(id))

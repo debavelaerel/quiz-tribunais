@@ -66,7 +66,9 @@ class Lead:
     @property
     def editais(self):
         """Só os editais de verdade: 'qualquer' não é um deles."""
-        lista = EDITAIS.get(self.get("alvo")) or EDITAIS.get("trt", [])
+        # alvo "any" ("qualquer tribunal") não tem lista própria: reconhece o concurso marcado em
+        # qualquer grupo (antes só olhava o TRT e ignorava TJ/TRF marcados).
+        lista = EDITAIS.get(self.get("alvo")) or [e for grupo in EDITAIS.values() for e in grupo]
         por_id = {e["id"]: e for e in lista}
         return [por_id[i] for i in self.editais_raw if i in por_id]
 
