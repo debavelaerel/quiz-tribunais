@@ -404,103 +404,103 @@ EDITAIS = {
         {
             "id": "tjpb",
             "label": "TJ PB",
-            "sub": "edital aberto (FGV) com 50 vagas de analista judiciário, inscrições até 18 de novembro, prova em 24 de janeiro"
+            "sub": "edital publicado para analista judiciário (banca FGV); 50 vagas"
         },
         {
             "id": "tjsp",
             "label": "TJ SP",
-            "sub": "dois editais abertos (Vunesp): oficial de justiça, com 132 vagas imediatas e nível superior, e escrevente, com cadastro de reserva e ensino médio; inscrições até 10 de dezembro, prova em 14 de março"
+            "sub": "edital publicado para escrevente e oficial de justiça (banca Vunesp)"
         },
         {
             "id": "tjgo",
             "label": "TJ GO",
-            "sub": "concurso autorizado para analista judiciário, área judiciária e de apoio; banca prevista para fevereiro de 2027"
+            "sub": "concurso autorizado para analista judiciário, área judiciária e de apoio"
         },
         {
             "id": "tjam",
             "label": "TJ AM",
-            "sub": "cerca de 400 vagas previstas no orçamento, com edital esperado em 2027"
+            "sub": "cerca de 400 vagas anunciadas pelo tribunal"
         },
         {
             "id": "tjto",
             "label": "TJ TO",
-            "sub": "autorizado, com banca em contratação; 117 cargos vagos de analista"
+            "sub": "banca em contratação; 331 cargos vagos, 117 de analista"
         },
         {
             "id": "tjal",
             "label": "TJ AL",
-            "sub": "comissão formada para analista, oficial de justiça avaliador; banca ainda não definida"
+            "sub": "comissão formada para analista, oficial de justiça avaliador"
         },
         {
             "id": "tjrs",
             "label": "TJ RS",
-            "sub": "comissão formada para analista de apoio especializado; sem edital publicado"
+            "sub": "comissão formada para analista do Poder Judiciário"
         }
     ],
     "trf": [
         {
             "id": "trf3",
             "label": "TRF3 (SP e MS)",
-            "sub": "edital aberto (Vunesp) para analista e técnico, inscrições de 4 a 23 de novembro, prova em 31 de janeiro"
+            "sub": "edital publicado para analista e técnico (banca Vunesp)"
         },
         {
             "id": "trf2",
             "label": "TRF2 (RJ e ES)",
-            "sub": "previsto no orçamento de 2027, sem banca nem cronograma"
+            "sub": "previsto no PLOA 2027, sem cronograma"
         }
     ],
     "trt": [
         {
             "id": "trt8",
             "label": "TRT8 (PA e AP)",
-            "sub": "edital aberto (FCC) para analista e técnico, inscrições até 5 de novembro, prova em 17 de janeiro"
+            "sub": "edital publicado para técnico e analista (banca FCC)"
         },
         {
             "id": "trt4",
             "label": "TRT4 (RS)",
-            "sub": "edital aberto (FCC) para analista e técnico, inscrições até 25 de novembro, prova em 31 de janeiro"
+            "sub": "edital publicado para técnico e analista (banca FCC)"
         },
         {
             "id": "trt23",
             "label": "TRT23 (MT)",
-            "sub": "banca definida (FCC), edital esperado em breve"
+            "sub": "banca definida (FCC), edital esperado ainda em 2026"
         },
         {
             "id": "trt3",
             "label": "TRT3 (MG)",
-            "sub": "autorizado, com banca a definir e edital esperado em 2027"
+            "sub": "autorizado, edital previsto para 2027, com até 444 vacâncias"
         },
         {
             "id": "trt5",
             "label": "TRT5 (BA)",
-            "sub": "previsto no orçamento de 2027, com banca a definir; último concurso em 2013"
+            "sub": "previsto no PLOA 2027"
         },
         {
             "id": "trt22",
             "label": "TRT22 (PI)",
-            "sub": "novo concurso em planejamento, dependendo de liberação orçamentária"
+            "sub": "previsto após dezembro de 2026"
         }
     ],
     "fe": [
         {
             "id": "dpu",
             "label": "DPU",
-            "sub": "sem banca nem edital confirmados para analista e técnico"
+            "sub": "810 vagas previstas na LOA 2026, analista e técnico"
         },
         {
             "id": "dpema",
             "label": "DPE MA",
-            "sub": "primeiro concurso de servidores em preparação, com 31 cargos vagos de técnico de nível superior; sem edital"
+            "sub": "primeiro concurso de servidores, previsto para 2026"
         },
         {
             "id": "pgeba",
             "label": "PGE BA",
-            "sub": "banca definida (FCC), 115 vagas de analista e assistente de procuradoria; edital ainda não publicado"
+            "sub": "banca definida, 115 vagas de analista e assistente"
         },
         {
             "id": "pgerj",
             "label": "PGE RJ",
-            "sub": "autorizado para analista, sem banca nem edital"
+            "sub": "autorizado para analista"
         }
     ]
 }
